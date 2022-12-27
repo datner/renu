@@ -1,0 +1,97 @@
+{
+  "admin": {
+    "Components": {
+      "Aside": {
+        "items": "Items"
+      },
+      "FormCategoryCombobox": {
+        "category": "Category"
+      },
+      "FormDropzone": {
+        "image": "Image",
+        "drop files here": "Drop the files here ...",
+        "drag and drop here": "Drag n drop some files here, or click to select files"
+      },
+      "ItemForm": {
+        "title": {
+          "edit": "Edit an Item",
+          "new": "Create an Item"
+        },
+        "identifier": "Identifier",
+        "price": "Price",
+        "english name": "English Name",
+        "english description": "English Description",
+        "hebrew name": "Hebrew Name",
+        "hebrew description": "Hebrew Description",
+        "upload": "Uploading Image...",
+        "update": {
+          "initial": "Save Changes",
+          "item": "Saving Changes..."
+        },
+        "create": {
+          "initial": "Create Item",
+          "item": "Creating Item..."
+        }
+      },
+      "CategoryForm": {
+        "title": {
+          "edit": "Edit a Category",
+          "new": "Create a Category"
+        },
+        "identifier": "Identifier",
+        "english name": "English Name",
+        "hebrew name": "Hebrew Name",
+        "update": {
+          "initial": "Update Category",
+          "category": "Updating Category..."
+        },
+        "create": {
+          "initial": "Create Category",
+          "category": "Creating Category..."
+        }
+      },
+      "VenueSettings": {
+        "address": "Address",
+        "phone number": "Phone Number",
+        "update": "Update",
+        "updating": "Updating..."
+      }
+    }
+  },
+  "menu": {
+    "Components": {
+      "ViewOrderButton": {
+        "viewOrder": "View Order"
+      },
+      "CallToActionText": {
+        "new": "Add to order",
+        "update": "Update order",
+        "remove": {
+          "_": "Remove",
+          "all": "all"
+        }
+      },
+      "Extras": {
+        "min": "min: {min}",
+        "max": "max: {max}",
+        "error": "Please reach minimum!"
+      },
+      "OrderModal": {
+        "yourOrder": "Your Order",
+        "order": "Order!",
+        "loading": "Redirecting..."
+      },
+      "OrderModalItem": {
+        "comment": "Comment"
+      },
+      "ItemData": {
+        "name": "Name",
+        "description": "Description",
+        "price": "Price"
+      },
+      "ItemModal": {
+        "comment": "Comment"
+      }
+    }
+  }
+}

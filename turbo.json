@@ -2,13 +2,46 @@
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**", ".next/**"]
+      "dependsOn": ["^db:generate", "^build"],
+      "outputs": ["dist/**", ".next/**"],
+      "env": [
+        "NODE_ENV",
+        "DATABASE_URL",
+        "IMGIX_API_KEY",
+        "IMGIX_SOURCE_ID",
+        "DORIX_QA_API_URL",
+        "DORIX_API_URL",
+        "DORIX_API_KEY",
+        "TELEGRAM_BOT_TOKEN",
+        "TELEGRAM_CHAT_ID",
+        "CREDIT_GUARD_API_URL",
+        "PAY_PLUS_API_KEY",
+        "PAY_PLUS_API_SECRET_KEY",
+        "PAY_PLUS_QA_API_URL",
+        "PAY_PLUS_API_URL",
+        "REVALIDATION_SECRET_TOKEN"
+      ]
     },
     "lint": {
       "outputs": []
     },
+    "typecheck": {
+      "outputs": []
+    },
     "dev": {
+      "dependsOn": ["^db:generate"],
+      "cache": false
+    },
+    "test": {
+      "outputs": []
+    },
+    "test:watch": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:push": {
       "cache": false
     }
   }

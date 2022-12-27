@@ -13,6 +13,15 @@ coverage
 out/
 build
 
+# blitz.js
+.blitz/
+*.sqlite
+*.sqlite-journal
+.now
+.blitz**
+blitz-log.log
+
+
 # misc
 .DS_Store
 *.pem
@@ -28,6 +37,10 @@ yarn-error.log*
 .env.development.local
 .env.test.local
 .env.production.local
+
+# Logs
+logs
+*.log
 
 # turbo
 .turbo

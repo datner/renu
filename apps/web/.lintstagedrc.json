@@ -1,0 +1,4 @@
+{
+  "*.{js,ts,tsx}": ["next lint --fix"],
+  "*.json": ["prettier --format"]
+}

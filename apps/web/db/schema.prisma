@@ -1,0 +1,376 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id             Int          @id @default(autoincrement())
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  name           String?
+  email          String       @unique
+  hashedPassword String?
+  role           GlobalRole   @default(USER)
+  restaurantId   Int?
+  deleted        DateTime?
+  restaurant     Restaurant?  @relation(fields: [restaurantId], references: [id])
+  membership     Membership[]
+  sessions       Session[]
+  tokens         Token[]
+}
+
+model Session {
+  id                 Int       @id @default(autoincrement())
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  expiresAt          DateTime?
+  handle             String    @unique
+  hashedSessionToken String?
+  antiCSRFToken      String?
+  publicData         String?
+  privateData        String?
+  userId             Int?
+  user               User?     @relation(fields: [userId], references: [id])
+}
+
+model Token {
+  id          Int       @id @default(autoincrement())
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  hashedToken String
+  type        TokenType
+  expiresAt   DateTime
+  sentTo      String
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id])
+
+  @@unique([hashedToken, type])
+}
+
+model Organization {
+  id           Int           @id @default(autoincrement())
+  name         String
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  identifier   String        @unique
+  affiliations Affiliation[]
+  memberships  Membership[]
+  venues       Venue[]
+}
+
+model Membership {
+  id             Int            @id @default(autoincrement())
+  role           MembershipRole
+  organizationId Int
+  userId         Int?
+  invitedName    String?
+  invitedEmail   String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  user           User?          @relation(fields: [userId], references: [id])
+  affiliations   Affiliation[]
+
+  @@unique([organizationId, invitedEmail])
+}
+
+model Affiliation {
+  id             Int            @id @default(autoincrement())
+  role           MembershipRole
+  organizationId Int
+  memberId       Int
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  member         Membership     @relation(fields: [memberId], references: [id])
+  organization   Organization   @relation(fields: [organizationId], references: [id])
+  Venue          Venue          @relation(fields: [venueId], references: [id])
+  venueId        Int
+}
+
+model Venue {
+  id                    Int                    @id @default(autoincrement())
+  identifier            String                 @unique
+  logo                  String
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @default(now()) @updatedAt
+  deleted               DateTime?
+  organizationId        Int
+  organization          Organization           @relation(fields: [organizationId], references: [id])
+  categories            Category[]
+  clearingProvider      ClearingProvider       @default(PAY_PLUS)
+  clearingIntegration   ClearingIntegration?
+  inventory             Item[]
+  managementIntegration ManagementIntegration?
+  content               RestaurantI18L[]
+  menus                 Menu[]
+  simpleContactInfo     String?
+  open                  Boolean                @default(true)
+  Affiliation           Affiliation[]
+  orders                Order[]
+}
+
+model ClearingIntegration {
+  id         Int              @id @default(autoincrement())
+  provider   ClearingProvider
+  terminal   String
+  venueId    Int              @unique
+  vendorData Json             @default("{}")
+  Venue      Venue            @relation(fields: [venueId], references: [id])
+}
+
+model ClearingProfile {
+  provider   ClearingProvider @id
+  vendorData Json
+}
+
+model ManagementIntegration {
+  id         Int                @id @default(autoincrement())
+  provider   ManagementProvider
+  venueId    Int                @unique
+  vendorData Json               @default("{}")
+  Venue      Venue              @relation(fields: [venueId], references: [id])
+}
+
+model ManagementProfile {
+  provider   ManagementProvider @unique
+  vendorData Json
+}
+
+model Restaurant {
+  id         Int              @id @default(autoincrement())
+  slug       String           @unique
+  logo       String
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @default(now()) @updatedAt
+  deleted    DateTime?
+  categories Category[]
+  inventory  Item[]
+  menu       Menu?
+  content    RestaurantI18L[]
+  users      User[]
+}
+
+model RestaurantI18L {
+  id           Int         @id @default(autoincrement())
+  restaurantId Int?
+  locale       Locale
+  name         String
+  venueId      Int?
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
+  Venue        Venue?      @relation(fields: [venueId], references: [id])
+}
+
+model Menu {
+  id             Int            @id @default(autoincrement())
+  restaurantId   Int            @unique
+  identifier     String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @default(now()) @updatedAt
+  deleted        DateTime?
+  organizationId Int            @default(0)
+  restaurant     Restaurant     @relation(fields: [restaurantId], references: [id])
+  categories     Category[]
+  menuCategories MenuCategory[]
+  Venue          Venue[]
+
+  @@unique([restaurantId, identifier])
+}
+
+model MenuCategory {
+  id         Int      @id @default(autoincrement())
+  menu       Menu     @relation(fields: [menuId], references: [id])
+  menuId     Int
+  Category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+
+  position Int
+}
+
+model CategoryItem {
+  id         Int      @id @default(autoincrement())
+  position   Int
+  Category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+  Item       Item     @relation(fields: [itemId], references: [id])
+  itemId     Int
+}
+
+model Category {
+  id             Int            @id @default(autoincrement())
+  menuId         Int?
+  restaurantId   Int?
+  identifier     String
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @default(now()) @updatedAt
+  deleted        DateTime?
+  organizationId Int            @default(0)
+  venueId        Int?
+  menu           Menu?          @relation(fields: [menuId], references: [id])
+  restaurant     Restaurant?    @relation(fields: [restaurantId], references: [id])
+  Venue          Venue?         @relation(fields: [venueId], references: [id])
+  content        CategoryI18L[]
+  items          Item[]
+  menuCategories MenuCategory[]
+  categoryItems  CategoryItem[]
+
+  @@unique([restaurantId, identifier])
+}
+
+model CategoryI18L {
+  id          Int      @id @default(autoincrement())
+  categoryId  Int
+  locale      Locale
+  name        String
+  description String?  @default("")
+  category    Category @relation(fields: [categoryId], references: [id])
+}
+
+model Item {
+  id             Int       @id @default(autoincrement())
+  price          Int
+  identifier     String
+  image          String
+  organizationId Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @default(now()) @updatedAt
+  blurDataUrl    String?
+  deleted        DateTime?
+
+  content ItemI18L[]
+
+  category   Category @relation(fields: [categoryId], references: [id])
+  categoryId Int
+
+  categoryItems CategoryItem[]
+
+  restaurant   Restaurant? @relation(fields: [restaurantId], references: [id])
+  restaurantId Int?
+
+  modifiers ItemModifier[]
+
+  Venue   Venue? @relation(fields: [venueId], references: [id])
+  venueId Int?
+
+  referencedIn OrderItem[]
+
+  managementRepresentation Json @default("{}")
+
+  @@unique([organizationId, identifier])
+}
+
+model ItemModifier {
+  id       Int  @id @default(autoincrement())
+  position Int
+  config   Json
+
+  item                     Item                @relation(fields: [itemId], references: [id])
+  itemId                   Int
+  referencedIn             OrderItemModifier[]
+  managementRepresentation Json                @default("{}")
+}
+
+model ItemI18L {
+  id          Int    @id @default(autoincrement())
+  itemId      Int
+  locale      Locale
+  name        String
+  description String
+  item        Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}
+
+model ShortenedUrl {
+  slug        String @id @unique
+  destination String
+}
+
+model Order {
+  id           Int         @id @default(autoincrement())
+  venue        Venue       @relation(fields: [venueId], references: [id])
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @default(now()) @updatedAt
+  venueId      Int
+  txId         String?     @unique
+  customerName String      @default("Anonymous Renu User")
+  items        OrderItem[]
+  state        OrderState  @default(Init)
+}
+
+model OrderItem {
+  id        Int                 @id @default(autoincrement())
+  item      Item                @relation(fields: [itemId], references: [id])
+  itemId    Int
+  modifiers OrderItemModifier[]
+  price     Int
+  quantity  Int
+  comment   String
+  name      String
+  orderId   Int
+  order     Order               @relation(fields: [orderId], references: [id])
+}
+
+model OrderItemModifier {
+  id             Int          @id @default(autoincrement())
+  modifier       ItemModifier @relation(fields: [itemModifierId], references: [id])
+  itemModifierId Int
+  choice         String
+  ref            String
+  amount         Int
+  price          Int
+  referencedIn   OrderItem[]
+}
+
+enum TokenType {
+  RESET_PASSWORD
+}
+
+enum Locale {
+  en
+  he
+}
+
+enum OrderState {
+  Init
+  Dead
+  PaidFor
+  Unconfirmed
+  Confirmed
+  Cancelled
+  Refunded
+  Delivered
+}
+
+enum MembershipRole {
+  OWNER
+  ADMIN
+  USER
+}
+
+enum ClearingProvider {
+  CREDIT_GUARD
+  PAY_PLUS
+}
+
+enum ManagementProvider {
+  DORIX
+  RENU
+}
+
+enum ModifierType {
+  ONE_OF
+  EXTRAS
+  QUERY
+  SLIDER
+  OPTIONS
+}
+
+enum GlobalRole {
+  USER
+  ADMIN
+  SUPER
+
+  @@map("Role")
+}

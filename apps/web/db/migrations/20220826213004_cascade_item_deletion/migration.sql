@@ -1,0 +1,5 @@
+-- DropForeignKey
+ALTER TABLE "ItemI18L" DROP CONSTRAINT "ItemI18L_itemId_fkey";
+
+-- AddForeignKey
+ALTER TABLE "ItemI18L" ADD CONSTRAINT "ItemI18L_itemId_fkey" FOREIGN KEY ("itemId") REFERENCES "Item"("id") ON DELETE CASCADE ON UPDATE CASCADE;

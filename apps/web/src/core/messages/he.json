@@ -1,0 +1,97 @@
+{
+  "admin": {
+    "Components": {
+      "Aside": {
+        "items": "פריטים"
+      },
+      "FormCategoryCombobox": {
+        "category": "קטגוריה"
+      },
+      "FormDropzone": {
+        "image": "תמונה",
+        "drop files here": "הנח קובץ פה ...",
+        "drag and drop here": "גרור קובץ לפה, או לחץ לפתיחת חלון בחירה"
+      },
+      "ItemForm": {
+        "title": {
+          "edit": "ערוך פריט",
+          "new": "צור פריט"
+        },
+        "identifier": "מזהה (באנגלית)",
+        "price": "מחיר",
+        "english name": "שם באנגלית",
+        "english description": "תיאור באנגלית",
+        "hebrew name": "שם בעברית",
+        "hebrew description": "תיאור בעברית",
+        "upload": "מעלה תמונה ...",
+        "update": {
+          "initial": "שומר שימויים",
+          "item": "שומר שינויים ..."
+        },
+        "create": {
+          "initial": "צור פריט",
+          "item": "יוצר פריט ..."
+        }
+      },
+      "CategoryForm": {
+        "title": {
+          "edit": "ערוך קטגוריה",
+          "new": "צור קטגוריה"
+        },
+        "identifier": "מזהה (באנגלית)",
+        "english name": "שם באנגלית",
+        "hebrew name": "שם בעברית",
+        "update": {
+          "initial": "עדכן קטגוריה",
+          "category": "מעדכן  קטגוריה ..."
+        },
+        "create": {
+          "initial": "צור קטגוריה",
+          "category": "יוצר קטגוריה ..."
+        }
+      },
+      "VenueSettings": {
+        "address": "כתובת",
+        "phone number": "מספר טלפון",
+        "update": "עדכן",
+        "update": "מעדכן..."
+      }
+    }
+  },
+  "menu": {
+    "Components": {
+      "ViewOrderButton": {
+        "viewOrder": "צפה בהזמנה"
+      },
+      "CallToActionText": {
+        "new": "הוסף להזמנה",
+        "update": "עדכן הזמנה",
+        "remove": {
+          "_": "הסר",
+          "all": "הכל"
+        }
+      },
+      "Extras": {
+        "min": "מינימום: {min}",
+        "max": "מקסימום: {max}",
+        "error": "בבקשה הגיע לבחירה מינימלית!"
+      },
+      "OrderModal": {
+        "yourOrder": "ההזמנה שלך",
+        "order": "הזמן!",
+        "loading": "מעביר לעמוד תשלום..."
+      },
+      "OrderModalItem": {
+        "comment": "הערות"
+      },
+      "ItemData": {
+        "name": "שם",
+        "description": "תיאור",
+        "price": "מחיר"
+      },
+      "ItemModal": {
+        "comment": "הערות"
+      }
+    }
+  }
+}

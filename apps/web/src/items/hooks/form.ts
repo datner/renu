@@ -1,6 +1,6 @@
 import { useRouter } from "next/router"
 import { Routes } from "@blitzjs/next"
-import { useMutation, useQuery } from "@blitzjs/rpc"
+import { invoke, useQuery } from "@blitzjs/rpc"
 import createItem from "../mutations/createItem"
 import updateItem from "../mutations/updateItem"
 import getItem from "../queries/getItem"
@@ -23,13 +23,13 @@ const useCreate = (redirect = false) =>
   pipe(
     {
       redirect,
-      createItem: useMutation(createItem),
       router: useRouter(),
     },
-    ({ createItem: [createItem], redirect, router }) =>
+    ({ redirect, router }) =>
       (data: ItemSchema) =>
         pipe(
-          () => createItem(data),
+          () => invoke(createItem, data),
+          TE.chainFirstTaskK(() => () => fetch("/api/revalidate-current")),
           TE.chainFirstTaskK((item) =>
             fpSetQueryData(getItem, { identifier: item.identifier }, item)
           ),
@@ -39,14 +39,6 @@ const useCreate = (redirect = false) =>
           TE.chainFirstTaskK(() => invalidateQueries),
           TE.mapLeft((e) =>
             match(e)
-              .with(
-                { tag: "NoEnvVarError" },
-                constant("Could not find required environment resources")
-              )
-              .with(
-                { tag: "RevalidationFailedError" },
-                constant("Failed to revalidate your venue.. :(")
-              )
               .with({ tag: "prismaNotFoundError" }, constant("this should not happen.. :("))
               .with({ tag: "prismaValidationError" }, ({ error }) => error.message)
               .exhaustive()
@@ -56,13 +48,13 @@ const useCreate = (redirect = false) =>
   )
 
 const useUpdate = (identifier: string) => {
-  const [update] = useMutation(updateItem)
   const router = useRouter()
   const [item, { setQueryData }] = useQuery(getItem, { identifier })
 
   const onSubmit = (data: ItemSchema) =>
     pipe(
-      () => update({ id: item.id, ...data }),
+      () => invoke(updateItem, { id: item.id, ...data }),
+      T.chainFirst(() => () => fetch("/api/revalidate-current")),
       T.chainFirst(() => invalidateQueries),
       T.chainFirst((it) => () => setQueryData(it)),
       T.chainFirst(({ identifier }) =>

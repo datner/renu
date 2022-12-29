@@ -7,7 +7,6 @@ import { pipe } from "fp-ts/function"
 import * as S from "fp-ts/string"
 import * as TE from "fp-ts/TaskEither"
 import { prismaNotValid } from "src/core/helpers/prisma"
-import { revalidateVenue } from "src/core/helpers/revalidation"
 
 const removeDashes = S.replace("-", "")
 const isCell = S.startsWith("05")
@@ -31,6 +30,8 @@ export default resolver.pipe(
           }),
         prismaNotValid
       ),
-      TE.chainFirstTaskK((v) => revalidateVenue(v.identifier))
+      TE.getOrElse((e) => {
+        throw e
+      })
     )()
 )

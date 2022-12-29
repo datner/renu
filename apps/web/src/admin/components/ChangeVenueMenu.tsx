@@ -19,6 +19,7 @@ export const ChangeVenueMenu = () => {
   const [changeVenue, { isLoading }] = useMutation(changeCurrentVenue, {
     onSuccess() {
       getQueryClient().clear()
+      fetch("/api/revalidate-current")
     },
   })
   const title = titleFor(useLocale())

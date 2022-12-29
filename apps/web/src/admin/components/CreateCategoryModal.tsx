@@ -13,7 +13,7 @@ type Props = {
 export const CreateCategoryModal = create<Props>(({ name }) => {
   const modal = useModal()
   const locale = useLocale()
-  const { onSubmit } = category.useCreate({ redirect: false })
+  const { onSubmit } = category.useCreate()
   const defaultValues: DefaultValues<CreateCategory> = {
     [locale]: {
       name,

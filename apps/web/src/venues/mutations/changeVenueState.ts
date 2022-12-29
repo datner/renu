@@ -4,7 +4,6 @@ import { ensureVenueRelatedToOrganization } from "src/auth/helpers/ensureVenueRe
 import { setDefaultOrganizationId } from "src/auth/helpers/setDefaultOrganizationId"
 import { setDefaultVenueId } from "src/auth/helpers/setDefaultVenueId"
 import { prismaNotFound, prismaNotValid } from "src/core/helpers/prisma"
-import { revalidateVenue } from "src/core/helpers/revalidation"
 import { NotFoundError } from "blitz"
 import db, { Prisma } from "db"
 import { pipe } from "fp-ts/lib/function"
@@ -29,7 +28,6 @@ export default resolver.pipe(
           e instanceof Prisma.PrismaClientValidationError ? prismaNotValid(e) : prismaNotFound(e)
       ),
       TE.chainFirstTaskK((venue) => () => ctx.session.$setPublicData({ venue: venue })),
-      TE.chainFirstTaskK((venue) => revalidateVenue(venue.identifier)),
       TE.getOrElse((e) => {
         throw match(e)
           .with({ tag: "prismaNotFoundError" }, (e) => new NotFoundError(e.error.message))

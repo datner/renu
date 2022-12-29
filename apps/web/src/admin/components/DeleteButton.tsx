@@ -16,7 +16,11 @@ type Props = {
 export function DeleteButton(props: Props) {
   const { identifier, onRemove: onDelete } = props
   const router = useRouter()
-  const [removeItemMutation, { isLoading, isIdle, isSuccess }] = useMutation(removeItem)
+  const [removeItemMutation, { isLoading, isIdle, isSuccess }] = useMutation(removeItem, {
+    onSuccess() {
+      fetch("/api/revalidate-current")
+    },
+  })
   const [ref, { width }] = useMeasure()
   const isNoWidth = usePrevious(width) === 0
   const { w } = useSpring({ w: width + 32, immediate: isNoWidth })

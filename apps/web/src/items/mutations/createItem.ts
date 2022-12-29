@@ -9,7 +9,6 @@ import { pipe } from "fp-ts/function"
 import { z } from "zod"
 import { setDefaultOrganizationIdNoFilter } from "src/auth/helpers/setDefaultOrganizationId"
 import { setDefaultVenue } from "src/auth/helpers/setDefaultVenue"
-import { revalidateVenue } from "src/core/helpers/revalidation"
 import { prismaNotFound, prismaNotValid } from "src/core/helpers/prisma"
 
 export type CreateItemOutput = z.infer<typeof CreateItem>
@@ -67,7 +66,6 @@ export default resolver.pipe(
       T.apS("blurDataUrl", () => getBlurDataUrl(input.image)),
       TE.fromTask,
       TE.chain(setPositionInCategory),
-      TE.chainW(createItem),
-      TE.chainFirstW(() => revalidateVenue(input.venue.identifier))
+      TE.chainW(createItem)
     )()
 )

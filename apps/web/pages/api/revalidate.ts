@@ -1,11 +1,14 @@
 import { constFalse, pipe } from "fp-ts/function"
+import * as J from "fp-ts/Json"
+import * as C from "fp-ts/Console"
 import * as E from "fp-ts/Either"
 import * as A from "fp-ts/Array"
 import * as TE from "fp-ts/TaskEither"
-import { NextApiRequest, NextApiResponse } from "next"
+import { NextApiHandler, NextApiRequest, NextApiResponse } from "next"
 import { getEnvVar } from "src/core/helpers/env"
 import { match } from "ts-pattern"
-import { api } from "src/blitz-server"
+import { z } from "zod"
+import { ensureType } from "src/core/helpers/zod"
 
 type UnknownTokenError = {
   tag: "UnknownTokenError"
@@ -46,9 +49,13 @@ const getSecretToken = (req: NextApiRequest) =>
     : E.left<NoTokenError>({ tag: "NoTokenError" })
 
 const getPathToRevalidate = (req: NextApiRequest) =>
-  req.query["path"] != null
-    ? E.right(req.query["path"])
-    : E.left<NoPathError>({ tag: "NoPathError" })
+  pipe(
+    req.body,
+    J.parse,
+    E.chainW(ensureType(z.object({ paths: z.string().array() }))),
+    E.mapLeft(() => ({ tag: "NoPathError" } as NoPathError)),
+    E.map((b) => b.paths)
+  )
 
 const castArray = <A>(a: A | A[]) => (Array.isArray(a) ? a : A.of(a))
 const isValidURL = (path: string) => {
@@ -74,7 +81,7 @@ const revalidatePaths = (res: NextApiResponse) =>
     )
   )
 
-const handler = api((req, res) =>
+const handler = ((req, res) =>
   pipe(
     E.of(req),
     E.chainW(ensureTokenMatch),
@@ -83,8 +90,9 @@ const handler = api((req, res) =>
     E.chainW(ensureValidPaths),
     TE.fromEither,
     TE.map(revalidatePaths(res)),
-    TE.map(TE.sequenceArray),
-    TE.flattenW,
+    TE.chainW(TE.sequenceArray),
+    TE.chainFirstIOK(C.log),
+    TE.orElseFirstIOK(C.error),
     TE.match(
       (e) =>
         match(e)
@@ -99,7 +107,6 @@ const handler = api((req, res) =>
           .exhaustive(),
       () => res.json({ revalidated: true })
     )
-  )()
-)
+  )()) satisfies NextApiHandler
 
 export default handler

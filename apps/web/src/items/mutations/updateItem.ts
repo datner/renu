@@ -8,7 +8,6 @@ import { getBlurDataUrl } from "src/core/helpers/plaiceholder"
 import { ModifierSchema, OptionsSchemaArray, UpdateItem } from "../validations"
 import { NotFoundError } from "blitz"
 import { setDefaultVenue } from "src/auth/helpers/setDefaultVenue"
-import { revalidateVenue } from "src/core/helpers/revalidation"
 
 export default resolver.pipe(
   resolver.zod(UpdateItem),
@@ -115,7 +114,6 @@ export default resolver.pipe(
         } satisfies Prisma.ItemModifierUncheckedUpdateManyWithoutItemNestedInput,
       },
     })
-    await revalidateVenue(venue.identifier)()
     return item
   }
 )

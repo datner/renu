@@ -10,7 +10,12 @@ export function VenueSettings() {
   const form = useZodForm({
     schema: Settings,
   })
-  const [updateSettings] = useMutation(updateAddress)
+
+  const [updateSettings] = useMutation(updateAddress, {
+    onSuccess() {
+      fetch("/api/revalidate-current")
+    },
+  })
 
   const handleSubmit = form.handleSubmit(async (data) => {
     await updateSettings(data)

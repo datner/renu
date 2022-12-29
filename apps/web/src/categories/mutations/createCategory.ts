@@ -1,7 +1,6 @@
 import { resolver } from "@blitzjs/rpc"
 import { setDefaultOrganizationIdNoFilter } from "src/auth/helpers/setDefaultOrganizationId"
 import { setDefaultVenue } from "src/auth/helpers/setDefaultVenue"
-import { revalidateVenue } from "src/core/helpers/revalidation"
 import db from "db"
 import { CreateCategory } from "../validations"
 
@@ -21,8 +20,6 @@ export default resolver.pipe(
         content: true,
       },
     })
-
-    await revalidateVenue(venue.identifier)()
 
     return item
   }

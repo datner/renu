@@ -1,8 +1,7 @@
 // @ts-check
-const { withBlitz } = require("@blitzjs/next")
-const { withPlaiceholder } = require("@plaiceholder/next")
-const { Locale } = require("@prisma/client")
-const { pipe } = require("fp-ts/function")
+import { withBlitz } from "@blitzjs/next"
+import { withPlaiceholder } from "@plaiceholder/next"
+import { Locale } from "@prisma/client"
 
 /**
  * @type {import('@blitzjs/next').BlitzConfig}
@@ -50,4 +49,4 @@ const config = {
   },
 }
 
-module.exports = pipe(config, withBlitz, withPlaiceholder)
+export default withPlaiceholder(withBlitz(config))

@@ -4,6 +4,21 @@
     "build": {
       "dependsOn": ["^db:generate", "^build"],
       "outputs": ["dist/**", ".next/**"],
+      "inputs": [
+        "src/**/*.ts",
+        "src/**/*.tsx",
+        "src/**/*.js",
+        "src/**/*.jsx",
+        "pages/**/*.ts",
+        "pages/**/*.tsx",
+        "db/**/*.ts",
+        "integrations/**/*.ts",
+        "mailers/**/*.ts",
+        "*.config.js",
+        "*.config.mjs",
+        "package.json",
+        "tsconfig.json"
+      ],
       "env": [
         "NODE_ENV",
         "DATABASE_URL",
@@ -21,6 +36,9 @@
         "PAY_PLUS_API_URL",
         "REVALIDATION_SECRET_TOKEN"
       ]
+    },
+    "start": {
+      "dependsOn": ["build"]
     },
     "lint": {
       "outputs": []

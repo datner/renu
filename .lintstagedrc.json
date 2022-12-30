@@ -1,4 +1,3 @@
 {
-  "*.{js,ts,tsx}": ["next lint --fix"],
   "*.json": ["pretty-quick --format"]
 }

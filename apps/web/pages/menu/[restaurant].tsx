@@ -2,10 +2,9 @@ import { gSP } from "src/blitz-server"
 import { GetStaticPaths, GetStaticPropsContext, InferGetStaticPropsType } from "next"
 import clsx from "clsx"
 import db, { Locale, Prisma } from "db"
-import { Suspense, useState } from "react"
+import { Fragment, useState } from "react"
 import { useLocale } from "src/core/hooks/useLocale"
 import { contentOption, titleFor } from "src/core/helpers/content"
-import { ListItem } from "src/menu/components/ListItem"
 import { CategoryHeader } from "src/menu/components/CategoryHeader"
 import { useNavBar } from "src/menu/hooks/useNavBar"
 import { fromNullable, getEq, some, matchW } from "fp-ts/Option"
@@ -22,12 +21,17 @@ import { useAtom } from "jotai"
 import { itemAtom, itemModalOpenAtom } from "src/menu/jotai/item"
 import { ModifierConfig } from "db/itemModifierConfig"
 import { Closed } from "src/menu/components/Closed"
+import { ListItemNoDrag } from "src/menu/components/ListItemNoDrag"
 
 const LazyViewOrderButton = dynamic(() => import("src/menu/components/ViewOrderButton"), {
   suspense: true,
 })
-const LazyItemModal = dynamic(() => import("src/menu/components/ItemModal"), { suspense: true })
-const LazyOrderModal = dynamic(() => import("src/menu/components/OrderModal"), { suspense: true })
+const LazyItemModal = dynamic(() => import("src/menu/components/ItemModal"), {
+  loading: () => <Fragment />,
+})
+const LazyOrderModal = dynamic(() => import("src/menu/components/OrderModal"), {
+  loading: () => <Fragment />,
+})
 
 const eqOptionStr = getEq(eqStr)
 
@@ -104,7 +108,7 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
               <CategoryHeader ref={navbar.setSection} category={category} />
               <ul role="list" className="flex flex-col gap-2 group-last:min-h-screen">
                 {category.items?.map((item) => (
-                  <ListItem
+                  <ListItemNoDrag
                     key={item.id}
                     atom={orderAtomFamily(item)}
                     onClick={() => handleShowOrderModal(item)}
@@ -114,17 +118,13 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
             </div>
           ))}
         </div>
-        <Suspense fallback={<></>}>
-          <LazyViewOrderButton
-            onClick={() => {
-              setReviewOrder(true)
-            }}
-          />
-        </Suspense>
-        <Suspense fallback={<></>}>
-          <LazyOrderModal open={reviewOrder} onClose={() => setReviewOrder(false)} />
-        </Suspense>
-        <Suspense fallback={<></>}>{itemModal(item)}</Suspense>
+        <LazyViewOrderButton
+          onClick={() => {
+            setReviewOrder(true)
+          }}
+        />
+        <LazyOrderModal open={reviewOrder} onClose={() => setReviewOrder(false)} />
+        {itemModal(item)}
         {restaurant.simpleContactInfo && (
           <div className="mt-4 text-center">{restaurant.simpleContactInfo}</div>
         )}
@@ -239,6 +239,5 @@ export const getStaticProps = gSP(async (context: GetStaticPropsContext) => {
       restaurant: typedRestaurant,
       messages: (await import(`src/core/messages/${context.locale}.json`)).default,
     },
-    revalidate: 60,
   }
 })

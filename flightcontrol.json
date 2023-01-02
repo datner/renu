@@ -1,0 +1,45 @@
+{
+  "environments": [
+    {
+      "id": "production",
+      "name": "Production",
+      "region": "eu-central-1",
+      "source": {
+        "branch": "main"
+      },
+      "services": [
+        {
+          "id": "renu",
+          "name": "Renu",
+          "type": "fargate",
+          "cpu": 0.5,
+          "memory": 1,
+          "domain": "renu.menu",
+          "minInstances": 2,
+          "maxInstances": 4,
+          "buildCommand": "pnpm build --filter web",
+          "startCommand": "pnpm start --filter web",
+          "watchPaths": ["apps/web/**", "packages/database/**", "packages/ui/**"],
+          "enableCloudfrontSwr": true,
+          "envVariables": {
+            "APP_ENV": "production"
+          }
+        },
+        {
+          "id": "db",
+          "name": "Database",
+          "type": "rds",
+          "engine": "postgres",
+          "storage": 20,
+          "maxStorage": 100,
+          "engineVersion": "13",
+          "instanceSize": "db.t4g.micro",
+          "autoUpgradeMinorVersions": true,
+          "storage": 20,
+          "private": false,
+          "connectionStringEnvVarName": "DATABASE_URL"
+        }
+      ]
+    }
+  ]
+}

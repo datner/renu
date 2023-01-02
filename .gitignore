@@ -44,3 +44,5 @@ logs
 
 # turbo
 .turbo
+
+packages/tsconfig/.tsbuildinfo

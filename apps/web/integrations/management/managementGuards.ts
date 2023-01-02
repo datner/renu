@@ -1,4 +1,4 @@
-import { ManagementIntegration, ManagementProvider } from "@prisma/client"
+import { ManagementIntegration, ManagementProvider } from "database"
 import { managementMismatchError, ManagementMismatchError } from "./managementErrors"
 import * as E from "fp-ts/Either"
 

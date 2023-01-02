@@ -8,7 +8,7 @@ import {
   ClearingProvider,
 } from "integrations/clearing/clearingProvider"
 import { ensureClearingMatch } from "integrations/clearing/clearingGuards"
-import { ClearingIntegration, ClearingProvider as CP, Order } from "@prisma/client"
+import { ClearingIntegration, ClearingProvider as CP, Order } from "database"
 import { ensureType, ZodParseError } from "src/core/helpers/zod"
 import { request, RequestOptions } from "integrations/http/httpClient"
 import { TransactionFailedError } from "integrations/clearing/clearingErrors"

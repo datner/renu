@@ -1,5 +1,5 @@
 import { resolver } from "@blitzjs/rpc"
-import { GlobalRole } from "@prisma/client"
+import { GlobalRole } from "database"
 import { Settings } from "src/admin/validations/settings"
 import { setDefaultVenue } from "src/auth/helpers/setDefaultVenue"
 import db from "db"

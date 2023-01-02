@@ -8,7 +8,7 @@ import * as RTE from "fp-ts/ReaderTaskEither"
 import { request } from "integrations/http/httpClient"
 import { breakerError, BreakerError } from "integrations/http/httpErrors"
 import { now } from "fp-ts/Date"
-import { ManagementProvider, ClearingProvider } from "@prisma/client"
+import { ManagementProvider, ClearingProvider } from "database"
 
 export type BreakerOptions = {
   maxBreakerRetries: number

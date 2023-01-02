@@ -1,5 +1,5 @@
 import { resolver } from "@blitzjs/rpc"
-import { OrderState, Prisma } from "@prisma/client"
+import { OrderState, Prisma } from "database"
 import * as TE from "fp-ts/TaskEither"
 import * as RTE from "fp-ts/ReaderTaskEither"
 import { pipe } from "fp-ts/function"

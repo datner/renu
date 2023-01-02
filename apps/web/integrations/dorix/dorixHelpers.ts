@@ -1,4 +1,4 @@
-import { Order, OrderItem, OrderItemModifier, Prisma } from "@prisma/client"
+import { Order, OrderItem, OrderItemModifier, Prisma } from "database"
 import { addMinutes, formatISO } from "date-fns/fp"
 import { now } from "fp-ts/Date"
 import * as A from "fp-ts/Array"

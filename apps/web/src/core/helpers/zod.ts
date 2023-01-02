@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client"
+import { Prisma } from "database"
 import * as E from "fp-ts/Either"
 import { z } from "zod"
 

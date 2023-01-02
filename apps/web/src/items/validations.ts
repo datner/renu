@@ -1,4 +1,4 @@
-import { ItemModifier, Locale, ManagementProvider, Prisma } from "@prisma/client"
+import { ItemModifier, Locale, ManagementProvider, Prisma } from "database"
 import { Slug } from "src/auth/validations"
 import { z } from "zod"
 import { ensureType, Id } from "src/core/helpers/zod"

@@ -1,5 +1,5 @@
 import { useLocale } from "src/core/hooks/useLocale"
-import { Locale } from "@prisma/client"
+import { Locale } from "database"
 import { useIsomorphicLayoutEffect } from "src/core/hooks/useIsomorphicLayoutEffect"
 import { MantineProvider as MantineProvider_ } from "@mantine/core"
 import { getEmotionCache } from "src/core/helpers/rtl-cache"

@@ -1,7 +1,7 @@
 import { BlitzPage, useAuthenticatedSession } from "@blitzjs/auth"
 import { useQuery } from "@blitzjs/rpc"
 import { Routes } from "@blitzjs/next"
-import { Order, OrderState, Prisma } from "@prisma/client"
+import { Order, OrderState, Prisma } from "database"
 import getVenueOrders from "src/venues/queries/current/getVenueOrders"
 import { Suspense } from "react"
 

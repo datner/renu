@@ -1,11 +1,5 @@
 import * as RTE from "fp-ts/ReaderTaskEither"
-import {
-  ManagementIntegration,
-  Order,
-  OrderItem,
-  OrderItemModifier,
-  OrderState,
-} from "@prisma/client"
+import { ManagementIntegration, Order, OrderItem, OrderItemModifier, OrderState } from "database"
 import { HttpCacheEnv, HttpClientEnv } from "integrations/http/httpClient"
 import { ManagementError, ReportOrderFailedError } from "./managementErrors"
 import { GenericError } from "integrations/helpers"

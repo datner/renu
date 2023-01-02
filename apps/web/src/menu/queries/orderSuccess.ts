@@ -1,7 +1,7 @@
 import { resolver } from "@blitzjs/rpc"
 import { z } from "zod"
 import { pipe } from "fp-ts/function"
-import { Order } from "@prisma/client"
+import { Order } from "database"
 import * as E from "fp-ts/Either"
 import * as TE from "fp-ts/TaskEither"
 import { Id } from "src/core/helpers/zod"

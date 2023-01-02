@@ -1,6 +1,6 @@
 import { generateToken, hash256, SecurePassword } from "@blitzjs/auth"
 import { resolver } from "@blitzjs/rpc"
-import { GlobalRole, MembershipRole } from "@prisma/client"
+import { GlobalRole, MembershipRole } from "database"
 import { nanoid } from "nanoid"
 import { InviteMemberSchema } from "../validations"
 import { addHours } from "date-fns/fp"

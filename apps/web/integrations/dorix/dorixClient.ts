@@ -11,7 +11,7 @@ import {
 } from "integrations/management/managementClient"
 import { ensureType } from "src/core/helpers/zod"
 import { DorixVendorData } from "./types"
-import { ManagementProvider, OrderState } from "@prisma/client"
+import { ManagementProvider, OrderState } from "database"
 import { ReportOrderFailedError } from "integrations/management/managementErrors"
 import { ensureManagementMatch } from "integrations/management/managementGuards"
 import { MenuResponse, OrderResponse, StatusResponse, toOrder } from "./dorixHelpers"

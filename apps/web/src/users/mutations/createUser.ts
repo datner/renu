@@ -1,6 +1,6 @@
 import { SecurePassword } from "@blitzjs/auth"
 import { resolver } from "@blitzjs/rpc"
-import { GlobalRole } from "@prisma/client"
+import { GlobalRole } from "database"
 import { CreateClientSchema } from "../validations"
 import db from "db"
 

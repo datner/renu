@@ -2,7 +2,7 @@ import * as Eq from "fp-ts/Eq"
 import * as N from "fp-ts/number"
 import * as S from "fp-ts/string"
 import * as D from "fp-ts/Date"
-import { Item, Prisma } from "@prisma/client"
+import { Item, Prisma } from "database"
 
 const eqDateOrNull: Eq.Eq<Date | null> = {
   equals: (a, b) => (a !== null && b !== null && D.Eq.equals(a, b)) || a === b,

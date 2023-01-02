@@ -1,4 +1,4 @@
-import { ManagementProvider, Order, OrderState } from "@prisma/client"
+import { ManagementProvider, Order, OrderState } from "database"
 import * as RTE from "fp-ts/ReaderTaskEither"
 import { FullOrderWithItems } from "integrations/clearing/clearingProvider"
 import { dorixClient } from "integrations/dorix/dorixClient"

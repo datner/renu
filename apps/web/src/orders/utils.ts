@@ -4,7 +4,7 @@ import * as A from "fp-ts/Array"
 import * as R from "fp-ts/ReadonlyArray"
 import * as L from "monocle-ts/Lens"
 import * as T from "monocle-ts/Traversal"
-import { Order, OrderItem } from "@prisma/client"
+import { Order, OrderItem } from "database"
 
 export namespace OrderUtils {
   export const items = pipe(

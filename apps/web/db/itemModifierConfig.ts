@@ -1,4 +1,4 @@
-import { Locale } from "@prisma/client"
+import { Locale } from "database"
 import * as O from "fp-ts/Option"
 import { isNonEmpty, filter } from "fp-ts/Array"
 import * as A from "fp-ts/Array"

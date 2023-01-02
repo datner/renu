@@ -1,4 +1,4 @@
-import { Locale } from "@prisma/client"
+import { Locale } from "database"
 import { pipe } from "fp-ts/function"
 import * as A from "fp-ts/Array"
 import * as N from "fp-ts/number"

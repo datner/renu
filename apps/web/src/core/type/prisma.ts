@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client"
+import { Prisma } from "database"
 
 export type PrismaNotFoundError = {
   tag: "prismaNotFoundError"

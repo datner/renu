@@ -1,4 +1,4 @@
-import { Prisma, PrismaClient, PrismaPromise } from "@prisma/client"
+import { Prisma, PrismaClient, PrismaPromise } from "database"
 import { PrismaNotFoundError, PrismaValidationError } from "src/core/type/prisma"
 import db from "db"
 import * as TE from "fp-ts/TaskEither"

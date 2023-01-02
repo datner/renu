@@ -15,7 +15,7 @@ import * as O from "fp-ts/Option"
 import * as L from "monocle-ts/Lens"
 import * as T from "monocle-ts/Traversal"
 import * as I from "monocle-ts/Iso"
-import { Locale } from "@prisma/client"
+import { Locale } from "database"
 
 export const baseToOneOfOption = I.iso<BaseOption, OneOfOption>(
   (b) => Object.assign(b, { default: false }),

@@ -1,5 +1,5 @@
 import { AuthenticatedMiddlewareCtx } from "blitz"
-import { Venue } from "@prisma/client"
+import { Venue } from "database"
 
 export function setDefaultVenue<T extends object, V extends Venue = Venue>(
   input: T,

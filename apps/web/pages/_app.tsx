@@ -4,7 +4,7 @@ import { AppProps, ErrorBoundary, ErrorComponent, ErrorFallbackProps } from "@bl
 import { LoginForm } from "src/auth/components/LoginForm"
 import { NextIntlProvider } from "next-intl"
 import { useLocale } from "src/core/hooks/useLocale"
-import { Locale } from "@prisma/client"
+import { Locale } from "database"
 import { useIsomorphicLayoutEffect } from "src/core/hooks/useIsomorphicLayoutEffect"
 import { AuthenticationError, AuthorizationError } from "blitz"
 import { MantineProvider } from "src/core/components/MantineProvider"

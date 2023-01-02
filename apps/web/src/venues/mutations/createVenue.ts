@@ -1,5 +1,5 @@
 import { resolver } from "@blitzjs/rpc"
-import { GlobalRole, Locale, MembershipRole } from "@prisma/client"
+import { GlobalRole, Locale, MembershipRole } from "database"
 import { CreateVenueSchema } from "../validations"
 import db from "db"
 

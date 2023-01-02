@@ -17,7 +17,7 @@ import {
   AutocompleteProps,
 } from "@mantine/core"
 import getOrgUsers from "src/users/queries/getOrgUsers"
-import { Prisma } from "@prisma/client"
+import { Prisma } from "database"
 import * as S from "fp-ts/string"
 import * as Eq from "fp-ts/Eq"
 import * as O from "fp-ts/Option"

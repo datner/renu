@@ -1,5 +1,5 @@
 import { useRouter } from "next/router"
-import { Locale } from "@prisma/client"
+import { Locale } from "database"
 import { useMemo } from "react"
 import { z } from "zod"
 

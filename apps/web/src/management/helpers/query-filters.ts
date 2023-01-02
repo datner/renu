@@ -1,4 +1,4 @@
-import { Prisma } from "@prisma/client"
+import { Prisma } from "database"
 import { QueryFilter } from "src/core/helpers/prisma"
 
 export const { ofVenue } = {

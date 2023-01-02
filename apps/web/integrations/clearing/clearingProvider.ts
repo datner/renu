@@ -1,4 +1,4 @@
-import { ClearingIntegration, Order, Prisma } from "@prisma/client"
+import { ClearingIntegration, Order, Prisma } from "database"
 import * as RTE from "fp-ts/ReaderTaskEither"
 import { GenericError } from "integrations/helpers"
 import { CircuitBreakerEnv } from "integrations/http/circuitBreaker"

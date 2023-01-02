@@ -1,5 +1,5 @@
 import { useQuery } from "@blitzjs/rpc"
-import { Category, Prisma } from "@prisma/client"
+import { Category, Prisma } from "database"
 import { useLocale } from "src/core/hooks/useLocale"
 import { titleFor } from "src/core/helpers/content"
 import { useController } from "react-hook-form"

@@ -1,4 +1,4 @@
-import { Locale } from "@prisma/client"
+import { Locale } from "database"
 import { useRouter } from "next/router"
 import { z } from "zod"
 

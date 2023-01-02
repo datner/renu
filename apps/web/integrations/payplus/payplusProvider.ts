@@ -10,7 +10,7 @@ import {
   ClearingIntegrationEnv,
 } from "integrations/clearing/clearingProvider"
 import { ensureClearingMatch } from "integrations/clearing/clearingGuards"
-import { ClearingIntegration, ClearingProvider as CP, Order } from "@prisma/client"
+import { ClearingIntegration, ClearingProvider as CP, Order } from "database"
 import { ensureType } from "src/core/helpers/zod"
 import {
   Authorization,

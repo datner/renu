@@ -1,4 +1,4 @@
-import { ClearingIntegration, ClearingProvider } from "@prisma/client"
+import { ClearingIntegration, ClearingProvider } from "database"
 import * as E from "fp-ts/Either"
 import { ClearingMismatchError } from "./clearingErrors"
 

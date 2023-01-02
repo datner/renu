@@ -14,7 +14,7 @@ import {
   Alert,
   Code,
 } from "@mantine/core"
-import { Prisma } from "@prisma/client"
+import { Prisma } from "database"
 import * as O from "fp-ts/Option"
 import * as A from "fp-ts/Array"
 import { pipe } from "fp-ts/function"

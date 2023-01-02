@@ -7,7 +7,6 @@ import * as E from "fp-ts/Either"
 import * as TE from "fp-ts/TaskEither"
 import { getMembership } from "../helpers/getMembership"
 import { Login } from "../validations"
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime"
 import { hashPassword, verifyPassword } from "../helpers/fp/securePassword"
 import { findFirstUser, updateUser } from "src/users/helpers/prisma"
 
@@ -25,7 +24,7 @@ export const authenticateUser =
     pipe(
       findFirstUser(args),
       TE.mapLeft((e) =>
-        e.error instanceof PrismaClientKnownRequestError && e.error.code === "P2025"
+        e.error instanceof Prisma.PrismaClientKnownRequestError && e.error.code === "P2025"
           ? ({
               tag: "AuthenticationError" as const,
               error: new AuthenticationError(),

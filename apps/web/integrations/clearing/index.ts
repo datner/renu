@@ -1,4 +1,4 @@
-import { ClearingProvider, Order } from "@prisma/client"
+import { ClearingProvider, Order } from "database"
 import * as RTE from "fp-ts/ReaderTaskEither"
 import { creditGuardProvider } from "integrations/creditGuard/creditGuardProvider"
 import { payplusProvider } from "integrations/payplus/payplusProvider"

@@ -1,4 +1,5 @@
 {
+  "$schema": "https://app.flightcontrol.dev/schema.json",
   "environments": [
     {
       "id": "production",
@@ -11,22 +12,25 @@
         {
           "id": "renu",
           "name": "Renu",
+          "buildType": "nixpacks",
           "type": "fargate",
           "cpu": 0.5,
           "memory": 1,
           "domain": "renu.menu",
           "minInstances": 2,
           "maxInstances": 4,
+          "installCommand": "pnpm i --filter ...web",
           "buildCommand": "pnpm build --filter web",
           "startCommand": "pnpm start --filter web",
           "watchPaths": ["apps/web/**", "packages/database/**", "packages/ui/**"],
           "enableCloudfrontSwr": true,
+          "healthCheckPath": "/",
           "envVariables": {
             "APP_ENV": "production"
           }
         },
         {
-          "id": "db",
+          "id": "database",
           "name": "Database",
           "type": "rds",
           "engine": "postgres",
@@ -35,7 +39,6 @@
           "engineVersion": "13",
           "instanceSize": "db.t4g.micro",
           "autoUpgradeMinorVersions": true,
-          "storage": 20,
           "private": false,
           "connectionStringEnvVarName": "DATABASE_URL"
         }

@@ -1,7 +1,6 @@
-// @ts-check
 import { withBlitz } from "@blitzjs/next"
 import { withPlaiceholder } from "@plaiceholder/next"
-import { Locale } from "@prisma/client"
+import { Locale } from "database"
 
 /**
  * @type {import('@blitzjs/next').BlitzConfig}

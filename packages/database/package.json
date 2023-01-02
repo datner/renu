@@ -1,7 +1,8 @@
 {
   "name": "database",
-  "main": "./index.ts",
-  "types": "./index.ts",
+  "main": "./index.mjs",
+  "types": "./index.d.ts",
+  "type": "module",
   "scripts": {
     "db:generate": "prisma generate",
     "db:push": "prisma db push --skip-generate"

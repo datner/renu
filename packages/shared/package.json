@@ -1,0 +1,8 @@
+{
+  "main": "./index.ts",
+  "type": "./index.ts",
+  "name": "shared",
+  "dependencies": {
+    "@fp-ts/data": "0.0.34"
+  }
+}

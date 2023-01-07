@@ -1,0 +1,14 @@
+{
+  "name": "database-helpers",
+  "main": "./index.ts",
+  "types": "./index.ts",
+  "type": "module",
+  "dependencies": {
+    "@fp-ts/data": "0.0.34",
+    "@fp-ts/schema": "0.0.7",
+    "database": "workspace:*"
+  },
+  "devDependencies": {
+    "tsconfig": "workspace:*"
+  }
+}

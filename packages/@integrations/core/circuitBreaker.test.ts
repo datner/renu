@@ -1,11 +1,10 @@
 import { describe, assert, it, beforeEach } from "vitest"
 import * as Clock from "@effect/io/Clock"
 import * as Ref from "@effect/io/Ref"
-import * as Cause from "@effect/io/Cause"
 import * as Layer from "@effect/io/Layer"
 import * as Effect from "@effect/io/Effect"
 import * as Schedule from "@effect/io/Schedule"
-import { pipe } from "@fp-ts/data/Function"
+import { constTrue, pipe } from "@fp-ts/data/Function"
 import * as E from "@fp-ts/data/Either"
 import * as Duration from "@fp-ts/data/Duration"
 import { CircuitBreaker as C, Common } from "."
@@ -50,7 +49,7 @@ describe("circuitBreaker", () => {
       const result = yield* $(
         pipe(
           Effect.succeed("success"),
-          C.breaker(Cause.isFailure),
+          C.breaker(constTrue),
           Effect.provideLayer(ctx.layer(state)),
           Effect.either
         )
@@ -67,7 +66,7 @@ describe("circuitBreaker", () => {
       const result = yield* $(
         pipe(
           Effect.succeed("success"),
-          C.breaker(Cause.isFailure),
+          C.breaker(constTrue),
           Effect.provideLayer(ctx.layer(state)),
           Effect.catchTag("BreakerError", () => Effect.fail("fail")),
           Effect.either
@@ -85,7 +84,7 @@ describe("circuitBreaker", () => {
       const result = yield* $(
         pipe(
           Effect.fail({ _tag: "fail", error: "test" } as const),
-          C.breaker(Cause.isFailure),
+          C.breaker(constTrue),
           Effect.provideLayer(ctx.layer(state)),
           Effect.catchTag("fail", () => Effect.fail("fail")),
           Effect.either
@@ -105,7 +104,7 @@ describe("circuitBreaker", () => {
         const roundA = yield* $(
           pipe(
             Effect.succeed("success"),
-            C.breaker(Cause.isFailure),
+            C.breaker(constTrue),
             Effect.provideLayer(ctx.layer(state)),
             Effect.catchTag("BreakerError", () => Effect.fail("fail")),
             Effect.either
@@ -118,7 +117,7 @@ describe("circuitBreaker", () => {
         const roundB = yield* $(
           pipe(
             Effect.succeed("success"),
-            C.breaker(Cause.isFailure),
+            C.breaker(constTrue),
             Effect.provideLayer(ctx.layer(state)),
             Effect.either
           )
@@ -128,7 +127,7 @@ describe("circuitBreaker", () => {
         const roundC = yield* $(
           pipe(
             Effect.fail({ _tag: "fail", error: "test" } as const),
-            C.breaker(Cause.isFailure),
+            C.breaker(constTrue),
             Effect.provideLayer(ctx.layer(state)),
             Effect.catchTag("fail", () => Effect.fail("fail")),
             Effect.either
@@ -147,7 +146,7 @@ describe("circuitBreaker", () => {
         const roundA = yield* $(
           pipe(
             Effect.succeed("success"),
-            C.breaker(Cause.isFailure),
+            C.breaker(constTrue),
             Effect.provideLayer(ctx.layer(state)),
             Effect.catchTag("BreakerError", () => Effect.fail("open")),
             Effect.either
@@ -160,7 +159,7 @@ describe("circuitBreaker", () => {
         const roundB = yield* $(
           pipe(
             Effect.fail({ _tag: "fail", error: "error" } as const),
-            C.breaker(Cause.isFailure),
+            C.breaker(constTrue),
             Effect.provideLayer(ctx.layer(state)),
             Effect.catchTag("fail", () => Effect.fail("fail")),
             Effect.either
@@ -171,7 +170,7 @@ describe("circuitBreaker", () => {
         const roundC = yield* $(
           pipe(
             Effect.succeed("success"),
-            C.breaker(Cause.isFailure),
+            C.breaker(constTrue),
             Effect.provideLayer(ctx.layer(state)),
             Effect.catchTag("BreakerError", () => Effect.fail("breaker")),
             Effect.either

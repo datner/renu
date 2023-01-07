@@ -1,4 +1,3 @@
-import * as Cause from "@effect/io/Cause"
 import * as Schedule from "@effect/io/Schedule"
 import * as Ref from "@effect/io/Ref"
 import * as Effect from "@effect/io/Effect"
@@ -9,6 +8,7 @@ import * as Context from "@fp-ts/data/Context"
 import * as Predicate from "@fp-ts/data/Predicate"
 import { taggedError, InferError } from "shared/errors"
 import * as B from "@fp-ts/data/Boolean"
+import * as O from "@fp-ts/data/Option"
 import { TaggedError } from "shared/errors"
 import { Common } from "."
 
@@ -54,14 +54,9 @@ export const matchBreakerW: <A, B, C>(
   onOpen: (s: BreakerOpen) => C
 ) => (breakerState: BreakerState) => A | B | C = matchImpl
 
-export const foldBreaker: <R, E, A>(
-  onClosed: (s: BreakerClosed) => Effect.Effect<R, E, A>,
-  onOpen: (s: BreakerOpen) => Effect.Effect<R, E, A>
-) => (breakerState: BreakerState) => Effect.Effect<R, E, A> = matchImpl
-
-export const foldBreakerW: <R1, E1, A, R2, E2, B>(
+export const foldBreaker: <R1, E1, A, R2, E2, B>(
   onClosed: (s: BreakerClosed) => Effect.Effect<R1, E1, A>,
-  onOpen: (s: BreakerOpen) => Effect.Effect<R1, E2, B>
+  onOpen: (s: BreakerOpen) => Effect.Effect<R2, E2, B>
 ) => (breakerState: BreakerState) => Effect.Effect<R1 | R2, E1 | E2, A | B> = matchImpl
 
 export const open = (fromNow: Duration.Duration): BreakerState => ({
@@ -98,7 +93,7 @@ export const Layers = {
 }
 
 export const breaker =
-  <E extends TaggedError>(pred: Predicate.Predicate<Cause.Cause<E>>) =>
+  <E extends TaggedError>(isRetryable: Predicate.Predicate<E>) =>
   <R, A>(effect: Effect.Effect<R, E, A>) =>
     Effect.gen(function* ($) {
       const config = yield* $(Effect.service(BreakerConfigService))
@@ -106,14 +101,22 @@ export const breaker =
       const { retry } = yield* $(Effect.service(Common.ScheduleService))
       const { state } = yield* $(Effect.service(BreakerStateService))
 
-      const fail = pipe(
-        state,
-        Ref.update(
-          onClosed((s) =>
-            s.failCount < config.maxFailure ? closed(s.failCount + 1) : open(config.cooldown)
+      const failOnPred = (e: E) =>
+        pipe(
+          e,
+          O.liftPredicate(isRetryable),
+          O.as(
+            pipe(
+              state,
+              Ref.update(
+                onClosed((s) =>
+                  s.failCount < config.maxFailure ? closed(s.failCount + 1) : open(config.cooldown)
+                )
+              ),
+              Effect.flatMap(() => Effect.fail(e))
+            )
           )
         )
-      )
 
       return yield* $(
         pipe(
@@ -131,12 +134,8 @@ export const breaker =
             )
           ),
           Effect.flatMap(
-            foldBreaker<R, E | BreakerError, A>(
-              () =>
-                pipe(
-                  effect,
-                  Effect.onError((e) => (pred(e) ? fail : Effect.never()))
-                ),
+            foldBreaker(
+              () => pipe(effect, Effect.catchSome(failOnPred)),
               () => Effect.fail(breakerError(new Error(`Breaker ${name} is open`)))
             )
           ),

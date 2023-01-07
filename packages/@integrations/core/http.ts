@@ -3,6 +3,7 @@ import * as Effect from "@effect/io/Effect"
 import * as Context from "@fp-ts/data/Context"
 import { taggedError, InferError } from "shared/errors"
 import { TaggedError } from "shared/errors"
+import { Json } from "@fp-ts/data/Json"
 
 interface HttpConfigService {
   baseUrl: string
@@ -46,6 +47,9 @@ export const HttpFetchService = HttpConfigWith(
       }, httpRequestError),
   })
 )
+
+export const toJson = (res: Response) =>
+  Effect.tryCatchPromise(() => res.json() as Promise<Json>, taggedError("JsonParseError"))
 
 export const Layers = {
   HttpFetchService: Layer.fromEffect(HttpService)(HttpFetchService),

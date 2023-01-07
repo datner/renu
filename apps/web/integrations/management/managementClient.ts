@@ -9,8 +9,6 @@ import { ManagementMenu } from "./types"
 import { FullOrderWithItems } from "integrations/clearing/clearingProvider"
 import { CircuitBreakerEnv } from "integrations/http/circuitBreaker"
 
-export type FullOrder = Order & { items: (OrderItem & { modifiers: OrderItemModifier[] })[] }
-
 type Env = HttpClientEnv & HttpCacheEnv & CircuitBreakerEnv & ManagementIntegrationEnv
 
 export interface ManagementClient {

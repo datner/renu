@@ -238,11 +238,38 @@ importers:
     specifiers:
       "@effect/io": 0.0.50
       "@fp-ts/data": 0.0.34
+      "@fp-ts/schema": 0.0.7
+      database: workspace:*
       shared: workspace:*
       vitest: 0.26.3
     dependencies:
       "@effect/io": 0.0.50
       "@fp-ts/data": 0.0.34
+      "@fp-ts/schema": 0.0.7
+      shared: link:../../shared
+    devDependencies:
+      database: link:../../database
+      vitest: 0.26.3
+
+  packages/@integrations/dorix:
+    specifiers:
+      "@effect/io": 0.0.50
+      "@fp-ts/data": 0.0.34
+      "@fp-ts/optic": 0.0.6
+      "@fp-ts/schema": 0.0.7
+      "@integrations/core": workspace:*
+      database: workspace:*
+      database-helpers: workspace:*
+      shared: workspace:*
+      vitest: 0.26.3
+    dependencies:
+      "@effect/io": 0.0.50
+      "@fp-ts/data": 0.0.34
+      "@fp-ts/optic": 0.0.6
+      "@fp-ts/schema": 0.0.7
+      "@integrations/core": link:../core
+      database: link:../../database
+      database-helpers: link:../../database-helpers
       shared: link:../../shared
     devDependencies:
       vitest: 0.26.3
@@ -251,12 +278,14 @@ importers:
     specifiers:
       "@effect/io": 0.0.50
       "@fp-ts/data": 0.0.34
+      "@fp-ts/schema": 0.0.7
       "@integrations/core": workspace:*
       shared: workspace:*
       vitest: 0.26.3
     dependencies:
       "@effect/io": 0.0.50
       "@fp-ts/data": 0.0.34
+      "@fp-ts/schema": 0.0.7
       "@integrations/core": link:../core
       shared: link:../../shared
     devDependencies:
@@ -271,6 +300,19 @@ importers:
       "@prisma/client": 4.8.0_prisma@4.8.0
     devDependencies:
       prisma: 4.8.0
+      tsconfig: link:../tsconfig
+
+  packages/database-helpers:
+    specifiers:
+      "@fp-ts/data": 0.0.34
+      "@fp-ts/schema": 0.0.7
+      database: workspace:*
+      tsconfig: workspace:*
+    dependencies:
+      "@fp-ts/data": 0.0.34
+      "@fp-ts/schema": 0.0.7
+      database: link:../database
+    devDependencies:
       tsconfig: link:../tsconfig
 
   packages/eslint-config-custom:
@@ -293,8 +335,10 @@ importers:
   packages/shared:
     specifiers:
       "@fp-ts/data": 0.0.34
+      database: workspace:*
     dependencies:
       "@fp-ts/data": 0.0.34
+      database: link:../database
 
   packages/tsconfig:
     specifiers: {}
@@ -4020,6 +4064,27 @@ packages:
       }
     dependencies:
       "@fp-ts/core": 0.0.11
+    dev: false
+
+  /@fp-ts/optic/0.0.6:
+    resolution:
+      {
+        integrity: sha512-cVK2zfGnLg1ieaRaO2AdjYAYo8XYhvuMN+dt/76tAaNKFgzX9Hn8I7pXBeZidaHkeyqPn1QM64eyvII1roToxA==,
+      }
+    dependencies:
+      "@fp-ts/core": 0.0.11
+      "@fp-ts/data": 0.0.34
+    dev: false
+
+  /@fp-ts/schema/0.0.7:
+    resolution:
+      {
+        integrity: sha512-9QUldRcc5Ii+69neOw00cDaR5jjK5CAMvbfUhh9mU3FmBEZEY2/23IMSfMmKUQs65qIofRbS9MIJRfa1rosQ2g==,
+      }
+    dependencies:
+      "@fp-ts/core": 0.0.11
+      "@fp-ts/data": 0.0.34
+      fast-check: 3.5.0
     dev: false
 
   /@headlessui/react/1.7.7_biqbaboplfbrettd7655fr4n2y:
@@ -9088,6 +9153,16 @@ packages:
       - supports-color
     dev: false
 
+  /fast-check/3.5.0:
+    resolution:
+      {
+        integrity: sha512-5Yk9kfPy1DR8+9nl+wgRbXGM+p7e25nDRuZ/4b3TjIaWu53p/KkwS4uyKFc+Ek2Ft5nF40KRCbPYGrWYp0SjPw==,
+      }
+    engines: { node: ">=8.0.0" }
+    dependencies:
+      pure-rand: 5.0.5
+    dev: false
+
   /fast-deep-equal/3.1.3:
     resolution:
       {
@@ -13548,6 +13623,13 @@ packages:
         integrity: sha512-XRsRjdf+j5ml+y/6GKHPZbrF/8p2Yga0JPtdqTIY2Xe5ohJPD9saDJJLPvp9+NSBprVvevdXZybnj2cv8OEd0A==,
       }
     engines: { node: ">=6" }
+
+  /pure-rand/5.0.5:
+    resolution:
+      {
+        integrity: sha512-BwQpbqxSCBJVpamI6ydzcKqyFmnd5msMWUGvzXLm1aXvusbbgkbOto/EUPM00hjveJEaJtdbhUjKSzWRhQVkaw==,
+      }
+    dev: false
 
   /q/1.5.1:
     resolution:

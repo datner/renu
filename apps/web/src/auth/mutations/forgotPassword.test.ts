@@ -10,8 +10,11 @@ beforeEach(async () => {
 })
 
 vi.mock("@blitzjs/auth", async () => {
-  const blitzjsAuth = await vi.importActual<object>("@blitzjs/auth")
-  return { ...blitzjsAuth, generateToken: vi.fn().mockReturnValue("test-token") }
+  const blitzjsAuth = await vi.importActual<Record<string, any>>("@blitzjs/auth")
+  return {
+    ...blitzjsAuth,
+    generateToken: vi.fn().mockReturnValue("test-token"),
+  }
 })
 vi.mock("preview-email")
 

@@ -4,7 +4,7 @@
   "types": "./index.ts",
   "type": "module",
   "dependencies": {
-    "@fp-ts/data": "0.0.34",
+    "@fp-ts/data": "0.0.36",
     "@fp-ts/schema": "0.0.7",
     "database": "workspace:*"
   },

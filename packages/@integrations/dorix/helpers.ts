@@ -6,6 +6,8 @@ import * as E from "@fp-ts/data/Either"
 import * as A from "@fp-ts/data/ReadonlyArray"
 import * as Duration from "@fp-ts/data/Duration"
 import * as C from "@fp-ts/schema/Codec"
+import * as D from "@fp-ts/schema/Decoder"
+import * as S from "@fp-ts/schema/Schema"
 import { pipe } from "@fp-ts/data/Function"
 import * as Management from "@integrations/core/management"
 import { ManagementProvider, Order, OrderItem, OrderItemModifier, Prisma } from "database"
@@ -29,7 +31,11 @@ export const DorixIntegrations = C.struct({
   }),
 })
 
-export const Integration = pipe(Management.Integration, C.extend(DorixIntegrations))
+export const Integration = pipe(
+  Management.Integration,
+  C.omit("vendorData"),
+  C.extend(DorixIntegrations)
+)
 export type Integration = C.Infer<typeof Integration>
 
 export const IntegrationService = Context.Tag<Integration>()
@@ -180,7 +186,8 @@ export const StatusResponse = C.struct({
       status: OrderStatus,
       timestamp: C.string,
     }),
-    C.array
+    C.array,
+    C.optional
   ),
   error: pipe(
     C.struct({
@@ -191,3 +198,10 @@ export const StatusResponse = C.struct({
     C.optional
   ),
 })
+
+export const SendOrderResponse = S.union(
+  S.struct({ ack: S.literal(true) }),
+  S.struct({ ack: S.literal(false), message: pipe(S.string, S.optional) })
+)
+
+export const SendOrderResponseDecoder = D.decoderFor(SendOrderResponse)

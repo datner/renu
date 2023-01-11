@@ -27,6 +27,7 @@
     "@hookform/resolvers": "2.9.10",
     "@integrations/core": "workspace:*",
     "@integrations/dorix": "workspace:*",
+    "@integrations/management": "workspace:*",
     "@juggle/resize-observer": "3.4.0",
     "@mantine/core": "5.10.0",
     "@mantine/dropzone": "5.10.0",

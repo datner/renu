@@ -7,6 +7,7 @@ import { Locale } from "database"
  **/
 const config = {
   reactStrictMode: true,
+  transpilePackages: ["ui", "@integrations/*", "shared"],
   i18n: {
     locales: Object.values(Locale),
     defaultLocale: Locale.en,

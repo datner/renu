@@ -18,23 +18,27 @@ export const Integration = C.struct({
   id: C.number,
   venueId: C.number,
   provider: C.enums(ManagementProvider),
-  // vendorData :: Json
+  vendorData: C.json,
 })
 
 export const managementError = taggedError("ManagementError")
 export type ManagementError = InferError<typeof managementError>
 
+export const FullOrderService = Context.Tag<FullOrderWithItems>()
+export const IntegrationSettingsService = Context.Tag<ManagementIntegration>()
+
 export interface ManagementService {
-  reportOrder(
+  reportOrder: (
     order: FullOrderWithItems
-  ): Effect.Effect<ManagementIntegration, ManagementError, void>
+  ) => Effect.Effect<ManagementIntegration, ManagementError, void>
 
-  getOrderStatus(order: Order): Effect.Effect<ManagementIntegration, ManagementError, OrderState>
+  getOrderStatus: (
+    order: Order
+  ) => Effect.Effect<ManagementIntegration, ManagementError, OrderState>
 
-  // getVenueMenu(): Effect.Effect<ManagementIntegration, ManagementError, ManagementMenu>
+  getVenueMenu: Effect.Effect<ManagementIntegration, ManagementError, ManagementMenu>
 }
 export const ManagementService = Context.Tag<ManagementService>()
-export const IntegrationSettingsService = Context.Tag<ManagementIntegration>()
 
 export interface Identified {
   id?: string

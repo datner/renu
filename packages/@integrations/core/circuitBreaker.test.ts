@@ -54,6 +54,7 @@ describe("circuitBreaker", () => {
           Effect.either
         )
       )
+
       assert.deepStrictEqual(result, E.right("success"))
     })
 

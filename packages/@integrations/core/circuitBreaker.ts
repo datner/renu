@@ -1,7 +1,6 @@
 import * as Schedule from "@effect/io/Schedule"
 import * as Ref from "@effect/io/Ref"
 import * as Effect from "@effect/io/Effect"
-import * as Layer from "@effect/io/Layer"
 import { pipe, constFalse, constTrue } from "@fp-ts/data/Function"
 import * as Duration from "@fp-ts/data/Duration"
 import * as Context from "@fp-ts/data/Context"
@@ -9,13 +8,8 @@ import * as Predicate from "@fp-ts/data/Predicate"
 import { taggedError, InferError } from "shared/errors"
 import * as B from "@fp-ts/data/Boolean"
 import * as O from "@fp-ts/data/Option"
-import { TaggedError } from "shared/errors"
 import { Common } from "."
-
-interface BreakerService {
-  breakerCircuit: <R, E, A>(that: Effect.Effect<R, E, A>) => Effect.Effect<R, E | "breaker", A>
-}
-const BreakerService = Context.Tag<BreakerService>()
+import { inspect } from "util"
 
 export const breakerError = taggedError("BreakerError")
 export type BreakerError = InferError<typeof breakerError>
@@ -61,7 +55,7 @@ export const foldBreaker: <R1, E1, A, R2, E2, B>(
 
 export const open = (fromNow: Duration.Duration): BreakerState => ({
   _tag: "BreakerOpen",
-  endTime: Duration.add(now())(fromNow),
+  endTime: pipe(now(), Duration.add(fromNow)),
 })
 
 export const closed = (failCount: number): BreakerState => ({
@@ -84,42 +78,44 @@ export interface BreakerStateService {
 }
 export const BreakerStateService = Context.Tag<BreakerStateService>()
 
-export const Layers = {
-  DefaultBreakerState: pipe(
-    Ref.make(closed(0)),
-    Effect.map((state) => ({ state })),
-    Layer.fromEffect(BreakerStateService)
-  ),
-}
+export const initState = Ref.make(closed(0))
+
+export const makeBreakerStateProvider = () =>
+  pipe(
+    initState,
+    Effect.tap(() => Effect.logWarning("Create new breaker state")),
+    Effect.map((state) => Effect.provideService(BreakerStateService)({ state }))
+  )
 
 export const breaker =
-  <E extends TaggedError>(isRetryable: Predicate.Predicate<E>) =>
-  <R, A>(effect: Effect.Effect<R, E, A>) =>
-    Effect.gen(function* ($) {
-      const config = yield* $(Effect.service(BreakerConfigService))
-      const { name } = yield* $(Effect.service(Common.IdentityService))
-      const { retry } = yield* $(Effect.service(Common.ScheduleService))
-      const { state } = yield* $(Effect.service(BreakerStateService))
+  <E>(isRetryable: Predicate.Predicate<E>) =>
+  <R, A>(self: Effect.Effect<R, E, A>) =>
+    Effect.flatten(
+      Effect.gen(function* ($) {
+        const config = yield* $(Effect.service(BreakerConfigService))
+        const { state } = yield* $(Effect.service(BreakerStateService))
+        const { retry } = yield* $(Effect.service(Common.ScheduleService))
 
-      const failOnPred = (e: E) =>
-        pipe(
-          e,
-          O.liftPredicate(isRetryable),
-          O.as(
-            pipe(
-              state,
-              Ref.update(
-                onClosed((s) =>
-                  s.failCount < config.maxFailure ? closed(s.failCount + 1) : open(config.cooldown)
-                )
-              ),
-              Effect.flatMap(() => Effect.fail(e))
+        const failOnPred = (e: E) =>
+          pipe(
+            e,
+            O.liftPredicate(isRetryable),
+            O.as(
+              pipe(
+                state,
+                Ref.update(
+                  onClosed((s) =>
+                    s.failCount < config.maxFailure
+                      ? closed(s.failCount + 1)
+                      : open(config.cooldown)
+                  )
+                ),
+                Effect.flatMap(() => Effect.fail(e))
+              )
             )
           )
-        )
 
-      return yield* $(
-        pipe(
+        return pipe(
           state,
           Ref.updateAndGet(
             onOpen((s) =>
@@ -135,8 +131,21 @@ export const breaker =
           ),
           Effect.flatMap(
             foldBreaker(
-              () => pipe(effect, Effect.catchSome(failOnPred)),
-              () => Effect.fail(breakerError(new Error(`Breaker ${name} is open`)))
+              () => pipe(self, Effect.catchSome(failOnPred)),
+              () =>
+                Effect.serviceWithEffect(Common.IdentityService)(({ name }) =>
+                  Effect.fail(breakerError(new Error(`Breaker ${name} is open`)))
+                )
+            )
+          ),
+          Effect.tapEither(() =>
+            pipe(
+              Ref.get(state),
+              Effect.tap((s) =>
+                Effect.sync(() =>
+                  console.log(`state: ${inspect(s, { colors: true, depth: null })}`)
+                )
+              )
             )
           ),
           Effect.retry(
@@ -149,5 +158,5 @@ export const breaker =
           ),
           Effect.tap(() => Ref.set(closed(0))(state))
         )
-      )
-    })
+      })
+    )

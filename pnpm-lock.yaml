@@ -103,6 +103,7 @@ importers:
       "@hookform/resolvers": 2.9.10
       "@integrations/core": workspace:*
       "@integrations/dorix": workspace:*
+      "@integrations/management": workspace:*
       "@juggle/resize-observer": 3.4.0
       "@mantine/core": 5.10.0
       "@mantine/dropzone": 5.10.0
@@ -179,6 +180,7 @@ importers:
       "@hookform/resolvers": 2.9.10_react-hook-form@7.41.5
       "@integrations/core": link:../../packages/@integrations/core
       "@integrations/dorix": link:../../packages/@integrations/dorix
+      "@integrations/management": link:../../packages/@integrations/management
       "@juggle/resize-observer": 3.4.0
       "@mantine/core": 5.10.0_lbfixegkxal6rwioqxubxet6s4
       "@mantine/dropzone": 5.10.0_3m53ouna3laykmqkiimzgz4i2m
@@ -282,6 +284,27 @@ importers:
       database-helpers: link:../../database-helpers
       shared: link:../../shared
     devDependencies:
+      vitest: 0.26.3
+
+  packages/@integrations/management:
+    specifiers:
+      "@effect/io": 0.0.60
+      "@fp-ts/data": 0.0.36
+      "@fp-ts/schema": 0.0.7
+      "@integrations/core": workspace:*
+      "@integrations/dorix": workspace:*
+      database: workspace:*
+      shared: workspace:*
+      vitest: 0.26.3
+    dependencies:
+      "@effect/io": 0.0.60
+      "@fp-ts/data": 0.0.36
+      "@fp-ts/schema": 0.0.7
+      "@integrations/core": link:../core
+      "@integrations/dorix": link:../dorix
+      shared: link:../../shared
+    devDependencies:
+      database: link:../../database
       vitest: 0.26.3
 
   packages/@integrations/presto:

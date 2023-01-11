@@ -1,5 +1,6 @@
 import { resolver } from "@blitzjs/rpc"
 import { OrderState, Prisma } from "database"
+import * as C from "fp-ts/Console"
 import * as TE from "fp-ts/TaskEither"
 import * as RTE from "fp-ts/ReaderTaskEither"
 import { pipe } from "fp-ts/function"
@@ -9,8 +10,13 @@ import { z } from "zod"
 import { findUniqueOrder, updateOrder } from "../helpers/prisma"
 import { gotClient } from "integrations/http/gotHttpClient"
 import { breakers } from "integrations/http/circuitBreaker"
-import { clients, getOrderStatus, reportOrder } from "integrations/management"
+import { getOrderStatus, reportOrder } from "integrations/management"
 import { fullOrderInclude } from "integrations/clearing/clearingProvider"
+import { isTaggedErrorFromUnknown } from "shared/errors"
+import { NotFoundError } from "blitz"
+import { isNativeError } from "util/types"
+import { ManagementUnreachableError } from "src/core/errors"
+import { inspect } from "util"
 
 const ValidateStatus = z.object({
   orderId: z
@@ -53,14 +59,15 @@ const runOperations = (order: DeepOrder) => {
       RTE.chainTaskEitherKW(() => changeState(OrderState.Unconfirmed))
     )
     const confirmOrder = pipe(getOrderStatus(order), RTE.chainTaskEitherKW(changeState))
+    console.log(inspect(order, { colors: true, depth: 1 }))
 
     switch (order.state) {
       case "Init":
         return pipe(
           RTE.of(order),
-          RTE.apFirstW(confirmPaidFor),
-          RTE.apFirstW(confirmReported),
-          RTE.apFirstW(confirmOrder)
+          RTE.chainFirstW(() => confirmPaidFor),
+          RTE.chainFirstW(() => confirmReported),
+          RTE.chainFirstW(() => confirmOrder)
         )
 
       case "PaidFor":
@@ -105,7 +112,6 @@ export default resolver.pipe(resolver.zod(ValidateStatus), (input) =>
         TE.chainW(({ order, clearingIntegration, managementIntegration }) =>
           runOperations(order)({
             circuitBreakerOptions: breakers[managementIntegration.provider],
-            managementClient: clients[managementIntegration.provider],
             managementIntegration,
             clearingIntegration,
             clearingProvider: providers[clearingIntegration.provider],
@@ -115,6 +121,18 @@ export default resolver.pipe(resolver.zod(ValidateStatus), (input) =>
       )
     }),
     TE.orLeft((e) => {
+      if ("_tag" in e) {
+        if (e._tag === "ManagementError") {
+          if (isTaggedErrorFromUnknown("HttpNotFoundError")(e.error))
+            if (isNativeError(e.error.error)) {
+              throw new NotFoundError(e.error.error.message)
+            }
+          if (isTaggedErrorFromUnknown("BreakerError")(e.error)) {
+            throw new ManagementUnreachableError()
+          }
+          throw new NotFoundError("Order not found")
+        }
+      }
       throw e
     })
   )()

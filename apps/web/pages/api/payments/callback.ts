@@ -1,6 +1,6 @@
 import { PayPlusCallback } from "src/payments/payplus"
 import { Method } from "got"
-import { pipe, constVoid } from "fp-ts/function"
+import { pipe, constVoid, flow } from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import * as E from "fp-ts/Either"
 import * as TE from "fp-ts/TaskEither"
@@ -15,12 +15,10 @@ import { ensureType } from "src/core/helpers/zod"
 import { sendMessage } from "integrations/telegram/sendMessage"
 import { log } from "blitz"
 import { Format } from "telegraf"
-import { clients, getOrderStatus, reportOrder } from "integrations/management"
-import { gotClient } from "integrations/http/gotHttpClient"
+import { getOrderStatus, reportOrder } from "integrations/management"
 import { fullOrderInclude } from "integrations/clearing/clearingProvider"
 import { z } from "zod"
 import { updateOrder } from "src/orders/helpers/prisma"
-import { breakers } from "integrations/http/circuitBreaker"
 
 type WrongMethodError = {
   tag: "WrongMethodError"
@@ -113,49 +111,48 @@ const onCharge = (ppc: PayPlusCallback) =>
             include: fullOrderInclude,
           })
         ),
-        RTE.chainFirstW((o) =>
+        RTE.chainW((o) =>
           pipe(
             o,
             reportOrder,
-            RTE.orElseFirstW((e) => {
-              if (e.tag === "ReportOrderFailedError") {
-                const orderId = ppc.transaction.more_info
-                const venueId = ppc.transaction.more_info_1
-                const { provider } = managementIntegration
-                const pre = Format.pre("none")
-                const message =
-                  e.error instanceof Error
-                    ? `Provider ${provider} reported the following error:\n ${pre(e.error.message)}`
-                    : `Please reach out to ${managementIntegration.provider} support for further details.`
+            RTE.orElseW((e) => {
+              const orderId = ppc.transaction.more_info
+              const venueId = ppc.transaction.more_info_1
+              const { provider } = managementIntegration
+              const pre = Format.pre("none")
+              const message =
+                e.error instanceof Error
+                  ? `Provider ${provider} reported the following error:\n ${pre(e.error.message)}`
+                  : `Please reach out to ${managementIntegration.provider} support for further details.`
 
-                return pipe(
-                  RTE.fromTask(
-                    sendMessage(
-                      Format.fmt(
-                        ` Order ${orderId} of venue ${venueId} could not be submitted to management.\n\n${message}`
-                      )
+              return pipe(
+                RTE.fromTask(
+                  sendMessage(
+                    Format.fmt(
+                      ` Order ${orderId} of venue ${venueId} could not be submitted to management.\n\n${message}`
                     )
-                  ),
-                  RTE.apSecondW(RTE.throwError({ tag: "ContinueToCheckStatus", order: o } as const))
-                )
-              }
-
-              return RTE.rightIO(constVoid)
-            })
+                  )
+                ),
+                RTE.apSecondW(RTE.throwError({ tag: "ContinueToCheckStatus", order: o } as const))
+              )
+            }),
+            RTE.apSecond(RTE.right(o))
           )
         ),
         RTE.chainFirstTaskEitherKW((o) => changeOrderState(o.id)(OrderState.Unconfirmed)),
         RTE.orElseFirstW((e) =>
           e.tag === "ContinueToCheckStatus" ? RTE.right(e.order) : RTE.throwError(e)
         ),
-        RTE.chainW(getOrderStatus),
+        RTE.chainW(
+          flow(
+            getOrderStatus,
+            RTE.mapLeft((e) => ({ tag: e._tag, ...e }))
+          )
+        ),
         RTE.chainTaskEitherKW(changeOrderState(ppc.transaction.more_info)),
         RTE.apSecond(RTE.of(constVoid))
       )({
         managementIntegration,
-        circuitBreakerOptions: breakers[managementIntegration.provider],
-        httpClient: gotClient,
-        managementClient: clients[managementIntegration.provider],
       })
     )
   )

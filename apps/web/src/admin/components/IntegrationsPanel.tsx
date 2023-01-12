@@ -48,7 +48,7 @@ function Integrations() {
     E.fold(
       (e) =>
         match(e)
-          .with({ tag: P.union("BreakerError", "HttpServerError") }, () => (
+          .with({ _tag: "ManagementError" }, () => (
             <div className="flex flex-col min-h-0 grow items-center justify-center">
               <div className="alert alert-error shadow-lg max-w-md">
                 <div>
@@ -60,20 +60,20 @@ function Integrations() {
               </div>
             </div>
           ))
-          .with({ tag: "ManagementMismatchError" }, (e) => (
-            <div className="flex flex-col min-h-0 grow items-center justify-center">
-              <div className="alert alert-warning shadow-lg max-w-md">
-                <div>
-                  <ExclamationTriangleIcon className="shrink-0 h-6 w-6" />
-                  <span>
-                    Warning! Management Integration is mismatched. Expected {e.needed} configuration
-                    but received
-                    {e.given} configuration
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))
+          // .with({ tag: "ManagementMismatchError" }, (e) => (
+          //   <div className="flex flex-col min-h-0 grow items-center justify-center">
+          //     <div className="alert alert-warning shadow-lg max-w-md">
+          //       <div>
+          //         <ExclamationTriangleIcon className="shrink-0 h-6 w-6" />
+          //         <span>
+          //           Warning! Management Integration is mismatched. Expected {e.needed} configuration
+          //           but received
+          //           {e.given} configuration
+          //         </span>
+          //       </div>
+          //     </div>
+          //   </div>
+          // ))
           .otherwise(() => (
             <div className="flex flex-col min-h-0 grow items-center justify-center">
               <div className="alert alert-error shadow-lg max-w-md">

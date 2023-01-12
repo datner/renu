@@ -64,7 +64,8 @@
         "viewOrder": "View Order"
       },
       "CallToActionText": {
-        "new": "Add to order",
+        "add": "Add",
+        "to order": "to order",
         "update": "Update order",
         "remove": {
           "_": "Remove",

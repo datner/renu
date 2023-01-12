@@ -15,6 +15,7 @@ import { OrderFamilyAtom, OrderItem } from "src/menu/jotai/order"
 import { max, multiply, add } from "src/core/helpers/number"
 import { useUpdateOrderItem } from "../hooks/useUpdateOrderItem"
 import { MonoidSum } from "fp-ts/lib/number"
+import { clsx } from "@mantine/core"
 
 type Props = {
   atom: OrderFamilyAtom
@@ -105,7 +106,15 @@ export const ListItem = memo(function ListItem(props: Props) {
         className="relative flex flex-1 pointer-events-none h-36 overflow-hidden rounded-lg bg-white shadow"
       >
         <a.div style={styles} className="inset-y-0 absolute ltr:left-0 rtl:right-0">
-          <div className="inset-y-0 bg-gradient-to-t from-emerald-500 to-emerald-700 w-2 absolute shadow-2xl" />
+          <div
+            className={clsx("inset-y-0 bg-gradient-to-t w-2 absolute shadow-2xl", [
+              "group-5nth-1:from-emerald-500 group-5nth-1:to-emerald-700",
+              "group-5nth-2:from-ocre-500 group-5nth-2:to-ocre-600",
+              "group-5nth-3:from-ginger-500 group-5nth-3:to-ginger-600",
+              "group-5nth-4:from-coral-500 group-5nth-4:to-coral-600",
+              "group-5nth-5:from-blush-500 group-5nth-5:to-blush-600",
+            ])}
+          />
         </a.div>
         <div className="grow w-40 overflow-hidden">
           <ItemData content={content} price={price} amount={order.amount} />

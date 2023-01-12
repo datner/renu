@@ -39,7 +39,7 @@ const OrderState = {
   REMOVE: "REMOVE",
 } as const
 
-type OrderState = typeof OrderState[keyof typeof OrderState]
+type OrderState = (typeof OrderState)[keyof typeof OrderState]
 
 const floorOne = max(1)
 
@@ -199,7 +199,7 @@ export function ItemModalForm(props: ItemModalFormProps) {
       </FormProvider>
       {containerEl &&
         createPortal(
-          <div className="mt-6 z-20 sticky bottom-4 mx-2 flex gap-2">
+          <div className="mt-6 z-20 sticky bottom-4 mx-4 flex gap-2">
             <div className="basis-32">
               <AmountButtons
                 minimum={order.amount > 0 ? 0 : 1}
@@ -211,10 +211,8 @@ export function ItemModalForm(props: ItemModalFormProps) {
               form="item-form"
               type="submit"
               className={clsx(
-                "inline-flex grow justify-center items-center rounded-md border border-transparent shadow-sm px-2 sm:px-4 py-2 text-xs whitespace-nowrap font-medium text-white focus:outline-none focus:ring-2 focus:ring-offset-2  sm:text-base",
-                orderState === OrderState.REMOVE
-                  ? "bg-red-600 hover:bg-red-700 focus:ring-red-500"
-                  : "bg-emerald-600 hover:bg-emerald-700 focus:ring-emerald-500"
+                "btn grow px-2",
+                orderState === OrderState.REMOVE ? "btn-error" : "btn-primary"
               )}
             >
               <CallToActionText price={price} multi={order.amount > 1} orderState={orderState} />
@@ -239,24 +237,27 @@ function CallToActionText(props: CallToActionTextProps) {
     case OrderState.NEW:
       return (
         <>
-          <span className="inline-block text-left rtl:text-right font-medium flex-grow">
-            {t("new")}
+          <span className="inline-block text-left rtl:text-right grow xs:grow-0 xs:mx-1.5">
+            {t("add")}
+          </span>{" "}
+          <span className="hidden xs:inline-block text-left rtl:text-right grow">
+            {t("to order")}
           </span>
-          <span className="tracking-wider">{toShekel(price)}</span>
+          <span className="tracking-wider font-light">{toShekel(price)}</span>
         </>
       )
 
     case OrderState.UPDATE:
       return (
         <>
-          <span className="inline-block rtl:text-right font-medium flex-grow">{t("update")}</span>
-          <span className="tracking-wider">{toShekel(price)}</span>
+          <span className="inline-block rtl:text-right flex-grow">{t("update")}</span>
+          <span className="tracking-wider font-light">{toShekel(price)}</span>
         </>
       )
 
     case OrderState.REMOVE:
       return (
-        <span className="inline-block rtl:text-right font-medium flex-grow">
+        <span className="inline-block text-center font-medium flex-grow">
           {t("remove._")} {multi && t("remove.all")}
         </span>
       )

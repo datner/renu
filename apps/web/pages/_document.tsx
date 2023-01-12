@@ -12,8 +12,13 @@ class MyDocument extends Document {
     const dir = locale === Locale.he ? "rtl" : "ltr"
     return (
       <Html lang={locale} dir={dir} data-theme="renu" className="bg-white">
-        <Head />
-        <body>
+        <Head>
+          <script
+            async
+            src="https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver,scrollIntoView"
+          ></script>
+        </Head>
+        <body className="overscroll-x-contain">
           <Main />
           <NextScript />
         </body>

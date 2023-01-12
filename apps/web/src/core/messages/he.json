@@ -64,7 +64,8 @@
         "viewOrder": "צפה בהזמנה"
       },
       "CallToActionText": {
-        "new": "הוסף להזמנה",
+        "add": "הוסף",
+        "to order": "להזמנה",
         "update": "עדכן הזמנה",
         "remove": {
           "_": "הסר",

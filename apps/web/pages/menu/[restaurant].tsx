@@ -7,8 +7,7 @@ import { useLocale } from "src/core/hooks/useLocale"
 import { contentOption, titleFor } from "src/core/helpers/content"
 import { CategoryHeader } from "src/menu/components/CategoryHeader"
 import { useNavBar } from "src/menu/hooks/useNavBar"
-import { fromNullable, getEq, some, matchW } from "fp-ts/Option"
-import { Eq as eqStr } from "fp-ts/string"
+import { matchW } from "fp-ts/Option"
 import { constNull } from "fp-ts/function"
 import { NotFoundError } from "blitz"
 import dynamic from "next/dynamic"
@@ -17,11 +16,11 @@ import Head from "next/head"
 import { BlitzPage } from "@blitzjs/auth"
 import MenuLayout from "src/core/layouts/MenuLayout"
 import { OrderItem, orderAtomFamily } from "src/menu/jotai/order"
-import { useAtom } from "jotai"
+import { useAtom, useSetAtom } from "jotai"
 import { itemAtom, itemModalOpenAtom } from "src/menu/jotai/item"
 import { ModifierConfig } from "db/itemModifierConfig"
 import { Closed } from "src/menu/components/Closed"
-import { ListItemNoDrag } from "src/menu/components/ListItemNoDrag"
+import { ListItem } from "src/menu/components/ListItem"
 
 const LazyViewOrderButton = dynamic(() => import("src/menu/components/ViewOrderButton"), {
   suspense: true,
@@ -33,16 +32,13 @@ const LazyOrderModal = dynamic(() => import("src/menu/components/OrderModal"), {
   loading: () => <Fragment />,
 })
 
-const eqOptionStr = getEq(eqStr)
-
 export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) => {
   const { restaurant } = props
   const { categories } = restaurant
-  const navbar = useNavBar({ initialActive: fromNullable(categories[0]?.identifier) })
-  // const { table } = useZodParams(Query)
+  const { attachNav, setRoot, observe, active, setActive } = useNavBar()
   const locale = useLocale()
   const [item, setItem] = useAtom(itemAtom)
-  const [open, setOpen] = useAtom(itemModalOpenAtom)
+  const setOpen = useSetAtom(itemModalOpenAtom)
   const [reviewOrder, setReviewOrder] = useState(false)
 
   const handleShowOrderModal = (item: OrderItem["item"]) => {
@@ -75,46 +71,73 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div
-        ref={navbar.setContainer}
-        onScroll={navbar.onScroll}
-        className={clsx(
-          "relative flex flex-col grow min-h-0 bg-gray-50 scroll-smooth",
-          open || reviewOrder ? "overflow-hidden" : "overflow-auto"
-        )}
+        ref={setRoot}
+        className="flex flex-col grow min-h-0 bg-gray-50 scroll-smooth overflow-x-hidden"
       >
-        <nav
+        <div
+          role="tablist"
           aria-label="Categories"
-          className="sticky top-0 z-20 flex min-h-0 shrink-0 w-full overflow-x-auto bg-white shadow snap-x snap-mandatory scroll-smooth gap-2 p-2 "
+          className="fixed top-0 z-20 flex min-h-0 shrink-0 inset-x-0 overflow-x-auto bg-white shadow snap-x snap-mandatory scroll-smooth gap-2 p-2 scroll-m-2"
         >
-          {categories?.map((it, index) => (
+          {categories?.map((it) => (
             <button
               key={it.id}
-              ref={navbar.setButton(String(it.id))}
-              onClick={navbar.onClick(index)}
+              ref={attachNav}
+              aria-label={it.identifier}
+              onClick={() => setActive(document.querySelector(`#${it.identifier}`))}
               className={clsx(
-                eqOptionStr.equals(some(it.identifier), navbar.section)
-                  ? "bg-emerald-100 text-emerald-700 ring-1 ring-emerald-400"
+                active?.id === it.identifier
+                  ? [
+                      "ring-1",
+                      "5nth-1:bg-emerald-100 5nth-1:text-emerald-700 5nth-1:ring-emerald-400",
+                      "5nth-2:bg-ocre-100 5nth-2:text-ocre-700 5nth-2:ring-ocre-400",
+                      "5nth-3:bg-ginger-100 5nth-3:text-ginger-700 5nth-3:ring-ginger-400",
+                      "5nth-4:bg-coral-100 5nth-4:text-coral-700 5nth-4:ring-coral-400",
+                      "5nth-5:bg-blush-100 5nth-5:text-blush-700 5nth-5:ring-blush-400",
+                    ]
                   : "border-transparent text-gray-500 hover:text-gray-700",
-                "block flex-shrink-0 rounded-md snap-start scroll-m-2 px-3 py-2 text-sm font-medium"
+                "block flex-shrink-0 rounded-md snap-start px-3 py-2 text-sm font-semibold scroll-m-2"
               )}
             >
               {getTitle(it)}
             </button>
           ))}
-        </nav>
-        <div className="space-y-8">
+        </div>
+        <div>
           {categories?.map((category) => (
-            <div key={category.id} className="group ">
-              <CategoryHeader ref={navbar.setSection} category={category} />
-              <ul role="list" className="flex flex-col gap-2 group-last:min-h-screen">
+            <div
+              id={category.identifier}
+              aria-current={active?.id === category.identifier && "location"}
+              ref={observe}
+              key={category.id}
+              className={clsx("group pt-14", [
+                "5nth-1:bg-emerald-100",
+                "5nth-2:bg-ocre-100",
+                "5nth-3:bg-ginger-100",
+                "5nth-4:bg-coral-100",
+                "5nth-5:bg-blush-100",
+              ])}
+            >
+              <CategoryHeader category={category} />
+              <ul role="list" className="flex flex-col gap-2 pb-2 group-last:min-h-screen">
                 {category.items?.map((item) => (
-                  <ListItemNoDrag
+                  <ListItem
                     key={item.id}
                     atom={orderAtomFamily(item)}
                     onClick={() => handleShowOrderModal(item)}
                   />
                 ))}
               </ul>
+              <div
+                className={clsx("h-16 bg-gradient-to-b", [
+                  "group-5nth-1:from-emerald-100 group-5nth-1:to-ocre-100",
+                  "group-5nth-2:from-ocre-100 group-5nth-2:to-ginger-100",
+                  "group-5nth-3:from-ginger-100 group-5nth-3:to-coral-100",
+                  "group-5nth-4:from-coral-100 group-5nth-4:to-blush-100",
+                  "group-5nth-5:from-blush-100 group-5nth-5:to-emerald-100",
+                  "group-last:group-last:to-gray-50",
+                ])}
+              />
             </div>
           ))}
         </div>

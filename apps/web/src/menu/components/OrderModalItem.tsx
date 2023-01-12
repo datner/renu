@@ -9,7 +9,6 @@ import { AmountButtons, AmountButtonsProps } from "./AmountButtons"
 import { PrimitiveAtom, useAtomValue, useSetAtom } from "jotai"
 import { OrderItem } from "src/menu/jotai/order"
 import { useUpdateOrderItem } from "../hooks/useUpdateOrderItem"
-import { useUpdateAtom } from "jotai/utils"
 import { itemAtom, itemModalOpenAtom } from "src/menu/jotai/item"
 
 type Props = {
@@ -20,7 +19,7 @@ export function OrderModalItem(props: Props) {
   const { atom } = props
   const orderItem = useAtomValue(atom)
   const setOrderitem = useUpdateOrderItem(atom)
-  const setItem = useUpdateAtom(itemAtom)
+  const setItem = useSetAtom(itemAtom)
   const setOpen = useSetAtom(itemModalOpenAtom)
   const { item, amount, comment } = orderItem
   const locale = useLocale()

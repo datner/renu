@@ -23,7 +23,7 @@ function AsideDirectory() {
         <h3 className="text-xl text-gray-800 font-semibold inline-block grow">{t("items")}</h3>
         {isRefetching && <Loader color="teal" variant="dots" />}
       </div>
-      <nav className="grow min-h-0 overflow-y-auto" aria-label="Directory">
+      <nav className="grow h-0 overflow-y-auto" aria-label="Directory">
         {categories.map(({ categoryItems: items, identifier, ...rest }) => (
           <div key={identifier} className="relative">
             <div className="z-10 sticky top-0 border-t border-b border-gray-200 bg-gray-50 px-6 py-1 text-sm font-medium text-gray-500">

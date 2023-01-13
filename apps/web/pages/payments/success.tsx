@@ -17,6 +17,7 @@ import validateStatus from "src/orders/queries/validateStatus"
 import { Suspense } from "react"
 import { NotFoundError } from "blitz"
 import { ManagementUnreachableError } from "src/core/errors"
+import { GetServerSideProps } from "next"
 
 export function SuccessPage() {
   const searchParams = useSearchParams()
@@ -197,3 +198,5 @@ Please be patient with us while we're still in early beta
     </ErrorBoundary>
   )
 }
+
+export const getServerSideProps: GetServerSideProps = async () => ({ props: {} })

@@ -9,7 +9,7 @@ import { taggedError, InferError } from "shared/errors"
 import * as B from "@fp-ts/data/Boolean"
 import * as O from "@fp-ts/data/Option"
 import { Common } from "."
-import { inspect } from "util"
+import { inspect } from "node:util"
 
 export const breakerError = taggedError("BreakerError")
 export type BreakerError = InferError<typeof breakerError>

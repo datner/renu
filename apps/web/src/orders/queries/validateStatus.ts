@@ -14,9 +14,8 @@ import { getOrderStatus, reportOrder } from "integrations/management"
 import { fullOrderInclude } from "integrations/clearing/clearingProvider"
 import { isTaggedErrorFromUnknown } from "shared/errors"
 import { NotFoundError } from "blitz"
-import { isNativeError } from "util/types"
 import { ManagementUnreachableError } from "src/core/errors"
-import { inspect } from "util"
+import { inspect, types } from "node:util"
 
 const ValidateStatus = z.object({
   orderId: z
@@ -124,7 +123,7 @@ export default resolver.pipe(resolver.zod(ValidateStatus), (input) =>
       if ("_tag" in e) {
         if (e._tag === "ManagementError") {
           if (isTaggedErrorFromUnknown("HttpNotFoundError")(e.error))
-            if (isNativeError(e.error.error)) {
+            if (types.isNativeError(e.error.error)) {
               throw new NotFoundError(e.error.error.message)
             }
           if (isTaggedErrorFromUnknown("BreakerError")(e.error)) {

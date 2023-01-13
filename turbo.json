@@ -38,7 +38,7 @@
       ]
     },
     "start": {
-      "dependsOn": ["build"]
+      "dependsOn": []
     },
     "lint": {
       "outputs": []

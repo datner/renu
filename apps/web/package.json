@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "blitz dev",
-    "build": "next build",
+    "build": "blitz build",
     "start": "next start",
     "studio": "blitz prisma studio",
     "lint": "next lint",

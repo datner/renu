@@ -24,7 +24,7 @@
           "startCommand": "pnpm start --filter web",
           "watchPaths": ["apps/web/**", "packages/database/**", "packages/ui/**"],
           "enableCloudfrontSwr": true,
-          "healthCheckPath": "/",
+          "healthCheckPath": "/api/healthcheck",
           "envVariables": {
             "APP_ENV": "production"
           }

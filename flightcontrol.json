@@ -19,7 +19,7 @@
           "domain": "renu.menu",
           "minInstances": 2,
           "maxInstances": 4,
-          "installCommand": "pnpm i --filter ...web",
+          "installCommand": "pnpm i --filter web...",
           "buildCommand": "pnpm build --filter web",
           "startCommand": "pnpm start --filter web",
           "watchPaths": ["apps/web/**", "packages/database/**", "packages/ui/**"],

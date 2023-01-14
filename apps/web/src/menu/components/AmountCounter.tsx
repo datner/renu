@@ -1,5 +1,5 @@
-import { animated, useSpring } from "@react-spring/web"
-import { memo, ReactNode } from "react"
+import { animated, useSpring, config } from "@react-spring/web"
+import { memo, ReactNode, useEffect } from "react"
 import { ResizeObserver } from "@juggle/resize-observer"
 import { useIsRtl } from "src/core/hooks/useIsRtl"
 import { usePrevious } from "src/core/hooks/usePrevious"
@@ -21,9 +21,18 @@ export const AmountCounter = memo((props: Props) => {
   const { opacity, x, scale, rotate } = useSpring({
     opacity: Math.min(1, amount),
     x: amount > 0 ? 0 : rtlWidth,
-    scale: amount === prevAmount ? 1 : 15,
-    rotate: amount === prevAmount ? "0deg" : amount % 2 === 0 ? "10000deg" : "-10000deg",
+    scale: 1,
+    rotate: "0deg",
   })
+
+  useEffect(() => {
+    scale.set(1)
+    rotate.set("0deg")
+    scale.start(1.4, { config: config.stiff }).then(() => scale.start(1))
+    rotate
+      .start(amount % 2 === 0 ? "15deg" : "-15deg", { config: config.stiff })
+      .then(() => rotate.start("0deg"))
+  }, [amount, scale, rotate])
 
   return (
     <animated.div style={{ x }} className="flex flex-nowrap">

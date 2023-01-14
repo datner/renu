@@ -1,7 +1,7 @@
 import Image from "next/image"
 import { a, useSpring } from "@react-spring/web"
 import { useLocale } from "src/core/hooks/useLocale"
-import { decrement, increment, pipe } from "fp-ts/function"
+import { decrement, flow, increment, pipe } from "fp-ts/function"
 import * as L from "monocle-ts/Lens"
 import * as A from "fp-ts/Array"
 import { ItemData } from "./ItemData"
@@ -30,7 +30,7 @@ const amount = pipe(L.id<OrderItem>(), L.prop("amount"))
 
 const incAmount = pipe(amount, L.modify(increment))
 
-const decAmount = pipe(amount, L.modify(decrement))
+const decAmount = pipe(amount, L.modify(flow(decrement, max(0))))
 
 export const ListItem = memo(function ListItem(props: Props) {
   const { atom, onClick } = props

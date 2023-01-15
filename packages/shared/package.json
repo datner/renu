@@ -3,8 +3,8 @@
   "type": "./index.ts",
   "name": "shared",
   "dependencies": {
-    "@effect/io": "0.0.60",
-    "@fp-ts/data": "0.0.36",
+    "@effect/io": "0.0.63",
+    "@fp-ts/data": "0.0.39",
     "database": "workspace:*"
   }
 }

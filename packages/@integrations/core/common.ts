@@ -24,5 +24,5 @@ export const DefaultRetrySchedule: ScheduleService = {
 }
 
 export const Layers = {
-  DefaultRetrySchedule: Layer.succeed(ScheduleService)(DefaultRetrySchedule),
+  DefaultRetrySchedule: Layer.succeed(ScheduleService, DefaultRetrySchedule),
 }

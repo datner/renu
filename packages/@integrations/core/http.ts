@@ -63,9 +63,9 @@ export const toJson = (res: Response) =>
   Effect.tryCatchPromise(() => res.json() as Promise<Json>, taggedError("JsonParseError"))
 
 export const Layers = {
-  HttpFetchLayer: Layer.effect(HttpService)(HttpFetchService),
+  HttpFetchLayer: Layer.effect(HttpService, HttpFetchService),
   BasicHttpLayer: pipe(
-    Layer.succeed(HttpConfigService)({}),
-    Layer.provideToAndMerge(Layer.effect(HttpService)(HttpFetchService))
+    Layer.succeed(HttpConfigService, {}),
+    Layer.provideMerge(Layer.effect(HttpService, HttpFetchService))
   ),
 }

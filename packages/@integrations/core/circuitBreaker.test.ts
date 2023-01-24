@@ -23,20 +23,20 @@ describe("circuitBreaker", () => {
   beforeEach<Context>(async (ctx) => {
     ctx.layer = (state: Ref.Ref<C.BreakerState>) =>
       pipe(
-        Layer.succeed(Common.IdentityService)({ name: "test" }),
+        Layer.succeed(Common.IdentityService, { name: "test" }),
         Layer.merge(
-          Layer.succeed(C.BreakerConfigService)({
+          Layer.succeed(C.BreakerConfigService, {
             maxFailure: 1,
             cooldown: Duration.millis(5),
           })
         ),
         Layer.merge(
-          Layer.succeed(C.BreakerStateService)({
+          Layer.succeed(C.BreakerStateService, {
             state,
           })
         ),
         Layer.merge(
-          Layer.succeed(Common.ScheduleService)({
+          Layer.succeed(Common.ScheduleService, {
             retry: Schedule.spaced(Duration.zero),
           })
         )

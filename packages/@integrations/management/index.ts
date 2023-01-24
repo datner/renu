@@ -9,7 +9,7 @@ export { ManagementService, IntegrationSettingsService } from "@integrations/cor
 
 const withSettings = Z.serviceWithEffect(M.IntegrationSettingsService)
 
-export const ManagementServiceLayer = ZL.fromEffect(M.ManagementService)(
+export const ManagementServiceLayer = ZL.effect(M.ManagementService)(
   Z.gen(function* ($) {
     const services: Record<"DORIX" | "RENU", M.ManagementService> = {
       DORIX: yield* $(Z.service(Dorix.DorixService)),

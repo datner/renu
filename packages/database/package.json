@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:push": "prisma db push --skip-generate"
   },
   "dependencies": {
-    "@prisma/client": "4.8.1"
+    "@prisma/client": "4.9.0"
   },
   "devDependencies": {
-    "prisma": "4.8.1",
+    "prisma": "4.9.0",
     "tsconfig": "workspace:*"
   }
 }

@@ -15,7 +15,7 @@ import { OrderFamilyAtom, OrderItem } from "src/menu/jotai/order"
 import { max, multiply, add } from "src/core/helpers/number"
 import { useUpdateOrderItem } from "../hooks/useUpdateOrderItem"
 import { MonoidSum } from "fp-ts/lib/number"
-import { clsx } from "@mantine/core"
+import { clsx } from "clsx"
 
 type Props = {
   atom: OrderFamilyAtom

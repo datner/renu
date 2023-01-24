@@ -77,8 +77,7 @@ export const payplusRequest =
         } as RequestOptions,
         secretKey: Authorization.secret_key,
       })),
-      RTE.fromEither,
-      RTE.bindW("response", ({ url, options }) => payplusBreaker(url, options)),
+      RTE.fromEither, RTE.bindW("response", ({ url, options }) => payplusBreaker(url, options)),
       RTE.bindW("text", ({ response }) => RTE.fromTaskEither(response.text)),
       RTE.chainEitherKW(({ response, secretKey, text }) =>
         pipe(

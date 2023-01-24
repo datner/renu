@@ -1,6 +1,6 @@
 import * as Effect from "@effect/io/Effect"
 import * as Context from "@fp-ts/data/Context"
-import * as C from "@fp-ts/schema/Codec"
+import * as S from "@fp-ts/schema/Schema"
 import { ManagementIntegration, ManagementProvider, OrderState, Order, Prisma } from "database"
 import { InferError, taggedError } from "shared/errors"
 
@@ -14,11 +14,11 @@ export type FullOrderWithItems = Prisma.OrderGetPayload<{
   include: typeof fullOrderInclude
 }>
 
-export const Integration = C.struct({
-  id: C.number,
-  venueId: C.number,
-  provider: C.enums(ManagementProvider),
-  vendorData: C.json,
+export const Integration = S.struct({
+  id: S.number,
+  venueId: S.number,
+  provider: S.enums(ManagementProvider),
+  vendorData: S.json,
 })
 
 export const managementError = taggedError("ManagementError")

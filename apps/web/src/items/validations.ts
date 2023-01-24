@@ -315,6 +315,7 @@ export const UpdateItem = ItemSchemaImgTransform.extend({ id: Id }).transform(
     }
   }
 )
+export type UpdateItemOutput = z.infer<typeof UpdateItem>
 
 export type UpdateItem = z.input<typeof UpdateItem>
 export type CreateItem = z.input<typeof CreateItem>

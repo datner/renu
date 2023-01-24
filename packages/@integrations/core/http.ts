@@ -6,9 +6,9 @@ import { TaggedError } from "shared/errors"
 import { Json } from "@fp-ts/data/Json"
 import { pipe } from "@fp-ts/data/Function"
 
-interface HttpConfigService {
-  baseUrl: string
-  headers: HeadersInit
+export interface HttpConfigService {
+  readonly baseUrl?: string
+  readonly headers?: HeadersInit
 }
 export const HttpConfigService = Context.Tag<HttpConfigService>()
 
@@ -32,13 +32,11 @@ export type HttpRequestError = InferError<typeof httpRequestError>
 export const httpNotFoundError = taggedError("HttpNotFoundError")
 export type HttpNotFoundError = InferError<typeof httpNotFoundError>
 
-export const HttpServiceWithEffect = Effect.serviceWithEffect(HttpService)
-export const HttpConfigWith = Effect.serviceWith(HttpConfigService)
-
 export const request = (...args: Parameters<HttpRequest>) =>
-  HttpServiceWithEffect((s) => s.request(...args))
+  Effect.serviceWithEffect(HttpService, (s) => s.request(...args))
 
-export const HttpFetchService = HttpConfigWith(
+export const HttpFetchService = Effect.serviceWith(
+  HttpConfigService,
   (c): HttpService => ({
     request: (input: RequestInfo | URL, init?: RequestInit | undefined) =>
       pipe(
@@ -65,5 +63,9 @@ export const toJson = (res: Response) =>
   Effect.tryCatchPromise(() => res.json() as Promise<Json>, taggedError("JsonParseError"))
 
 export const Layers = {
-  HttpFetchLayer: Layer.fromEffect(HttpService)(HttpFetchService),
+  HttpFetchLayer: Layer.effect(HttpService)(HttpFetchService),
+  BasicHttpLayer: pipe(
+    Layer.succeed(HttpConfigService)({}),
+    Layer.provideToAndMerge(Layer.effect(HttpService)(HttpFetchService))
+  ),
 }

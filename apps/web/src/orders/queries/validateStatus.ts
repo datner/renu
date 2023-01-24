@@ -1,11 +1,12 @@
 import { resolver } from "@blitzjs/rpc"
-import { OrderState, Prisma } from "database"
+import * as O from "fp-ts/Option"
 import * as C from "fp-ts/Console"
 import * as TE from "fp-ts/TaskEither"
 import * as RTE from "fp-ts/ReaderTaskEither"
 import { pipe } from "fp-ts/function"
 import { providers, validateTransaction } from "integrations/clearing"
 import { Id } from "src/core/helpers/zod"
+import { PrismaError } from "src/core/helpers/prisma"
 import { z } from "zod"
 import { findUniqueOrder, updateOrder } from "../helpers/prisma"
 import { gotClient } from "integrations/http/gotHttpClient"
@@ -15,7 +16,10 @@ import { fullOrderInclude } from "integrations/clearing/clearingProvider"
 import { isTaggedErrorFromUnknown } from "shared/errors"
 import { NotFoundError } from "blitz"
 import { ManagementUnreachableError } from "src/core/errors"
+import * as Z from "@effect/io/Effect"
+import * as M from '@integrations/management'
 import { inspect, types } from "node:util"
+import db, { OrderState, Prisma } from "db"
 
 const ValidateStatus = z.object({
   orderId: z
@@ -42,10 +46,28 @@ const fullOrderIncludeWithIntegration = {
 
 type DeepOrder = Prisma.OrderGetPayload<{ include: typeof fullOrderIncludeWithIntegration }>
 
-const runOperations = (order: DeepOrder) => {
+const runOperations = (order: DeepOrder) =>  Z.gen(function* ($) {
+  const changeState = (state: OrderState) =>  Z.tryCatchPromise(
+        () => db.order.update({ where: { id: order.id }, data: { state } }),
+        (cause) => new PrismaError("failed to update order state", { cause, resource: "Order" })
+      )
+  
+  const confirmPaidFor = pipe(
+  
+  )
+
+  return pipe(
+    Z.succeed(order),
+    Z.
+  )
+
+}){
   {
     const changeState = (state: OrderState) =>
-      updateOrder({ where: { id: order.id }, data: { state } })
+      Z.tryCatchPromise(
+        () => db.order.update({ where: { id: order.id }, data: { state } }),
+        (cause) => new PrismaError("failed to update order state", { cause, resource: "Order" })
+      )
 
     const confirmPaidFor = pipe(
       validateTransaction(order),
@@ -82,57 +104,64 @@ const runOperations = (order: DeepOrder) => {
 }
 
 export default resolver.pipe(resolver.zod(ValidateStatus), (input) =>
-  pipe(
-    findUniqueOrder({
-      where: { id: input.orderId },
-      include: fullOrderIncludeWithIntegration,
-    }),
-    TE.chainW(
-      TE.fromPredicate(
-        (o) => o.state === OrderState.Confirmed,
-        (order) => ({ tag: "Validate", order } as const)
-      )
-    ),
-    TE.orElseFirstW((e) => {
-      if (e.tag === "PrismaError") return TE.left(e)
-      return pipe(
-        TE.Do,
-        TE.let("order", () => e.order),
-        TE.bindW("managementIntegration", ({ order }) =>
-          TE.fromNullable({ tag: "NoManagementIntegration" } as const)(
-            order.venue.managementIntegration
-          )
-        ),
-        TE.bindW("clearingIntegration", ({ order }) =>
-          TE.fromNullable({ tag: "NoClearingIntegration" } as const)(
-            order.venue.clearingIntegration
-          )
-        ),
-        TE.chainW(({ order, clearingIntegration, managementIntegration }) =>
-          runOperations(order)({
-            circuitBreakerOptions: breakers[managementIntegration.provider],
-            managementIntegration,
-            clearingIntegration,
-            clearingProvider: providers[clearingIntegration.provider],
-            httpClient: gotClient,
-          })
+  Z.unsafeRunPromiseEither(
+    pipe(
+      Z.tryCatchPromise(
+        () =>
+          db.order.findUniqueOrThrow({
+            where: { id: input.orderId },
+            include: fullOrderIncludeWithIntegration,
+          }),
+        (cause) => new PrismaError("Could not find order", { cause, resource: "Order" })
+      ),
+      Z.flatMap((order) => (order.state === OrderState.Confirmed ? Z.succeed(order) : Z.never())),
+      TE.chainW(
+        TE.fromPredicate(
+          (o) => o.state === OrderState.Confirmed,
+          (order) => ({ _tag: "Validate", order } as const)
         )
-      )
-    }),
-    TE.orLeft((e) => {
-      if ("_tag" in e) {
-        if (e._tag === "ManagementError") {
-          if (isTaggedErrorFromUnknown("HttpNotFoundError")(e.error))
-            if (types.isNativeError(e.error.error)) {
-              throw new NotFoundError(e.error.error.message)
+      ),
+      TE.orElseFirstW((e) => {
+        if (e._tag === "PrismaError") return TE.left(e)
+        return pipe(
+          TE.Do,
+          TE.let("order", () => e.order),
+          TE.bindW("managementIntegration", ({ order }) =>
+            TE.fromNullable({ tag: "NoManagementIntegration" } as const)(
+              order.venue.managementIntegration
+            )
+          ),
+          TE.bindW("clearingIntegration", ({ order }) =>
+            TE.fromNullable({ tag: "NoClearingIntegration" } as const)(
+              order.venue.clearingIntegration
+            )
+          ),
+          TE.chainW(({ order, clearingIntegration, managementIntegration }) =>
+            runOperations(order)({
+              circuitBreakerOptions: breakers[managementIntegration.provider],
+              managementIntegration,
+              clearingIntegration,
+              clearingProvider: providers[clearingIntegration.provider],
+              httpClient: gotClient,
+            })
+          )
+        )
+      }),
+      TE.orLeft((e) => {
+        if ("_tag" in e) {
+          if (e._tag === "ManagementError") {
+            if (isTaggedErrorFromUnknown("HttpNotFoundError")(e.error))
+              if (types.isNativeError(e.error.error)) {
+                throw new NotFoundError(e.error.error.message)
+              }
+            if (isTaggedErrorFromUnknown("BreakerError")(e.error)) {
+              throw new ManagementUnreachableError()
             }
-          if (isTaggedErrorFromUnknown("BreakerError")(e.error)) {
-            throw new ManagementUnreachableError()
+            throw new NotFoundError("Order not found")
           }
-          throw new NotFoundError("Order not found")
         }
-      }
-      throw e
-    })
-  )()
+        throw e
+      })
+    )
+  )
 )

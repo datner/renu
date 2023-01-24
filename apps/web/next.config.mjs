@@ -1,5 +1,4 @@
 import { withBlitz } from "@blitzjs/next"
-import { withPlaiceholder } from "@plaiceholder/next"
 import { Locale } from "database"
 
 /**
@@ -49,4 +48,4 @@ const config = {
   },
 }
 
-export default withPlaiceholder(withBlitz(config))
+export default withBlitz(config)

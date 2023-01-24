@@ -1,27 +1,25 @@
-import { Prisma, PrismaClient, PrismaPromise } from "database"
-import { PrismaNotFoundError, PrismaValidationError } from "src/core/type/prisma"
-import db from "db"
+import db, { Prisma, PrismaClient, PrismaPromise } from "db"
 import * as TE from "fp-ts/TaskEither"
 
-export const prismaNotFound = (e: unknown): PrismaNotFoundError => ({
-  tag: "prismaNotFoundError",
-  error: e as Prisma.NotFoundError,
-})
-
-export const prismaNotValid = (e: unknown): PrismaValidationError => ({
-  tag: "prismaValidationError",
-  error: e as Prisma.PrismaClientValidationError,
-})
-
-type PrismaError = {
-  tag: "PrismaError"
-  error: unknown
+export interface PrismaErrorOptions extends ErrorOptions {
+  resource?: Prisma.ModelName
 }
 
-export const prismaError = (error: unknown): PrismaError => ({
-  tag: "PrismaError",
-  error,
-})
+export class PrismaError extends Error {
+  readonly _tag = "PrismaError"
+  constructor(public message: string, public options: PrismaErrorOptions) {
+    super(message, options)
+  }
+}
+
+export const prismaNotFound = (cause: unknown) =>
+  new PrismaError("prisma did not find requested resource", { cause })
+
+export const prismaNotValid = (cause: unknown) =>
+  new PrismaError("prisma encountered a validation error", { cause })
+
+export const prismaError = (cause: unknown) =>
+  new PrismaError("prisma has thrown an error", { cause })
 
 export const getVenueById =
   <Include extends Prisma.VenueInclude>(include: Include) =>

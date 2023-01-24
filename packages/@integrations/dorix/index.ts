@@ -7,25 +7,22 @@ import * as Duration from "@fp-ts/data/Duration"
 import * as E from "@fp-ts/data/Either"
 import * as T from "@fp-ts/data/These"
 import * as J from "@fp-ts/data/Json"
-import * as P from "@fp-ts/data/Predicate"
 import * as Context from "@fp-ts/data/Context"
-import * as D from "@fp-ts/schema/Decoder"
+import * as P from "@fp-ts/schema/Parser"
+import * as S from "@fp-ts/schema/Schema"
 import { CircuitBreaker, Http, Common, Management } from "@integrations/core"
 import { isTaggedError, taggedError } from "shared/errors"
 import {
   Integration,
   IntegrationService,
-  SendOrderResponseDecoder,
+  SendOrderResponse,
   StatusResponse,
   toOrder,
 } from "./helpers"
 import { ManagementProvider, OrderState } from "database"
-import { DorixMenuDecoder, toMenu } from "./menu"
+import { DorixMenu, toMenu } from "./menu"
 
-const decodeToEffect =
-  <I, A>(decoder: D.Decoder<I, A>) =>
-  (i: I) =>
-    pipe(decoder.decode(i), T.absolve, Effect.fromEither)
+const decodeToEffect = <A>(schema: S.Schema<A>) => flow(P.decode(schema), Effect.fromEither)
 
 const DorixConfig = (isQA = false) =>
   Config.struct({
@@ -33,10 +30,12 @@ const DorixConfig = (isQA = false) =>
     apiKey: Config.secret(`DORIX_${isQA ? "QA_" : ""}API_KEY`),
   })
 
-const dorixIntegrationLayer = Layer.fromEffect(IntegrationService)(
-  Effect.serviceWithEffect(Management.IntegrationSettingsService)(decodeToEffect(Integration))
+const dorixIntegrationLayer = Layer.effect(
+  IntegrationService,
+  Effect.serviceWithEffect(Management.IntegrationSettingsService, decodeToEffect(Integration))
 )
-const dorixHttpConfigLayer = Layer.fromEffect(Http.HttpConfigService)(
+const dorixHttpConfigLayer = Layer.effect(
+  Http.HttpConfigService,
   Effect.gen(function* ($) {
     const { vendorData } = yield* $(Effect.service(IntegrationService))
     const { isQA = false } = vendorData
@@ -49,9 +48,9 @@ const dorixHttpConfigLayer = Layer.fromEffect(Http.HttpConfigService)(
   })
 )
 
-const dorixIdentityLayer = Layer.succeed(Common.IdentityService)({ name: "Dorix" })
+const dorixIdentityLayer = Layer.succeed(Common.IdentityService, { name: "Dorix" })
 
-const dorixCircuitBreakerConfigLayer = Layer.succeed(CircuitBreaker.BreakerConfigService)({
+const dorixCircuitBreakerConfigLayer = Layer.succeed(CircuitBreaker.BreakerConfigService, {
   maxFailure: 3,
   cooldown: Duration.seconds(10),
 })
@@ -60,8 +59,8 @@ const dorixLayer = pipe(
   dorixIdentityLayer,
   Layer.merge(dorixIntegrationLayer),
   Layer.merge(dorixCircuitBreakerConfigLayer),
-  Layer.provideToAndMerge(dorixHttpConfigLayer),
-  Layer.provideToAndMerge(Http.Layers.HttpFetchLayer),
+  Layer.provideMerge(dorixHttpConfigLayer),
+  Layer.provideMerge(Http.Layers.HttpFetchLayer),
   Layer.merge(Common.Layers.DefaultRetrySchedule)
 )
 
@@ -77,10 +76,11 @@ interface DorixService extends Management.ManagementService {
 }
 export const DorixService = Context.Tag<DorixService>()
 
-export const DorixServiceLayer = Layer.fromEffect(DorixService)(
+export const DorixServiceLayer = Layer.effect(
+  DorixService,
   Effect.gen(function* ($) {
     const state = yield* $(CircuitBreaker.initState)
-    const provideBreakerState = Effect.provideService(CircuitBreaker.BreakerStateService)({
+    const provideBreakerState = Effect.provideService(CircuitBreaker.BreakerStateService, {
       state,
     })
 
@@ -103,7 +103,7 @@ export const DorixServiceLayer = Layer.fromEffect(DorixService)(
           ),
           CircuitBreaker.breaker(isHttpError),
           Effect.flatMap(Http.toJson),
-          Effect.flatMap(decodeToEffect(SendOrderResponseDecoder)),
+          Effect.flatMap(decodeToEffect(SendOrderResponse)),
           Effect.flatMap((res) =>
             res.ack ? Effect.succeed(res) : Effect.fail(new Error(res.message))
           ),
@@ -148,7 +148,7 @@ export const DorixServiceLayer = Layer.fromEffect(DorixService)(
         Effect.map((is) => is.vendorData.branchId),
         Effect.flatMap((branchId) => Http.request(`/v1/menu/branch/${branchId}`)),
         Effect.flatMap(Http.toJson),
-        Effect.flatMap(decodeToEffect(DorixMenuDecoder)),
+        Effect.flatMap(decodeToEffect(DorixMenu)),
         Effect.map(toMenu),
         Effect.provideSomeLayer(dorixLayer),
         Effect.mapError(Management.managementError)

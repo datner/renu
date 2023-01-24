@@ -21,7 +21,7 @@ export const CategoryHeader = memo(
       <div ref={ref} className="mb-2 px-4 mx-0.5 py-1 font-medium text-gray-800">
         <h3
           className={clsx(
-            "font-bold text-start text-5xl sm:text-kxl underline underline-offset-4 decoration-3 leading-tight",
+            "font-bold font-title text-start text-5xl sm:text-kxl underline underline-offset-4 decoration-3 leading-tight",
             [
               "group-5nth-1:text-emerald-800 group-5nth-1:decoration-emerald-500",
               "group-5nth-2:text-ocre-800 group-5nth-2:decoration-ocre-400",

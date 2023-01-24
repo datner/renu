@@ -9,12 +9,12 @@ export const makeRuntime = <R, E, A>(layer: ZL.Layer<R, E, A>) =>
   Z.gen(function* ($) {
     const scope = yield* $(Scope.make())
     const env = yield* $(ZL.buildWithScope(scope)(layer))
-    const runtime = yield* $(pipe(Z.runtime<A>(), Z.provideEnvironment(env)))
+    const runtime = yield* $(pipe(Z.runtime<A>(), Z.provideContext(env)))
     yield* $(Z.log("creating scope"))
 
     return {
       runtime,
-      clean: Scope.close(Exit.unit())(scope),
+      clean: Scope.close(scope, Exit.unit()),
     }
   })
 

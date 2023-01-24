@@ -10,7 +10,7 @@ import * as S from "fp-ts/string"
 import * as B from "fp-ts/boolean"
 import { NextApiRequest, NextApiResponse } from "next"
 import db, { Order, OrderState, Prisma } from "db"
-import { prismaNotFound, prismaNotValid } from "src/core/helpers/prisma"
+import { PrismaError, prismaNotFound, prismaNotValid } from "src/core/helpers/prisma"
 import { ensureType } from "src/core/helpers/zod"
 import { sendMessage } from "integrations/telegram/sendMessage"
 import { log } from "blitz"
@@ -141,7 +141,7 @@ const onCharge = (ppc: PayPlusCallback) =>
         ),
         RTE.chainFirstTaskEitherKW((o) => changeOrderState(o.id)(OrderState.Unconfirmed)),
         RTE.orElseFirstW((e) =>
-          e.tag === "ContinueToCheckStatus" ? RTE.right(e.order) : RTE.throwError(e)
+          !(e instanceof PrismaError) ? RTE.right(e.order) : RTE.throwError(e)
         ),
         RTE.chainW(
           flow(
@@ -170,7 +170,7 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) =>
       sendMessage(
         Format.fmt(
           `Error in payment callback\n\n`,
-          Format.pre("none")("error" in e && e.error instanceof Error ? e.error.message : e.tag)
+          Format.pre("none")(e instanceof Error ? e.message : e.tag)
         )
       )
     ),

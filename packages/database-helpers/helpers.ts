@@ -1,4 +1,4 @@
-import * as C from "@fp-ts/schema/Codec"
+import * as S from "@fp-ts/schema/Schema"
 import { pipe } from "@fp-ts/data/Function"
 import { Locale } from "@prisma/client"
 
@@ -7,57 +7,57 @@ export const ModifierEnum = {
   extras: "extras",
 } as const
 
-export const OptionContent = C.struct({
-  locale: C.enums(Locale),
-  name: C.string,
-  description: C.string,
+export const OptionContent = S.struct({
+  locale: S.enums(Locale),
+  name: S.string,
+  description: S.string,
 })
-export type OptionContent = C.Infer<typeof OptionContent>
+export type OptionContent = S.Infer<typeof OptionContent>
 
-export const BaseOption = C.struct({
-  managementRepresentation: C.optional(C.json),
-  identifier: C.string,
-  position: pipe(C.number, C.int),
-  price: C.number,
-  content: C.nonEmptyArray(OptionContent),
+export const BaseOption = S.struct({
+  managementRepresentation: S.optional(S.json),
+  identifier: S.string,
+  position: pipe(S.number, S.int()),
+  price: S.number,
+  content: S.nonEmptyArray(OptionContent),
 })
-export type BaseOption = C.Infer<typeof BaseOption>
+export type BaseOption = S.Infer<typeof BaseOption>
 
-export const OneOfOption = pipe(BaseOption, C.extend(C.struct({ default: C.boolean })))
-export type OneOfOption = C.Infer<typeof OneOfOption>
-export const ExtrasOption = pipe(BaseOption, C.extend(C.struct({ multi: C.boolean })))
-export type ExtrasOption = C.Infer<typeof ExtrasOption>
+export const OneOfOption = pipe(BaseOption, S.extend(S.struct({ default: S.boolean })))
+export type OneOfOption = S.Infer<typeof OneOfOption>
+export const ExtrasOption = pipe(BaseOption, S.extend(S.struct({ multi: S.boolean })))
+export type ExtrasOption = S.Infer<typeof ExtrasOption>
 
-export const BaseModifier = C.struct({
-  identifier: C.string,
-  content: C.nonEmptyArray(OptionContent),
-  options: C.nonEmptyArray(BaseOption),
+export const BaseModifier = S.struct({
+  identifier: S.string,
+  content: S.nonEmptyArray(OptionContent),
+  options: S.nonEmptyArray(BaseOption),
 })
-export type BaseModifier = C.Infer<typeof BaseModifier>
+export type BaseModifier = S.Infer<typeof BaseModifier>
 
 export const OneOf = pipe(
   BaseModifier,
-  C.extend(
-    C.struct({
-      _tag: C.literal(ModifierEnum.oneOf),
-      options: C.nonEmptyArray(OneOfOption),
+  S.extend(
+    S.struct({
+      _tag: S.literal(ModifierEnum.oneOf),
+      options: S.nonEmptyArray(OneOfOption),
     })
   )
 )
-export type OneOf = C.Infer<typeof OneOf>
+export type OneOf = S.Infer<typeof OneOf>
 
 export const Extras = pipe(
   BaseModifier,
-  C.extend(
-    C.struct({
-      _tag: C.literal(ModifierEnum.extras),
-      options: C.nonEmptyArray(ExtrasOption),
-      min: pipe(C.number, C.int, C.greaterThanOrEqualTo(0), C.nullable),
-      max: pipe(C.number, C.int, C.greaterThanOrEqualTo(0), C.nullable),
+  S.extend(
+    S.struct({
+      _tag: S.literal(ModifierEnum.extras),
+      options: S.nonEmptyArray(ExtrasOption),
+      min: pipe(S.number, S.int(), S.greaterThanOrEqualTo(0), S.nullable),
+      max: pipe(S.number, S.int(), S.greaterThanOrEqualTo(0), S.nullable),
     })
   )
 )
-export type Extras = C.Infer<typeof Extras>
+export type Extras = S.Infer<typeof Extras>
 
-export const ModifierConfig = C.union(OneOf, Extras)
-export type ModifierConfig = C.Infer<typeof ModifierConfig>
+export const ModifierConfig = S.union(OneOf, Extras)
+export type ModifierConfig = S.Infer<typeof ModifierConfig>

@@ -84,7 +84,7 @@ export const makeBreakerStateProvider = () =>
   pipe(
     initState,
     Effect.tap(() => Effect.logWarning("Create new breaker state")),
-    Effect.map((state) => Effect.provideService(BreakerStateService)({ state }))
+    Effect.map((state) => Effect.provideService(BreakerStateService, { state }))
   )
 
 export const breaker =
@@ -102,8 +102,8 @@ export const breaker =
             O.liftPredicate(isRetryable),
             O.as(
               pipe(
-                state,
                 Ref.update(
+                  state,
                   onClosed((s) =>
                     s.failCount < config.maxFailure
                       ? closed(s.failCount + 1)
@@ -116,8 +116,8 @@ export const breaker =
           )
 
         return pipe(
-          state,
           Ref.updateAndGet(
+            state,
             onOpen((s) =>
               pipe(
                 s.endTime,
@@ -133,7 +133,7 @@ export const breaker =
             foldBreaker(
               () => pipe(self, Effect.catchSome(failOnPred)),
               () =>
-                Effect.serviceWithEffect(Common.IdentityService)(({ name }) =>
+                Effect.serviceWithEffect(Common.IdentityService, ({ name }) =>
                   Effect.fail(breakerError(new Error(`Breaker ${name} is open`)))
                 )
             )
@@ -156,7 +156,7 @@ export const breaker =
               )
             )
           ),
-          Effect.tap(() => Ref.set(closed(0))(state))
+          Effect.tap(() => Ref.set(state, closed(0)))
         )
       })
     )

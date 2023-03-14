@@ -5,12 +5,11 @@ import { useTranslations } from "next-intl"
 import { FormProvider, useController } from "react-hook-form"
 import getUploadUrl from "../mutations/getUploadUrl"
 import { FormDropzone } from "./FormDropzone"
-import { FC, PropsWithChildren, useReducer } from "react"
+import { useReducer } from "react"
 import { match } from "ts-pattern"
 import { FormCategoryCombobox } from "./FormCategoryCombobox"
 import { DeleteButton } from "./DeleteButton"
-import { pipe, constNull, flow, constTrue } from "fp-ts/function"
-import * as TE from "fp-ts/TaskEither"
+import { pipe, constNull, constTrue } from "fp-ts/function"
 import * as O from "fp-ts/Option"
 import * as Eq from "fp-ts/Eq"
 import { useStableEffect } from "fp-ts-react-stable-hooks"
@@ -27,30 +26,8 @@ import getVenueManagementIntegration from "src/venues/queries/current/getVenueMa
 
 type Props = {
   item: O.Option<GetItemResult>
-  onSubmit(data: ItemSchema): TE.TaskEither<string, GetItemResult>
+  onSubmit(data: ItemSchema): void
 }
-
-const ItemFormTabs: FC<PropsWithChildren<unknown>> = ({ children }) => (
-  <Tabs
-    keepMounted={false}
-    sx={{ flexGrow: 1, display: "flex", minHeight: 0, flexDirection: "column" }}
-    classNames={{ panel: "border-b-2 flex flex-col grow min-h-0" }}
-    defaultValue="general"
-  >
-    <Tabs.List px={24}>
-      <Tabs.Tab value="general" icon={<DocumentTextIcon className="h-5 w-5" />}>
-        General
-      </Tabs.Tab>
-      <Tabs.Tab value="modifiers" icon={<AdjustmentsVerticalIcon className="h-5 w-5" />}>
-        Modifiers
-      </Tabs.Tab>
-      <Tabs.Tab value="integrations" icon={<PuzzlePieceIcon className="h-5 w-5" />}>
-        Integrations
-      </Tabs.Tab>
-    </Tabs.List>
-    {children}
-  </Tabs>
-)
 
 export function ItemForm(props: Props) {
   const { onSubmit: onSubmit_, item } = props
@@ -100,10 +77,7 @@ export function ItemForm(props: Props) {
             }).then((res) => res.json())
             image.src = origin_path
           }
-          await pipe(
-            onSubmit_(data),
-            TE.match(setFormError, flow(O.some, toDefaults(integration), reset))
-          )()
+          onSubmit_(data)
         } catch (error: any) {
           setFormError(error.toString())
         }
@@ -171,7 +145,27 @@ export function ItemForm(props: Props) {
           <div>{deleteButton}</div>
         </div>
         <form className="grow min-h-0 flex flex-col" onSubmit={onSubmit}>
-          <ItemFormTabs>
+          <Tabs
+            keepMounted={false}
+            sx={{ flexGrow: 1, display: "flex", minHeight: 0, flexDirection: "column" }}
+            classNames={{ panel: "border-b-2 flex flex-col grow min-h-0" }}
+            defaultValue="general"
+          >
+            <Tabs.List px={24}>
+              <Tabs.Tab value="general" icon={<DocumentTextIcon className="h-5 w-5" />}>
+                General
+              </Tabs.Tab>
+              <Tabs.Tab value="modifiers" icon={<AdjustmentsVerticalIcon className="h-5 w-5" />}>
+                Modifiers
+              </Tabs.Tab>
+              <Tabs.Tab
+                disabled={integration.id === -1}
+                value="integrations"
+                icon={<PuzzlePieceIcon className="h-5 w-5" />}
+              >
+                Integrations
+              </Tabs.Tab>
+            </Tabs.List>
             <Tabs.Panel value="general">
               <div className="p-4 flex gap-4">
                 <fieldset className="space-y-2 flex-1" disabled={isSubmitting || isRemoving}>
@@ -232,7 +226,7 @@ export function ItemForm(props: Props) {
                 {message}
               </Button>
             </div>
-          </ItemFormTabs>
+          </Tabs>
         </form>
       </Paper>
     </FormProvider>

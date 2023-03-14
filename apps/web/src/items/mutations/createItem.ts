@@ -1,71 +1,71 @@
 import { resolver } from "@blitzjs/rpc"
-import * as TE from "fp-ts/TaskEither"
-import * as T from "fp-ts/Task"
-import * as L from "monocle-ts/Lens"
-import { getBlurDataUrl } from "src/core/helpers/plaiceholder"
-import db, { Venue } from "db"
-import { CreateItem } from "../validations"
-import { pipe } from "fp-ts/function"
+import * as Effect from "@effect/io/Effect"
+import * as Optic from "@fp-ts/optic"
+import { getBlurHash } from "src/core/helpers/plaiceholder"
+import { Prisma } from "database"
+import db from "db"
+import { CreateItem, CreateItemSchema, toCreateItem } from "../validations"
+import { pipe } from "@effect/data/Function"
 import { z } from "zod"
-import { setDefaultOrganizationIdNoFilter } from "src/auth/helpers/setDefaultOrganizationId"
-import { setDefaultVenue } from "src/auth/helpers/setDefaultVenue"
-import { prismaNotFound, prismaNotValid } from "src/core/helpers/prisma"
+import * as Parser from "@effect/schema/Parser"
+import { PrismaError } from "src/core/helpers/prisma"
+import * as Renu from "src/core/effect/runtime"
+import * as O from "@effect/data/Option"
 
 export type CreateItemOutput = z.infer<typeof CreateItem>
-const createItem = ({
-  venue,
-  ...data
-}: CreateItemOutput & { venue: Venue; blurDataUrl: string | undefined }) =>
-  TE.tryCatch(
+const createItem = (data: Prisma.ItemCreateInput) =>
+  Effect.tryCatchPromise(
     () =>
       db.item.create({
         include: { content: true, modifiers: true },
-        data: {
-          ...data,
-          organizationId: venue.organizationId,
-          Venue: { connect: { id: venue.id } },
-        },
+        data,
       }),
-    prismaNotValid
+    (cause) => new PrismaError("failed to create new item", { cause, resource: "Item" })
   )
 
-const catItemPos = pipe(
-  L.id<CreateItemOutput>(),
-  L.prop("categoryItems"),
-  L.prop("create"),
-  L.prop("position")
-)
+const input_ = Optic.id<Prisma.ItemCreateInput>()
 
-const catItemCategory = pipe(
-  L.id<CreateItemOutput>(),
-  L.prop("categoryItems"),
-  L.prop("create"),
-  L.prop("Category"),
-  L.prop("connect")
-)
+const categoryItemConnect = input_
+  .at("category")
+  .nonNullable()
+  .at("connect")
+  .nonNullable()
+  .at("id")
+  .nonNullable()
 
-const setPositionInCategory = <T extends CreateItemOutput>(input: T) =>
+const categoryItemPosition = input_
+  .at("categoryItems")
+  .nonNullable()
+  .at("create")
+  .nonNullable()
+  .filter((s): s is Prisma.CategoryItemCreateWithoutItemInput => !Array.isArray(s))
+  .at("position")
+
+const setPositionInCategory = <T extends ReturnType<typeof toCreateItem>>(input: T) =>
   pipe(
-    TE.tryCatch(
-      () => db.categoryItem.count({ where: { Category: catItemCategory.get(input) } }),
-      prismaNotFound
+    Effect.tryCatchPromise(
+      () =>
+        db.categoryItem.count({
+          where: { Category: { id: O.getOrThrow(Optic.getOption(categoryItemConnect)(input)) } },
+        }),
+      (cause) =>
+        new PrismaError("could not get category item count", { cause, resource: "CategoryItem" })
     ),
-    TE.map(catItemPos.set),
-    TE.ap(TE.of(input)),
-    TE.map((a) => a as T)
+    Effect.map((count) => Optic.replace(categoryItemPosition)(count)(input))
   )
 
 export default resolver.pipe(
-  resolver.zod(CreateItem),
+  Parser.decodeOrThrow(CreateItemSchema),
   resolver.authorize(),
-  setDefaultOrganizationIdNoFilter,
-  setDefaultVenue,
-  (input) =>
+  (input, ctx) =>
     pipe(
-      T.of(input),
-      T.apS("blurDataUrl", () => getBlurDataUrl(input.image)),
-      TE.fromTask,
-      TE.chain(setPositionInCategory),
-      TE.chainW(createItem)
-    )()
+      Effect.succeed(input),
+      Effect.map(toCreateItem),
+      Effect.bind("blurHash", ({ image }) => getBlurHash(image)),
+      Effect.bindValue("organizationId", () => ctx.session.organization.id),
+      Effect.bindValue("Venue", () => ({ connect: { id: ctx.session.venue.id } })),
+      Effect.flatMap(setPositionInCategory),
+      Effect.flatMap(createItem),
+      Renu.runPromise$
+    )
 )

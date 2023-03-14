@@ -2,7 +2,8 @@
   "admin": {
     "Components": {
       "Aside": {
-        "items": "פריטים"
+        "items": "פריטים",
+        "categories": "קטגוריות"
       },
       "FormCategoryCombobox": {
         "category": "קטגוריה"

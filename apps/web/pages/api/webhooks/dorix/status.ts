@@ -86,7 +86,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) =>
       sendMessage(
         Format.fmt(
           `Error in dorix callback\n\n`,
-          Format.pre("none")(e.error instanceof Error ? e.error.message : e.tag)
+          Format.pre("none")(
+            "error" in e && e.error instanceof Error
+              ? e.error.message
+              : "too complicated for me to unfurl"
+          )
         )
       )
     ),

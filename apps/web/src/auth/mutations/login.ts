@@ -24,7 +24,7 @@ export const authenticateUser =
     pipe(
       findFirstUser(args),
       TE.mapLeft((e) =>
-        e.error instanceof Prisma.PrismaClientKnownRequestError && e.error.code === "P2025"
+        e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025"
           ? ({
               tag: "AuthenticationError" as const,
               error: new AuthenticationError(),

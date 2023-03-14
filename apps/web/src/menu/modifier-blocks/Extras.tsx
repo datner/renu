@@ -1,27 +1,26 @@
 import { Transition } from "@headlessui/react"
-import { ExtrasOption, Extras } from "db/itemModifierConfig"
 import { useState } from "react"
 import { getLabel } from "./helpers"
 import { useLocale } from "src/core/hooks/useLocale"
 import { Locale } from "db"
-import { useController, useFormContext, useFormState } from "react-hook-form"
+import { useController, useFormContext, useWatch } from "react-hook-form"
 import { ItemForm } from "../validations/item"
-import { constFalse, constNull, identity, pipe } from "fp-ts/function"
-import * as s from "fp-ts/string"
-import * as n from "fp-ts/number"
-import * as O from "fp-ts/Option"
-import * as Ord from "fp-ts/Ord"
-import * as RR from "fp-ts/Record"
+import { constFalse, constNull, pipe } from "@effect/data/Function"
+import * as N from "@effect/data/Number"
+import * as O from "@effect/data/Option"
+import * as A from "@effect/data/ReadonlyArray"
+import * as RR from "@effect/data/ReadonlyRecord"
 import { useTranslations } from "next-intl"
 import { toShekel } from "src/core/helpers/content"
 import { useTimeout } from "@mantine/hooks"
 import { AmountCounter } from "../components/AmountCounter"
+import * as _Menu from "src/menu/schema"
+import { Modifiers } from "database-helpers"
+import { constTrue } from "fp-ts/lib/function"
 
 type Props = {
-  modifier: Extras
+  modifier: _Menu.ItemModifier<Modifiers.Extras>
 }
-
-const optNumberLt = pipe(n.Ord, O.getOrd, Ord.lt)
 
 const ExtrasCheck = ({
   option,
@@ -29,12 +28,12 @@ const ExtrasCheck = ({
   name,
   maxReached,
 }: {
-  option: ExtrasOption
+  option: Modifiers.ExtrasOption
   locale: Locale
   name: string
   maxReached: boolean
 }) => {
-  const { field } = useController({ name })
+  const { field } = useController({ name, defaultValue: 0 })
   const handleChange = () => {
     changeValue(field.value > 0 ? 0 : 1)
   }
@@ -45,9 +44,12 @@ const ExtrasCheck = ({
     changeValue(value)
   }
   const [show, setShow] = useState(field.value > 0 && option.multi)
-  const { start, clear } = useTimeout(() => setShow(false), 1600)
+  const { start, clear } = useTimeout(() => setShow(false), 1600, { autoInvoke: true })
   const changeValue = (value: number) => {
-    field.onChange(value)
+    if (value !== field.value) {
+      // prevents needless rerender
+      field.onChange(value)
+    }
     clear()
     if (value > 0 && option.multi) {
       setShow(true)
@@ -58,6 +60,7 @@ const ExtrasCheck = ({
 
   return (
     <div key={option.identifier} className="label relative gap-1 justify-start">
+      <input id={"input-" + field.name} type="number" className="hidden" {...field} />
       <input
         id={`checkbox-${option.identifier}`}
         disabled={field.value === 0 && maxReached}
@@ -67,7 +70,7 @@ const ExtrasCheck = ({
         onChange={handleChange}
       />
       <div className="absolute inset-0 z-10" onClick={handleClick} />
-      <label htmlFor={`checkbox-${option.identifier}`} className="label-text grow">
+      <label htmlFor={"input-" + field.name} className="label-text grow">
         <AmountCounter label={getLabel(option)(locale)} amount={field.value} />
       </label>
       {option.price > 0 && (
@@ -102,62 +105,69 @@ const ExtrasCheck = ({
   )
 }
 
-const foldSum = RR.foldMap(s.Ord)(n.MonoidSum)
+const getAmount = (choices?: Record<string, number>) =>
+  pipe(
+    O.fromNullable(choices),
+    O.map(RR.collect((_, a) => a)),
+    O.map(N.sumAll),
+    O.getOrElse(() => 0)
+  )
 
 export const ExtrasComponent = (props: Props) => {
   const { modifier } = props
+  const { id, config } = modifier
   const locale = useLocale()
   const t = useTranslations("menu.Components.Extras")
-  const { field, fieldState } = useController<ItemForm, `modifiers.extras.${string}`>({
-    name: `modifiers.extras.${modifier.identifier}`,
+  const { control } = useFormContext<ItemForm>()
+
+  const { field, fieldState } = useController({
+    control,
+    name: `modifiers.extras.${id}.choices`,
+    rules: {
+      validate: {
+        overMax: (o) => O.match(config.max, constTrue, N.greaterThanOrEqualTo(getAmount(o))),
+        belowMin: (o) =>
+          N.lessThanOrEqualTo(
+            O.getOrElse(config.min, () => 0),
+            getAmount(o)
+          ),
+      },
+    },
   })
 
-  const currentAmount = pipe(field.value.choices, foldSum(identity))
+  const value = useWatch({ control, name: `modifiers.extras.${id}.choices` })
 
-  const maxReached = pipe(
-    modifier.max,
-    O.fold(constFalse, (max) => Ord.geq(n.Ord)(currentAmount, max))
+  const maxReached = O.match(config.max, constFalse, (max) =>
+    N.lessThanOrEqualTo(max, getAmount(value))
   )
 
-  const minText = pipe(
-    modifier.min,
-    O.map((min) => t("min", { min }))
-  )
-  const maxText = pipe(
-    modifier.max,
-    O.map((max) => t("max", { max }))
-  )
+  const minText = O.map(config.min, (min) => t("min", { min }))
+
+  const maxText = O.map(config.max, (max) => t("max", { max }))
+
   const minMaxText = pipe(
-    O.sequenceArray([minText, maxText]),
-    O.fold(constNull, (txts) => txts.join(" "))
-  )
-
-  // types here are fucked, can't create an optic for it
-  const errorText = pipe(
-    fieldState.error,
-    O.fromNullable,
-    O.chainNullableK((o) => o?.message),
-    O.fold(constNull, () => <span className="text-error">{t("error")}</span>)
+    A.sequence(O.Applicative)([minText, maxText]),
+    O.match(constNull, (txts) => txts.join(" "))
   )
 
   return (
     <fieldset ref={field.ref} tabIndex={0} className="form-control">
       <legend className="label w-full">
         <p className="label-text">
-          {getLabel(modifier)(locale)}
+          {getLabel(config)(locale)}
           <br />
           {minMaxText}
           <br />
-          {errorText}
+          {fieldState.invalid && <span className="text-error">{t("error")}</span>}
         </p>
       </legend>
-      {modifier.options.map((o) => (
+      {config.options.map((o) => (
         <ExtrasCheck
           maxReached={maxReached}
           key={o.identifier}
           locale={locale}
           option={o}
-          name={`modifiers.extras.${modifier.identifier}.choices.${o.identifier}`}
+          name={`modifiers.extras.${id}.choices.${o.identifier}`}
         />
       ))}
     </fieldset>

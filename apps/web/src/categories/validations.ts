@@ -1,5 +1,6 @@
-import { Locale } from "database"
-import { Slug } from "src/auth/validations"
+import { Common } from "src/core/schema"
+import * as S from "@effect/schema/Schema"
+import { pipe } from "@effect/data/Function"
 import { z } from "zod"
 
 export const Content = z.object({
@@ -7,19 +8,26 @@ export const Content = z.object({
   description: z.string().default(""),
 })
 
-export const CategorySchema = z.object({
-  identifier: Slug,
-  en: Content.transform((it) => ({ ...it, locale: Locale.en })),
-  he: Content.transform((it) => ({ ...it, locale: Locale.he })),
+const _CategoryContent = pipe(Common.Content, S.omit("locale"))
+
+export const CreateCategory = S.struct({
+  identifier: Common.Slug,
+  en: _CategoryContent,
+  he: _CategoryContent,
 })
 
-export const UpdateCategory = CategorySchema
+export const CreateCategoryResult = S.struct({
+  identifier: Common.Slug,
+  content: S.struct({ createMany: S.struct({ data: S.array(Common.Content) }) }),
+})
 
-export const CreateCategory = CategorySchema.transform(({ en, he, identifier }) => ({
-  identifier,
-  content: { createMany: { data: [en, he] } },
-}))
+export interface CategoryForm {
+  identifier: string
+  en: { name: string; description?: string }
+  he: { name: string; description?: string }
+}
 
-export type UpdateCategory = z.input<typeof UpdateCategory>
-export type CreateCategory = z.input<typeof CreateCategory>
-export type CategorySchema = z.input<typeof CategorySchema>
+export const UpdateCategory = CreateCategory
+export interface UpdateCategory extends S.Infer<typeof UpdateCategory> {}
+export interface CreateCategory extends S.Infer<typeof CreateCategory> {}
+export interface CategorySchema extends S.Infer<typeof CreateCategory> {}

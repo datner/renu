@@ -1,14 +1,12 @@
 import * as Effect from "@effect/io/Effect"
-import * as Context from "@fp-ts/data/Context"
-import * as T from "@fp-ts/data/These"
-import * as O from "@fp-ts/data/Option"
-import * as E from "@fp-ts/data/Either"
-import * as A from "@fp-ts/data/ReadonlyArray"
-import * as Duration from "@fp-ts/data/Duration"
-import * as C from "@fp-ts/schema/Codec"
-import * as D from "@fp-ts/schema/Decoder"
-import * as S from "@fp-ts/schema/Schema"
-import { pipe } from "@fp-ts/data/Function"
+import * as Context from "@effect/data/Context"
+import * as Duration from "@effect/data/Duration"
+import * as O from "@effect/data/Option"
+import * as E from "@effect/data/Either"
+import * as A from "@effect/data/ReadonlyArray"
+import * as P from "@effect/schema/Parser"
+import * as S from "@effect/schema/Schema"
+import { pipe } from "@effect/data/Function"
 import * as Management from "@integrations/core/management"
 import { ManagementProvider, Order, OrderItem, OrderItemModifier, Prisma } from "database"
 import { Modifiers } from "database-helpers"
@@ -23,32 +21,30 @@ type FullOrderModifier = Prisma.OrderItemModifierGetPayload<{
   include: { modifier: true }
 }>
 
-export const DorixIntegrations = C.struct({
-  provider: C.literal(ManagementProvider.DORIX),
-  vendorData: C.struct({
-    branchId: C.string,
-    isQA: C.optional(C.boolean),
+export const DorixIntegrations = S.struct({
+  provider: S.literal(ManagementProvider.DORIX),
+  vendorData: S.struct({
+    branchId: S.string,
+    isQA: S.optional(S.boolean),
   }),
 })
 
 export const Integration = pipe(
   Management.Integration,
-  C.omit("vendorData"),
-  C.extend(DorixIntegrations)
+  S.omit("vendorData"),
+  S.omit("provider"),
+  S.extend(DorixIntegrations)
 )
-export type Integration = C.Infer<typeof Integration>
+export interface Integration extends S.Infer<typeof Integration> {}
 
 export const IntegrationService = Context.Tag<Integration>()
 
-const ManagementRepresentation = pipe(
-  C.struct({ id: pipe(C.string, C.nullable, C.optional) }),
-  C.partial
-)
+const ManagementRepresentation = S.struct({ id: pipe(S.string, S.nullable, S.optional) })
 
 export const toModifier = A.map((m: FullOrderModifier) =>
   pipe(
-    Modifiers.BaseModifier.decode(m.modifier.config),
-    T.toEither((_, a) => E.right(a)),
+    m.modifier.config,
+    P.decode(Modifiers.BaseModifier),
     E.bindTo("config"),
     E.let("modifierName", ({ config }) =>
       pipe(
@@ -67,8 +63,8 @@ export const toModifier = A.map((m: FullOrderModifier) =>
     ),
     E.let("id", ({ choice }) =>
       pipe(
-        ManagementRepresentation.decode(choice.managementRepresentation),
-        T.toEither((_, a) => E.right(a)),
+        choice.managementRepresentation,
+        P.decode(ManagementRepresentation),
         O.fromEither,
         O.flatMapNullable((mr) => mr.id),
         O.getOrElse(() => m.choice)
@@ -106,7 +102,7 @@ export const toItem = A.map<OrderItemWithInfo, Dorix.Item>(
 )
 
 export const getDesiredTime = () =>
-  pipe(Duration.millis(Date.now()), Duration.add(Duration.minutes(10)), (d) =>
+  pipe(Duration.millis(Date.now()), Duration.sum(Duration.minutes(10)), (d) =>
     new Date(d.millis).toISOString()
   )
 
@@ -164,38 +160,38 @@ const ORDER_STATUS = {
   unreachable: "UNREACHABLE",
 } as const
 
-export const OrderStatus = C.enums(ORDER_STATUS)
+export const OrderStatus = S.enums(ORDER_STATUS)
 
-const nullishString = pipe(C.string, C.nullable, C.optional)
+const nullishString = pipe(S.string, S.nullable, S.optional)
 
-export const StatusResponse = C.struct({
-  branch: C.struct({
-    id: C.string,
+export const StatusResponse = S.struct({
+  branch: S.struct({
+    id: S.string,
     name: nullishString,
   }),
-  order: C.struct({
+  order: S.struct({
     status: OrderStatus,
     id: nullishString,
-    externalId: C.string,
-    source: C.literal("RENU"),
-    metadata: pipe(C.struct({}), C.optional),
-    estimatedTime: pipe(C.number, C.optional),
+    externalId: S.string,
+    source: S.literal("RENU"),
+    metadata: pipe(S.struct({}), S.optional),
+    estimatedTime: pipe(S.number, S.optional),
   }),
   history: pipe(
-    C.struct({
+    S.struct({
       status: OrderStatus,
-      timestamp: C.string,
+      timestamp: S.string,
     }),
-    C.array,
-    C.optional
+    S.array,
+    S.optional
   ),
   error: pipe(
-    C.struct({
-      message: C.string,
-      stack: C.string,
+    S.struct({
+      message: S.string,
+      stack: S.string,
     }),
-    C.partial,
-    C.optional
+    S.partial,
+    S.optional
   ),
 })
 
@@ -203,5 +199,3 @@ export const SendOrderResponse = S.union(
   S.struct({ ack: S.literal(true) }),
   S.struct({ ack: S.literal(false), message: pipe(S.string, S.optional) })
 )
-
-export const SendOrderResponseDecoder = D.decoderFor(SendOrderResponse)

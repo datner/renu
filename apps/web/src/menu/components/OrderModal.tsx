@@ -1,7 +1,7 @@
 import { useTranslations } from "next-intl"
 import { OrderModalItem } from "./OrderModalItem"
 import { Modal } from "./Modal"
-import { titleFor, toShekel } from "src/core/helpers/content"
+import { toShekel } from "src/core/helpers/content"
 import { useMutation } from "@blitzjs/rpc"
 import sendOrder from "../mutations/sendOrder"
 import { useLocale } from "src/core/hooks/useLocale"
@@ -10,66 +10,82 @@ import { Query } from "src/menu/validations/page"
 import useMeasure from "react-use-measure"
 import { usePrevious } from "src/core/hooks/usePrevious"
 import { useSpring, a } from "@react-spring/web"
-import { Locale } from "database"
-import * as E from "fp-ts/Either"
-import { useAtomValue } from "jotai"
-import { amountAtom, orderAtomFamily, orderItemsAtom, priceAtom } from "src/menu/jotai/order"
+import * as Order from "src/menu/hooks/useOrder"
+import * as HashMap from "@effect/data/HashMap"
+import * as A from "@effect/data/ReadonlyArray"
+import { pipe, absurd } from "@effect/data/Function"
 
 type Props = {
   open?: boolean
   onClose(): void
+  order: Order.Order
+  dispatch: Order.OrderDispatch
 }
 
-const title = titleFor(Locale.he)
-
 export function OrderModal(props: Props) {
-  const { onClose, open } = props
-  const items = useAtomValue(orderItemsAtom)
-  const amount = useAtomValue(amountAtom)
-  const overallPrice = useAtomValue(priceAtom)
+  const { onClose, open, order, dispatch } = props
   const t = useTranslations("menu.Components.OrderModal")
   const locale = useLocale()
   const { restaurant } = useZodParams(Query)
   const [ref, { height }] = useMeasure()
   const isNoHeight = usePrevious(height) === 0
   const { h } = useSpring({ h: height, immediate: isNoHeight })
-  const [sendOrderMutation, { isIdle, reset }] = useMutation(sendOrder, {
-    onSuccess: E.match(
-      (e) => {
-        switch (e.tag) {
-          case "ClearingMismatchError":
-            return console.log("Clearing mismatch error", e)
-          case "NoEnvVarError":
-            return console.log("add missing env var", e.key)
-          default: {
-            console.group(e.tag)
-            console.error(String(e.error))
-            console.groupEnd()
-          }
-        }
-        reset()
-      },
-      (url) => {
-        reset()
-        return window.location.assign(url)
-      }
-    ),
+  const [sendOrderMutation, { isLoading }] = useMutation(sendOrder, {
+    onSuccess: (url) => {
+      return window.location.assign(url.href)
+    },
   })
 
   const handleOrder = () => {
+    if (Order.isEmptyOrder(order)) return
+
     sendOrderMutation({
       locale,
       venueIdentifier: restaurant,
-      orderItems: items.map((it) => ({
-        comment: it.comment,
-        amount: it.amount,
-        price: it.item.price,
-        item: it.item.id,
-        name: title(it.item),
-        modifiers: it.modifiers,
-      })),
+      orderItems: pipe(
+        order.items,
+        HashMap.map((it) => ({
+          comment: it.comment,
+          amount: Order.isMultiOrderItem(it) ? it.amount : Order.Amount(1),
+          cost: it.cost,
+          item: it.item.id,
+          modifiers: pipe(
+            it.modifiers,
+            A.fromIterable,
+            A.map(([id, mod]) => {
+              if (Order.isOneOf(mod)) {
+                return {
+                  _tag: "OneOf",
+                  id,
+                  choice: mod.choice,
+                  amount: mod.amount,
+                } as const
+              }
+              if (Order.isExtras(mod)) {
+                return {
+                  _tag: "Extras",
+                  id,
+                  choices: A.fromIterable(mod.choices),
+                } as const
+              }
+
+              throw absurd(mod)
+            })
+          ),
+        })),
+        HashMap.values,
+        A.fromIterable
+      ),
     })
   }
+
+  const amount = Order.getOrderAmount(order)
+  const cost = Order.getOrderCost(order)
+  const items = Order.getOrderItems(order)
+
+  const listItems = HashMap.mapWithIndex(items, (item, key) => (
+    <OrderModalItem key={key} hash={key} dispatch={dispatch} orderItem={item} />
+  ))
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -79,22 +95,20 @@ export function OrderModal(props: Props) {
         <div>
           <a.div style={{ height: h }}>
             <ul ref={ref} className="divide-y divide-emerald-400">
-              {items.map(({ item }) => (
-                <OrderModalItem key={item.identifier} atom={orderAtomFamily(item)} />
-              ))}
+              {HashMap.values(listItems)}
             </ul>
           </a.div>
           <div className="h-8" />
           <button
             onClick={handleOrder}
-            disabled={!isIdle || amount === 0}
+            disabled={isLoading || amount === 0}
             className="btn w-full btn-primary"
           >
-            <span className="badge badge-outline badge-ghost">{amount}</span>
+            <span className="badge badge-outline badge-ghost">{}</span>
             <span className="inline-block flex-grow px-3 text-left rtl:text-right">
-              {isIdle ? t("order") : t("loading")}
+              {isLoading ? t("loading") : t("order")}
             </span>
-            <span className="tracking-wider font-light">{toShekel(overallPrice)}</span>
+            <span className="tracking-wider font-light">{toShekel(cost)}</span>
           </button>
         </div>
       </div>

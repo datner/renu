@@ -1,26 +1,28 @@
 import { gSP } from "src/blitz-server"
 import { GetStaticPaths, GetStaticPropsContext, InferGetStaticPropsType } from "next"
 import clsx from "clsx"
-import db, { Locale, Prisma } from "db"
-import { Fragment, useState } from "react"
+import db, { Locale } from "db"
+import { Fragment, useMemo, useState } from "react"
 import { useLocale } from "src/core/hooks/useLocale"
 import { contentOption, titleFor } from "src/core/helpers/content"
 import { CategoryHeader } from "src/menu/components/CategoryHeader"
 import { useNavBar } from "src/menu/hooks/useNavBar"
-import { matchW } from "fp-ts/Option"
-import { constNull } from "fp-ts/function"
 import { NotFoundError } from "blitz"
 import dynamic from "next/dynamic"
 import { Query } from "src/menu/validations/page"
 import Head from "next/head"
 import { BlitzPage } from "@blitzjs/auth"
 import MenuLayout from "src/core/layouts/MenuLayout"
-import { OrderItem, orderAtomFamily } from "src/menu/jotai/order"
-import { useAtom, useSetAtom } from "jotai"
-import { itemAtom, itemModalOpenAtom } from "src/menu/jotai/item"
-import { ModifierConfig } from "db/itemModifierConfig"
 import { Closed } from "src/menu/components/Closed"
 import { ListItem } from "src/menu/components/ListItem"
+import * as Order from "src/menu/hooks/useOrder"
+import { selectTheEntireMenu } from "src/menu/prisma"
+import * as A from "@effect/data/ReadonlyArray"
+import * as HashMap from "@effect/data/HashMap"
+import * as Data from "@effect/data/Data"
+import { pipe } from "@effect/data/Function"
+import * as Parser from "@effect/schema/Parser"
+import * as _Menu from "src/menu/schema"
 
 const LazyViewOrderButton = dynamic(() => import("src/menu/components/ViewOrderButton"), {
   suspense: true,
@@ -33,24 +35,19 @@ const LazyOrderModal = dynamic(() => import("src/menu/components/OrderModal"), {
 })
 
 export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) => {
-  const { restaurant } = props
+  const restaurant = useMemo(
+    () => Parser.decodeOrThrow(_Menu.FullMenu)(props.restaurant),
+    [props.restaurant]
+  )
+
   const { categories } = restaurant
   const { attachNav, setRoot, observe, active, setActive } = useNavBar()
+  // add the item modal state to the dispatch as well, just for laughs
+  const [orderState, dispatch] = Order.useOrder()
   const locale = useLocale()
-  const [item, setItem] = useAtom(itemAtom)
-  const setOpen = useSetAtom(itemModalOpenAtom)
   const [reviewOrder, setReviewOrder] = useState(false)
 
-  const handleShowOrderModal = (item: OrderItem["item"]) => {
-    setItem(item)
-    setOpen(true)
-  }
-
   const getTitle = titleFor(locale)
-
-  const itemModal = matchW<null, OrderItem["item"], JSX.Element>(constNull, (item) => (
-    <LazyItemModal atom={orderAtomFamily(item)} />
-  ))
 
   if (!restaurant.open) {
     return (
@@ -63,6 +60,8 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
       </>
     )
   }
+
+  const orderItems = Order.getOrderItems(orderState.order)
 
   return (
     <>
@@ -120,13 +119,32 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
             >
               <CategoryHeader category={category} />
               <ul role="list" className="flex flex-col gap-2 pb-2 group-last:min-h-screen">
-                {category.items?.map((item) => (
-                  <ListItem
-                    key={item.id}
-                    atom={orderAtomFamily(item)}
-                    onClick={() => handleShowOrderModal(item)}
-                  />
-                ))}
+                {category.categoryItems?.map(({ Item: item }) => {
+                  const orderItem = pipe(
+                    HashMap.filter(orderItems, (it) => it.item.id === item.id),
+                    HashMap.mapWithIndex((oi, key) => [key, oi] as const),
+                    HashMap.values,
+                    A.fromIterable
+                  )
+
+                  return A.match(
+                    orderItem,
+                    () => [
+                      <ListItem
+                        key={item.identifier}
+                        item={Order.NewActiveItem({ item: Data.struct(item) })}
+                        dispatch={dispatch}
+                      />,
+                    ],
+                    A.map(([key, it]) => (
+                      <ListItem
+                        key={item.identifier}
+                        item={Order.ExistingActiveItem({ item: it, key })}
+                        dispatch={dispatch}
+                      />
+                    ))
+                  )
+                })}
               </ul>
               <div
                 className={clsx("h-16 bg-gradient-to-b", [
@@ -142,12 +160,19 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
           ))}
         </div>
         <LazyViewOrderButton
+          order={orderState.order}
           onClick={() => {
             setReviewOrder(true)
           }}
         />
-        <LazyOrderModal open={reviewOrder} onClose={() => setReviewOrder(false)} />
-        {itemModal(item)}
+        <LazyOrderModal
+          order={orderState.order}
+          dispatch={dispatch}
+          open={reviewOrder}
+          onClose={() => setReviewOrder(false)}
+        />
+        <LazyItemModal dispatch={dispatch} activeItem={orderState.activeItem} />
+
         {restaurant.simpleContactInfo && (
           <div className="mt-4 text-center">{restaurant.simpleContactInfo}</div>
         )}
@@ -179,87 +204,14 @@ export const getStaticProps = gSP(async (context: GetStaticPropsContext) => {
   const { restaurant: identifier } = Query.parse(context.params)
   const restaurant = await db.venue.findUnique({
     where: { identifier },
-    select: {
-      open: true,
-      simpleContactInfo: true,
-      content: {
-        select: {
-          locale: true,
-          name: true,
-        },
-      },
-      categories: {
-        where: { categoryItems: { some: { Item: { deleted: null } } } },
-        select: {
-          id: true,
-          identifier: true,
-          content: {
-            select: {
-              locale: true,
-              name: true,
-              description: true,
-            },
-          },
-          categoryItems: {
-            orderBy: { position: Prisma.SortOrder.asc },
-            where: {
-              Item: { deleted: null },
-            },
-            select: {
-              position: true,
-              Item: {
-                select: {
-                  id: true,
-                  image: true,
-                  price: true,
-                  identifier: true,
-                  blurDataUrl: true,
-                  categoryId: true,
-                  content: {
-                    select: {
-                      locale: true,
-                      name: true,
-                      description: true,
-                    },
-                  },
-                  modifiers: {
-                    orderBy: { position: Prisma.SortOrder.asc },
-                    select: {
-                      id: true,
-                      position: true,
-                      config: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    },
+    select: selectTheEntireMenu,
   })
 
   if (!restaurant) throw new NotFoundError()
 
-  const typedRestaurant = {
-    ...restaurant,
-    categories: restaurant.categories.map((c) => ({
-      ...c,
-      items: c.categoryItems.map(({ Item: i }) => ({
-        ...i,
-        modifiers: i.modifiers
-          .map((m) => ({
-            ...m,
-            config: ModifierConfig.parse(m.config),
-          }))
-          .sort((a, b) => a.position - b.position),
-      })),
-    })),
-  }
-
   return {
     props: {
-      restaurant: typedRestaurant,
+      restaurant,
       messages: (await import(`src/core/messages/${context.locale}.json`)).default,
     },
   }

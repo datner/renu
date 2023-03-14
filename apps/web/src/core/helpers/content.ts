@@ -1,4 +1,4 @@
-import { Locale } from "db"
+import { Locale } from "database"
 import { get } from "./common"
 import { flow, pipe } from "fp-ts/function"
 import * as O from "monocle-ts/Optional"
@@ -25,10 +25,9 @@ export const contentOption = (prop: keyof ContentPartial, locale: Locale) =>
     O.fromNullable
   ).getOption
 
-export const shekel = Intl.NumberFormat("he-IL", {
+export const shekel = Intl.NumberFormat("us-IL", {
   style: "currency",
   currency: "ILS",
-  unitDisplay: "narrow",
 })
 
 export const priceOption = pipe(

@@ -1,19 +1,23 @@
 import { PromiseReturnType } from "blitz"
-import { useZodForm } from "src/core/hooks/useZodForm"
 import { useTranslations } from "next-intl"
-import { DefaultValues, FormProvider } from "react-hook-form"
+import { DefaultValues, FormProvider, useForm } from "react-hook-form"
 import { match, P } from "ts-pattern"
-import { CategorySchema } from "src/categories/validations"
 import getCategory from "src/categories/queries/getCategory"
 import { Button, createStyles, TextInput } from "@mantine/core"
 
 type Props = {
   item?: PromiseReturnType<typeof getCategory>
-  onSubmit(category: CategorySchema): Promise<void>
-  defaultValues?: DefaultValues<CategorySchema>
+  onSubmit(category: CategoryForm): Promise<void>
+  defaultValues?: DefaultValues<CategoryForm>
 }
 
-const DEFAULT_VALUES: DefaultValues<CategorySchema> = {
+export interface CategoryForm {
+  identifier: string
+  en: { name: string; description?: string }
+  he: { name: string; description?: string }
+}
+
+const DEFAULT_VALUES: DefaultValues<CategoryForm> = {
   identifier: "",
   en: { name: "" },
   he: { name: "" },
@@ -35,26 +39,15 @@ const useStyles = createStyles({
 })
 
 export function CategoryForm(props: Props) {
-  const { defaultValues = DEFAULT_VALUES, onSubmit: onSubmit_ } = props
+  const { defaultValues = DEFAULT_VALUES, onSubmit } = props
   const { classes } = useStyles()
   const t = useTranslations("admin.Components.CategoryForm")
-  const form = useZodForm({
-    schema: CategorySchema,
+  const form = useForm<CategoryForm>({
     defaultValues,
   })
 
-  const { handleSubmit, setFormError, formState, register } = form
+  const { handleSubmit, formState, register } = form
   const { isSubmitting } = formState
-
-  const onSubmit = handleSubmit(async (data) => {
-    try {
-      console.time("submitting")
-      await onSubmit_(data)
-      console.timeEnd("submitting")
-    } catch (error: any) {
-      setFormError(error.toString())
-    }
-  })
 
   const result = {
     defaultValues: props.defaultValues?.identifier,
@@ -76,22 +69,28 @@ export function CategoryForm(props: Props) {
             {props.defaultValues ? t("title.edit") : t("title.new")}
           </h2>
         </div>
-        <form className="space-y-6" onSubmit={onSubmit}>
+        <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="flex gap-4">
             <fieldset className="space-y-6 flex-1 font-mono" disabled={isSubmitting}>
               <TextInput
                 classNames={{ input: classes.mono }}
-                {...register("identifier")}
+                {...register("identifier", {
+                  pattern: {
+                    value: /^[a-z0-9-]+[^-]$/,
+                    message:
+                      "Slug should contain only lowercase letters, and numbers. Seperated by dashes",
+                  },
+                })}
                 label={t("identifier")}
                 placeholder="my-category"
               />
               <TextInput
-                {...register("en.name")}
+                {...register("en.name", { required: true })}
                 label={t("english name")}
                 placeholder="My Category"
               />
               <TextInput
-                {...register("he.name")}
+                {...register("he.name", { required: true })}
                 label={t("hebrew name")}
                 placeholder="הקטגוריה שלי"
               />

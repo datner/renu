@@ -7,7 +7,6 @@ import getOrgVenues from "src/venues/queries/getOrgVenues"
 import { pipe } from "fp-ts/function"
 import * as RA from "fp-ts/ReadonlyArray"
 import * as O from "fp-ts/Option"
-import { RestaurantI18L, Venue } from "database"
 import { Menu, Transition } from "@headlessui/react"
 import { clsx, Loader } from "@mantine/core"
 import { ChevronDownIcon } from "@heroicons/react/24/solid"
@@ -29,7 +28,7 @@ export const ChangeVenueMenu = () => {
     O.chain(({ id }) =>
       pipe(
         venues,
-        RA.findFirst<Venue & { content: RestaurantI18L[] }>((venue) => venue.id === id)
+        RA.findFirst((venue) => venue.id === id)
       )
     )
   )

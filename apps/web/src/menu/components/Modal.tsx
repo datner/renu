@@ -15,7 +15,9 @@ export function Modal(props: Props) {
     from: { y: 200, opacity: 0 },
     enter: { y: 0, opacity: 1 },
     leave: { y: 200, opacity: 0 },
-    onDestroyed,
+    onRest: () => {
+      if (!open) onDestroyed?.()
+    },
     config: config.stiff,
     reverse: open,
   })

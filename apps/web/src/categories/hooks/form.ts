@@ -2,23 +2,27 @@ import { invalidateQuery, setQueryData, useMutation } from "@blitzjs/rpc"
 import getCurrentVenueCategories from "../queries/getCurrentVenueCategories"
 import createCategory from "../mutations/createCategory"
 import getCategory from "../queries/getCategory"
-import { CategorySchema } from "../validations"
-import { pipe } from "fp-ts/function"
-import * as RT from "fp-ts/ReaderTask"
-
-const useCategoryMutation = () => useMutation(createCategory)
+import { CreateCategory } from "../validations"
+import { pipe } from "@effect/data/Function"
+import * as Effect from "@effect/io/Effect"
 
 export const category = {
   useCreate: () => {
-    const [create] = useCategoryMutation()
+    const [create] = useMutation(createCategory)
     return {
-      onSubmit: pipe(
-        RT.ask<CategorySchema>(),
-        RT.chainTaskK((data) => () => create(data)),
-        RT.chainFirstTaskK((c) => () => setQueryData(getCategory, { identifier: c.identifier }, c)),
-        RT.chainFirstTaskK(() => () => invalidateQuery(getCurrentVenueCategories)),
-        RT.chainFirstTaskK(() => () => fetch("/api/revalidate-current"))
-      ),
+      onSubmit: (data: CreateCategory) =>
+        pipe(
+          Effect.promise(() => create(data)),
+          Effect.tap((c) =>
+            Effect.allPar(
+              Effect.sync(() => setQueryData(getCategory, { identifier: c.identifier }, c)),
+              Effect.sync(() => setQueryData(getCategory, { id: c.id }, c)),
+              Effect.sync(() => invalidateQuery(getCurrentVenueCategories)),
+              Effect.sync(() => navigator.sendBeacon("/api/revalidate-current"))
+            )
+          ),
+          Effect.runPromise
+        ),
     }
   },
 }

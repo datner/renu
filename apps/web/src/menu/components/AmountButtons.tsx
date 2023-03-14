@@ -1,26 +1,22 @@
 export interface AmountButtonsProps {
   amount: number
-  onChange(amount: number): void
+  onIncrement(): void
+  onDecrement(): void
   minimum: number
 }
 
 export function AmountButtons(props: AmountButtonsProps) {
-  const { amount, onChange, minimum } = props
+  const { amount, minimum, onDecrement, onIncrement } = props
 
   return (
     <div className="btn-group w-full rtl:flex-row-reverse bg-white">
-      <button
-        disabled={amount <= minimum}
-        type="button"
-        className="btn w-10"
-        onClick={() => onChange(Math.max(0, amount - 1))}
-      >
+      <button disabled={amount <= minimum} type="button" className="btn w-10" onClick={onDecrement}>
         -
       </button>
       <button type="button" className="btn grow pointer-events-none">
         {amount}
       </button>
-      <button type="button" className="btn w-10" onClick={() => onChange(amount + 1)}>
+      <button type="button" className="btn w-10" onClick={onIncrement}>
         +
       </button>
     </div>

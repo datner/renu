@@ -2,45 +2,42 @@ import * as Effect from "@effect/io/Effect"
 import * as Layer from "@effect/io/Layer"
 import * as Config from "@effect/io/Config"
 import * as ConfigSecret from "@effect/io/Config/Secret"
-import { flow, pipe } from "@fp-ts/data/Function"
-import * as Duration from "@fp-ts/data/Duration"
-import * as E from "@fp-ts/data/Either"
-import * as T from "@fp-ts/data/These"
-import * as J from "@fp-ts/data/Json"
-import * as P from "@fp-ts/data/Predicate"
-import * as Context from "@fp-ts/data/Context"
-import * as D from "@fp-ts/schema/Decoder"
-import { CircuitBreaker, Http, Common, Management } from "@integrations/core"
-import { isTaggedError, taggedError } from "shared/errors"
+import * as Context from "@effect/data/Context"
+import * as Parser from "@effect/schema/Parser"
+import { pipe } from "@effect/data/Function"
+import { CircuitBreaker, Http, Management } from "@integrations/core"
+import { ManagementProvider, OrderState } from "database"
+import { DorixMenu, toMenu } from "./menu"
+import { ManagementError } from "@integrations/core/management"
+import { HttpService } from "@integrations/core/http"
 import {
   Integration,
   IntegrationService,
-  SendOrderResponseDecoder,
+  SendOrderResponse,
   StatusResponse,
   toOrder,
 } from "./helpers"
-import { ManagementProvider, OrderState } from "database"
-import { DorixMenuDecoder, toMenu } from "./menu"
 
-const decodeToEffect =
-  <I, A>(decoder: D.Decoder<I, A>) =>
-  (i: I) =>
-    pipe(decoder.decode(i), T.absolve, Effect.fromEither)
+const DorixConfig = Config.all({
+  qa: Config.all({
+    url: Config.string("dorixQaApiUrl"),
+    apiKey: Config.secret("dorixQaApiKey"),
+  }),
+  url: Config.string(`dorixApiUrl`),
+  apiKey: Config.secret(`dorixApiKey`),
+})
 
-const DorixConfig = (isQA = false) =>
-  Config.struct({
-    url: Config.string(`DORIX_${isQA ? "QA_" : ""}API_URL`),
-    apiKey: Config.secret(`DORIX_${isQA ? "QA_" : ""}API_KEY`),
-  })
-
-const dorixIntegrationLayer = Layer.fromEffect(IntegrationService)(
-  Effect.serviceWithEffect(Management.IntegrationSettingsService)(decodeToEffect(Integration))
+const provideDorixIntegration = Effect.provideServiceEffect(
+  IntegrationService,
+  Effect.serviceWith(Management.IntegrationSettingsService, Parser.decodeOrThrow(Integration))
 )
-const dorixHttpConfigLayer = Layer.fromEffect(Http.HttpConfigService)(
+const provideHttpConfig = Effect.provideServiceEffect(
+  Http.HttpConfigService,
   Effect.gen(function* ($) {
     const { vendorData } = yield* $(Effect.service(IntegrationService))
     const { isQA = false } = vendorData
-    const { url, apiKey } = yield* $(Effect.config(DorixConfig(isQA)))
+    const config = yield* $(Effect.config(DorixConfig))
+    const { url, apiKey } = isQA ? config.qa : config
 
     return {
       baseUrl: url,
@@ -49,40 +46,16 @@ const dorixHttpConfigLayer = Layer.fromEffect(Http.HttpConfigService)(
   })
 )
 
-const dorixIdentityLayer = Layer.succeed(Common.IdentityService)({ name: "Dorix" })
-
-const dorixCircuitBreakerConfigLayer = Layer.succeed(CircuitBreaker.BreakerConfigService)({
-  maxFailure: 3,
-  cooldown: Duration.seconds(10),
-})
-
-const dorixLayer = pipe(
-  dorixIdentityLayer,
-  Layer.merge(dorixIntegrationLayer),
-  Layer.merge(dorixCircuitBreakerConfigLayer),
-  Layer.provideToAndMerge(dorixHttpConfigLayer),
-  Layer.provideToAndMerge(Http.Layers.HttpFetchLayer),
-  Layer.merge(Common.Layers.DefaultRetrySchedule)
-)
-
-const stringify = flow(J.stringify, E.mapLeft(taggedError("JsonStringifyError")))
-
-const isHttpError = pipe(
-  isTaggedError("HttpRequestError")
-  /* P.or(isTaggedError("HttpNotFoundError")) */
-)
-
 interface DorixService extends Management.ManagementService {
   _tag: typeof ManagementProvider.DORIX
 }
-export const DorixService = Context.Tag<DorixService>()
+export const Tag = Context.Tag<DorixService>()
 
-export const DorixServiceLayer = Layer.fromEffect(DorixService)(
+export const layer = Layer.effect(
+  Tag,
   Effect.gen(function* ($) {
-    const state = yield* $(CircuitBreaker.initState)
-    const provideBreakerState = Effect.provideService(CircuitBreaker.BreakerStateService)({
-      state,
-    })
+    const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "Dorix" }))
+    const client = yield* $(Effect.service(HttpService))
 
     return {
       _tag: ManagementProvider.DORIX,
@@ -90,10 +63,9 @@ export const DorixServiceLayer = Layer.fromEffect(DorixService)(
         pipe(
           toOrder(order),
           Effect.tap(() => Effect.log("reporting order to dorix")),
-          Effect.map(stringify),
-          Effect.absolve,
+          Effect.map(JSON.stringify),
           Effect.flatMap((body) =>
-            Http.request("/v1/order", {
+            client.request("/v1/order", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json",
@@ -101,15 +73,15 @@ export const DorixServiceLayer = Layer.fromEffect(DorixService)(
               body,
             })
           ),
-          CircuitBreaker.breaker(isHttpError),
+          breaker((e) => e instanceof Http.HttpRequestError),
           Effect.flatMap(Http.toJson),
-          Effect.flatMap(decodeToEffect(SendOrderResponseDecoder)),
+          Effect.map(Parser.decodeOrThrow(SendOrderResponse)),
           Effect.flatMap((res) =>
             res.ack ? Effect.succeed(res) : Effect.fail(new Error(res.message))
           ),
-          provideBreakerState,
-          Effect.provideSomeLayer(dorixLayer),
-          Effect.mapError(Management.managementError),
+          provideHttpConfig,
+          provideDorixIntegration,
+          Effect.mapError((cause) => new ManagementError("failed to get order status", { cause })),
           Effect.asUnit
         ),
 
@@ -121,10 +93,10 @@ export const DorixServiceLayer = Layer.fromEffect(DorixService)(
             // ?branchId={branchId}&source=RENU
             ({ vendorData: { branchId } }) => new URLSearchParams({ branchId, source: "RENU" })
           ),
-          Effect.flatMap((qs) => Http.request(`/v1/order/${order.id}/status?${qs.toString()}`)),
-          CircuitBreaker.breaker(isHttpError),
+          Effect.flatMap((qs) => client.request(`/v1/order/${order.id}/status?${qs.toString()}`)),
+          breaker((e) => e instanceof Http.HttpRequestError),
           Effect.flatMap(Http.toJson),
-          Effect.flatMap(decodeToEffect(StatusResponse)),
+          Effect.map(Parser.decodeOrThrow(StatusResponse)),
           Effect.map((p) => {
             switch (p.order.status) {
               case "FAILED":
@@ -138,20 +110,22 @@ export const DorixServiceLayer = Layer.fromEffect(DorixService)(
                 return OrderState.Confirmed
             }
           }),
-          provideBreakerState,
-          Effect.provideSomeLayer(dorixLayer),
-          Effect.mapError(Management.managementError)
+          provideHttpConfig,
+          provideDorixIntegration,
+          Effect.mapError((cause) => new ManagementError("failed to get order status", { cause }))
         ),
 
       getVenueMenu: pipe(
         Effect.service(IntegrationService),
         Effect.map((is) => is.vendorData.branchId),
-        Effect.flatMap((branchId) => Http.request(`/v1/menu/branch/${branchId}`)),
+        Effect.flatMap((branchId) => client.request(`/v1/menu/branch/${branchId}`)),
+        breaker((e) => e instanceof Http.HttpRequestError),
         Effect.flatMap(Http.toJson),
-        Effect.flatMap(decodeToEffect(DorixMenuDecoder)),
+        Effect.map(Parser.decodeOrThrow(DorixMenu)),
         Effect.map(toMenu),
-        Effect.provideSomeLayer(dorixLayer),
-        Effect.mapError(Management.managementError)
+        provideHttpConfig,
+        provideDorixIntegration,
+        Effect.mapError((cause) => new ManagementError("failed to get order status", { cause }))
       ),
     }
   })

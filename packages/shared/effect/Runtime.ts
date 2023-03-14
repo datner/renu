@@ -1,27 +1,27 @@
+import * as ConfigProvider from "@effect/io/Config/Provider"
 import * as Scope from "@effect/io/Scope"
 import * as Exit from "@effect/io/Exit"
-import * as ZR from "@effect/io/Runtime"
-import * as ZL from "@effect/io/Layer"
-import * as Z from "@effect/io/Effect"
-import { pipe } from "@fp-ts/data/Function"
+import * as Runtime from "@effect/io/Runtime"
+import * as Layer from "@effect/io/Layer"
+import * as Effect from "@effect/io/Effect"
+import { pipe } from "@fp-ts/core/Function"
 
-export const makeRuntime = <R, E, A>(layer: ZL.Layer<R, E, A>) =>
-  Z.gen(function* ($) {
+export const makeRuntime = <R, E, A>(layer: Layer.Layer<R, E, A>) =>
+  Effect.gen(function* ($) {
     const scope = yield* $(Scope.make())
-    const env = yield* $(ZL.buildWithScope(scope)(layer))
-    const runtime = yield* $(pipe(Z.runtime<A>(), Z.provideEnvironment(env)))
-    yield* $(Z.log("creating scope"))
+    const env = yield* $(Layer.buildWithScope(layer, scope))
+    const runtime = yield* $(pipe(Effect.runtime<A>(), Effect.scoped, Effect.provideContext(env)))
 
     return {
       runtime,
-      clean: Scope.close(Exit.unit())(scope),
+      clean: Scope.close(scope, Exit.unit()),
     }
   })
 
 export const getAmbientRuntime =
   (cleanupSymbol: symbol) =>
-  <E, A extends { runtime: ZR.Runtime<any>; clean: Z.Effect<never, never, void> }>(
-    runtimeEffect: Z.Effect<never, E, A>
+  <E, A extends { runtime: Runtime.Runtime<any>; clean: Effect.Effect<never, never, void> }>(
+    runtimeEffect: Effect.Effect<never, E, A>
   ) => {
     const existing = process.listeners("beforeExit").find((listener) => cleanupSymbol in listener)
 
@@ -32,14 +32,14 @@ export const getAmbientRuntime =
     const runtime = new Promise<void>((resolve) => {
       existing?.(0)
       resolve()
-    }).then(() => Z.unsafeRunPromise(runtimeEffect))
+    }).then(() => Effect.runPromise(runtimeEffect))
 
     const cleanup = Object.assign(
       () =>
-        Z.unsafeRunPromise(
+        Effect.runPromise(
           pipe(
-            Z.promise(() => runtime),
-            Z.flatMap((_) => _.clean)
+            Effect.promise(() => runtime),
+            Effect.flatMap((_) => _.clean)
           )
         ),
       { [cleanupSymbol]: true }

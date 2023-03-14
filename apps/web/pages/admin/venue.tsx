@@ -4,7 +4,6 @@ import { AdminLayout } from "src/core/layouts/AdminLayout"
 import { Suspense } from "react"
 import { Content } from "src/admin/components/Content"
 import { LoadingOverlay } from "@mantine/core"
-import * as O from "fp-ts/lib/Option"
 import { VenueSettings } from "src/admin/components/VenueSettings"
 
 const AdminVenue: BlitzPage = () => {
@@ -26,8 +25,8 @@ AdminVenue.suppressFirstRenderFlicker = true
 export const getServerSideProps = gSSP(async (bag) => {
   const { locale, ctx } = bag
   const { session } = ctx
-  const { venue = O.none } = session
-  if (venue) {
+  const { venue } = session
+  if (!venue) {
     return {
       redirect: {
         destination: Routes.RestaurantSignupPage(),

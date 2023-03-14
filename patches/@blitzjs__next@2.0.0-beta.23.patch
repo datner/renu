@@ -1,0 +1,26 @@
+diff --git a/dist/index-server.cjs b/dist/index-server.cjs
+index ac3d339a33640cff35871ade3bdddc765a757d12..017807d297f47cb495f39bf09c63f6574cbb84bb 100644
+--- a/dist/index-server.cjs
++++ b/dist/index-server.cjs
+@@ -6,7 +6,7 @@ const blitz = require('blitz');
+ const rpc = require('@blitzjs/rpc');
+ const reactQuery = require('@tanstack/react-query');
+ const indexBrowser = require('./chunks/index-browser.cjs');
+-const router = require('next/dist/shared/lib/router/router');
++const router = require('next/dist/shared/lib/router/utils/resolve-href');
+ const _blitz = require('.blitz');
+ require('next/head');
+ require('react');
+diff --git a/dist/index-server.mjs b/dist/index-server.mjs
+index 226e1e5b3b354b9c9447d798b4d2b828dcd69f4a..f592838cf17e108a97555fc393b9569c0f087e25 100644
+--- a/dist/index-server.mjs
++++ b/dist/index-server.mjs
+@@ -3,7 +3,7 @@ import { installWebpackConfig, dehydrate, getInfiniteQueryKey, getQueryKey } fro
+ import { QueryClient } from '@tanstack/react-query';
+ import { w as withSuperJsonProps } from './chunks/index-browser.mjs';
+ export { B as BlitzProvider, E as ErrorBoundary, b as ErrorComponent, N as NoPageFlicker, R as RouterContext, e as extractQueryFromAsPath, d as extractRouterParams, s as setupBlitzClient, u as useErrorHandler, g as useParam, f as useParams, c as useRouterQuery, a as withErrorBoundary } from './chunks/index-browser.mjs';
+-import { resolveHref } from 'next/dist/shared/lib/router/router';
++import { resolveHref } from 'next/dist/shared/lib/router/utils/resolve-href';
+ export { Routes } from '.blitz';
+ import 'next/head';
+ import 'react';

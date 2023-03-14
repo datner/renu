@@ -238,6 +238,7 @@ model Item {
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @default(now()) @updatedAt
   blurDataUrl    String?
+  blurHash       String?
   deleted        DateTime?
 
   content ItemI18L[]

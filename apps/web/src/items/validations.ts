@@ -12,8 +12,13 @@ import * as Ord from "fp-ts/Ord"
 import { match } from "ts-pattern"
 import { constant, pipe, tuple } from "fp-ts/function"
 import { PromiseReturnType } from "blitz"
+import * as S from "@effect/schema/Schema"
+import * as Parser from "@effect/schema/Parser"
+import { parseString } from "@effect/schema/data/Number"
+import * as RA from "@effect/data/ReadonlyArray"
 import getItem from "./queries/getItem"
 import getVenueManagementIntegration from "src/venues/queries/current/getVenueManagementIntegration"
+import { Modifiers, Common } from "database-helpers"
 
 export const Content = z.object({
   name: z.string().min(1),
@@ -197,39 +202,34 @@ export const toDefaults = (integration: GetManagementIntegrationResult) =>
       blurDataUrl,
       modifiers,
       managementRepresentation,
-    }) =>
-      pipe(
-        integration,
-        E.matchW(
-          () => () => null,
-          (mi) => managementThings[mi.provider]
+    }) => {
+      const toId = managementThings[integration.provider]
+      return {
+        managementId: toId(managementRepresentation),
+        identifier,
+        categoryId,
+        price,
+        en: content.find((it) => it.locale === Locale.en),
+        he: content.find((it) => it.locale === Locale.he),
+        image: {
+          src: image,
+          blur: blurDataUrl ?? undefined,
+        },
+        modifiers: pipe(
+          modifiers,
+          A.sort(byPosition),
+          A.map((m) => ({
+            modifierId: m.id,
+            config: pipe(m.config, ModifierConfig.parse, ModifierConfig.unparse, (m) =>
+              match(m)
+                .with({ _tag: "oneOf" }, toOneOfDefaults(toId))
+                .with({ _tag: "extras" }, toExtrasDefaults(toId))
+                .exhaustive()
+            ),
+          }))
         ),
-        (toId) => ({
-          managementId: toId(managementRepresentation),
-          identifier,
-          categoryId,
-          price,
-          en: content.find((it) => it.locale === Locale.en),
-          he: content.find((it) => it.locale === Locale.he),
-          image: {
-            src: image,
-            blur: blurDataUrl ?? undefined,
-          },
-          modifiers: pipe(
-            modifiers,
-            A.sort(byPosition),
-            A.map((m) => ({
-              modifierId: m.id,
-              config: pipe(m.config, ModifierConfig.parse, ModifierConfig.unparse, (m) =>
-                match(m)
-                  .with({ _tag: "oneOf" }, toOneOfDefaults(toId))
-                  .with({ _tag: "extras" }, toExtrasDefaults(toId))
-                  .exhaustive()
-              ),
-            }))
-          ),
-        })
-      )
+      }
+    }
   )
 
 const ItemSchemaImgTransform = ItemSchema.extend({ image: Image.transform((it) => it.src) })
@@ -238,6 +238,93 @@ export type OptionsSchemaArray = (
   | z.infer<typeof ExtrasOptionSchema>
   | z.infer<typeof OneOfOptionSchema>
 )[]
+
+export const Id_ = pipe(
+  S.union(parseString(S.string), S.number),
+  S.int(),
+  S.nonNegative(),
+  S.brand("Id")
+)
+
+const Slug_ = pipe(
+  S.string,
+  S.nonEmpty(),
+  S.pattern(/^[a-z0-9-]+$/, {
+    message: (slug) =>
+      `${slug} is invalid. Slug should contain only lowercase letters, numbers, and dashes`,
+  }),
+  S.pattern(/[^-]$/, {
+    message: (slug) => `${slug} can not end with a dash, did you mean ${slug.slice(0, -1)}?`,
+  }),
+  S.brand("Slug")
+)
+
+const Price = pipe(
+  S.number,
+  S.int(),
+  S.nonNegative(),
+  S.filter((n) => n % 50 === 0),
+  S.brand("Price")
+)
+
+export const Content_ = S.struct({
+  name: pipe(S.string, S.nonEmpty()),
+  description: S.string,
+})
+
+export const Modifier = S.struct({
+  modifierId: pipe(Id_, S.optional),
+  managementId: pipe(Id_, S.optional),
+  config: Modifiers.ModifierConfig,
+})
+
+export const CreateItemSchema = S.struct({
+  managementId: pipe(S.string, S.nullable, S.optional),
+  image: S.string,
+  price: Price,
+  identifier: Slug_,
+  categoryId: Id_,
+  modifiers: S.array(Modifier),
+  content: S.array(Common.Content),
+})
+export interface CreateItemSchema extends S.Infer<typeof CreateItemSchema> {}
+
+export const toCreateItem = ({
+  content,
+  categoryId,
+  modifiers,
+  managementId,
+  image,
+  ...rest
+}: CreateItemSchema) =>
+  ({
+    ...rest,
+    image,
+    managementRepresentation: { id: managementId },
+    category: { connect: { id: categoryId } },
+    categoryItems: {
+      create: {
+        position: -1,
+        Category: { connect: { id: categoryId } },
+      },
+    },
+    content: {
+      createMany: {
+        data: [...content],
+      },
+    },
+
+    modifiers: {
+      create: pipe(
+        modifiers,
+        RA.filter((m) => m.modifierId == null),
+        RA.map(({ config }, p) => ({
+          position: p,
+          config: Parser.encodeOrThrow(Modifiers.ModifierConfig)(config) as Prisma.InputJsonValue,
+        }))
+      ),
+    },
+  } satisfies Prisma.ItemCreateInput)
 
 export const CreateItem = ItemSchemaImgTransform.transform(
   ({ en, he, categoryId, modifiers, managementId, ...rest }) =>
@@ -315,6 +402,7 @@ export const UpdateItem = ItemSchemaImgTransform.extend({ id: Id }).transform(
     }
   }
 )
+export type UpdateItemOutput = z.infer<typeof UpdateItem>
 
 export type UpdateItem = z.input<typeof UpdateItem>
 export type CreateItem = z.input<typeof CreateItem>

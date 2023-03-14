@@ -26,4 +26,5 @@ export const eqItem = Eq.struct<Item>({
   deleted: eqDateOrNull,
   blurDataUrl: Eq.eqStrict,
   managementRepresentation: eqManagement,
+  blurHash: Eq.eqStrict,
 })

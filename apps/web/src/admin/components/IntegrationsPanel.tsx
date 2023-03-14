@@ -7,11 +7,11 @@ import * as E from "fp-ts/Either"
 import * as A from "fp-ts/Array"
 import * as RA from "fp-ts/ReadonlyArray"
 import * as O from "fp-ts/Option"
-import { match, P } from "ts-pattern"
+import { match } from "ts-pattern"
 import { Reducer, Suspense, useCallback, useEffect, useReducer } from "react"
 import { ManagementIntegration } from "database"
 import getManagementMenu from "src/management/queries/getManagementMenu"
-import { ExclamationTriangleIcon, ServerStackIcon } from "@heroicons/react/24/outline"
+import { ServerStackIcon } from "@heroicons/react/24/outline"
 import { XCircleIcon } from "@heroicons/react/24/solid"
 import {
   Identified,
@@ -26,6 +26,7 @@ import { ItemSchema, ModifierSchema, OptionsSchemaArray } from "src/items/valida
 import { useLocale } from "src/core/hooks/useLocale"
 import { matchSorter } from "match-sorter"
 import { AutocompleteCategory, AutocompleteOption, NullableAutocomplete } from "./Autocomplete"
+import * as Match from "@effect/match"
 
 export function IntegrationsPanel() {
   return (
@@ -43,53 +44,54 @@ const eqManagementItem = eqIdentified<ManagementItem>()
 function Integrations() {
   const [managementMenu] = useQuery(getManagementMenu, null)
 
-  return pipe(
-    managementMenu,
-    E.fold(
-      (e) =>
-        match(e)
-          .with({ _tag: "ManagementError" }, () => (
-            <div className="flex flex-col min-h-0 grow items-center justify-center">
-              <div className="alert alert-error shadow-lg max-w-md">
-                <div>
-                  <ServerStackIcon className="shrink-0 h-6 w-6" />
-                  <span>
-                    {"Error! It seems we can't reach Dorixs' servers. Please try again later..."}
-                  </span>
-                </div>
-              </div>
-            </div>
-          ))
-          // .with({ tag: "ManagementMismatchError" }, (e) => (
-          //   <div className="flex flex-col min-h-0 grow items-center justify-center">
-          //     <div className="alert alert-warning shadow-lg max-w-md">
-          //       <div>
-          //         <ExclamationTriangleIcon className="shrink-0 h-6 w-6" />
-          //         <span>
-          //           Warning! Management Integration is mismatched. Expected {e.needed} configuration
-          //           but received
-          //           {e.given} configuration
-          //         </span>
-          //       </div>
-          //     </div>
-          //   </div>
-          // ))
-          .otherwise(() => (
-            <div className="flex flex-col min-h-0 grow items-center justify-center">
-              <div className="alert alert-error shadow-lg max-w-md">
-                <div>
-                  <XCircleIcon className="shrink-0 h-6 w-6" />
-                  <span>
-                    Error! Something went wrong along the way, please reach out to a Renu admin to
-                    resolve this issue
-                  </span>
-                </div>
-              </div>
-            </div>
-          )),
-      (props) => <IntegrationMenu {...props} />
-    )
-  )
+  return <IntegrationMenu {...managementMenu} />
+
+  // return pipe(
+  //           <div className="flex flex-col min-h-0 grow items-center justify-center">
+  //             <div className="alert alert-error shadow-lg max-w-md">
+  //               <div>
+  //                 <ServerStackIcon className="shrink-0 h-6 w-6" />
+  //                 <span>
+  //                   {"Error! It seems we can't reach Dorixs' servers. Please try again later..."}
+  //                 </span>
+  //               </div>
+  //             </div>
+  //           </IntegrationMenu>
+  // E.fold(
+  //   (e) =>
+  //     match(e)
+  //       .with({ _tag: "ManagementError" }, () => (
+  //       ))
+  //       // .with({ tag: "ManagementMismatchError" }, (e) => (
+  //       //   <div className="flex flex-col min-h-0 grow items-center justify-center">
+  //       //     <div className="alert alert-warning shadow-lg max-w-md">
+  //       //       <div>
+  //       //         <ExclamationTriangleIcon className="shrink-0 h-6 w-6" />
+  //       //         <span>
+  //       //           Warning! Management Integration is mismatched. Expected {e.needed} configuration
+  //       //           but received
+  //       //           {e.given} configuration
+  //       //         </span>
+  //       //       </div>
+  //       //     </div>
+  //       //   </div>
+  //       // ))
+  //       .otherwise(() => (
+  //         <div className="flex flex-col min-h-0 grow items-center justify-center">
+  //           <div className="alert alert-error shadow-lg max-w-md">
+  //             <div>
+  //               <XCircleIcon className="shrink-0 h-6 w-6" />
+  //               <span>
+  //                 Error! Something went wrong along the way, please reach out to a Renu admin to
+  //                 resolve this issue
+  //               </span>
+  //             </div>
+  //           </div>
+  //         </div>
+  //       )),
+  //   (props) => <IntegrationMenu {...props} />
+  //   )
+  // )
 }
 
 type Props = {

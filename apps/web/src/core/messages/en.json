@@ -2,7 +2,8 @@
   "admin": {
     "Components": {
       "Aside": {
-        "items": "Items"
+        "items": "Items",
+        "categories": "Categories"
       },
       "FormCategoryCombobox": {
         "category": "Category"

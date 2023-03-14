@@ -26,7 +26,7 @@ type Props = { children?: ReactNode }
 
 const sidebarNavigation = [
   { name: "Home", href: Routes.AdminHome(), icon: HomeIcon },
-  { name: "Menus", href: Routes.AdminMenus(), icon: ClipboardIcon, disabled: true },
+  { name: "Menus", href: Routes.AdminMenus(), icon: ClipboardIcon },
   { name: "Inventory", href: Routes.AdminItems(), icon: Square2StackIcon },
   { name: "Venue", href: Routes.AdminVenue(), icon: BuildingStorefrontIcon },
   {

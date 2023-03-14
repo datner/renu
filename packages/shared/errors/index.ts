@@ -1,4 +1,8 @@
-import * as Predicate from "@fp-ts/data/Predicate"
+import * as Predicate from "@fp-ts/core/Predicate"
+
+class ParseError {
+  readonly _tag = "ParseError"
+}
 
 export const taggedError =
   <T extends string>(_tag: T) =>

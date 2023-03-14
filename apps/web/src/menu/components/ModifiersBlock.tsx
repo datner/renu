@@ -1,28 +1,34 @@
-import { Modifier } from "db/itemModifierConfig"
-import { pipe } from "fp-ts/function"
-import { match } from "ts-pattern"
-import { map } from "fp-ts/Array"
+import { pipe } from "@effect/data/Function"
 import { OneOfComponent } from "src/menu/modifier-blocks/OneOf"
-import { ExtrasComponent } from "../modifier-blocks/Extras"
+import { ExtrasComponent } from "src/menu/modifier-blocks/Extras"
+import * as A from "@effect/data/ReadonlyArray"
+import * as Order from "@effect/data/typeclass/Order"
+import * as _Menu from "src/menu/schema"
+import { useMemo } from "react"
 
-type Props = {
-  modifiers: Modifier[]
+interface Props {
+  readonly modifiers: ReadonlyArray<_Menu.ItemModifier>
 }
+
+const ModifierOrder = Order.contramap(Order.number, (m: _Menu.ItemModifier) => m.position)
 
 export function ModifiersBlock(props: Props) {
   const { modifiers } = props
+  const sorted = useMemo(() => A.sort(modifiers, ModifierOrder), [modifiers])
 
   return (
     <div className="space-y-6">
       {pipe(
-        modifiers,
-        map((m) => m.config),
-        map((c) =>
-          match(c)
-            .with({ _tag: "oneOf" }, (of) => <OneOfComponent key={of.identifier} modifier={of} />)
-            .with({ _tag: "extras" }, (ex) => <ExtrasComponent key={ex.identifier} modifier={ex} />)
-            .exhaustive()
-        )
+        sorted,
+        A.map((c) => {
+          if (_Menu.isItemOneOf(c)) {
+            return <OneOfComponent key={c.id} modifier={c} />
+          }
+
+          if (_Menu.isItemExtras(c)) {
+            return <ExtrasComponent key={c.id} modifier={c} />
+          }
+        })
       )}
     </div>
   )

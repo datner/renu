@@ -24,14 +24,14 @@ function AsideDirectory() {
         {isRefetching && <Loader color="teal" variant="dots" />}
       </div>
       <nav className="grow h-0 overflow-y-auto" aria-label="Directory">
-        {categories.map(({ categoryItems: items, identifier, ...rest }) => (
-          <div key={identifier} className="relative">
+        {categories.map(({ categoryItems: items, identifier, ...rest }, i) => (
+          <div key={identifier + i} className="relative">
             <div className="z-10 sticky top-0 border-t border-b border-gray-200 bg-gray-50 px-6 py-1 text-sm font-medium text-gray-500">
               <h3>{title(rest)}</h3>
             </div>
             <ul role="list" className="relative z-0 divide-y divide-gray-200">
               {items.map(({ Item: item }) => (
-                <li key={item.id} className="bg-white">
+                <li key={item.id + i} className="bg-white">
                   <div className="relative px-6 py-5 flex items-center gap-3 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-emerald-500">
                     <div className="flex-shrink-0">
                       {item.image && (
@@ -69,4 +69,42 @@ function AsideDirectory() {
   )
 }
 
-export const Aside = { Directory: AsideDirectory }
+function AsideCategories() {
+  const locale = useLocale()
+  const t = useTranslations("admin.Components.Aside")
+  const [queryBag, { isLoading, isRefetching }] = useQuery(getCurrentVenueCategories, {})
+  const { categories } = queryBag
+
+  const title = titleFor(locale)
+
+  return (
+    <div className="flex min-h-0 grow flex-col">
+      <LoadingOverlay visible={isLoading} />
+      <div className="p-2 pl-4 flex items-center border-b">
+        <h3 className="text-xl text-gray-800 font-semibold inline-block grow">{t("categories")}</h3>
+        {isRefetching && <Loader color="teal" variant="dots" />}
+      </div>
+      <nav className="grow h-0 overflow-y-auto" aria-label="Directory">
+        <ul role="list" className="relative z-0 divide-y divide-gray-200">
+          {categories.map(({ categoryItems: items, identifier, ...rest }, i) => (
+            <li key={identifier + i} className="bg-white">
+              <div className="relative px-6 py-5 flex items-center gap-3 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-emerald-500">
+                <Link
+                  shallow
+                  href={Routes.AdminMenusMenu({ identifier })}
+                  className="focus:outline-none"
+                >
+                  {/* Extend touch target to entire panel */}
+                  <span className="absolute inset-0" aria-hidden="true" />
+                  <p className="text-sm font-medium text-gray-900">{title(rest)}</p>
+                </Link>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  )
+}
+
+export const Aside = { Directory: AsideDirectory, Categories: AsideCategories }

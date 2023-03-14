@@ -12,7 +12,7 @@ export default resolver.pipe(
   enforceSuperAdminIfNotCurrentOrganization,
   async (input) => {
     const category = await db.category.findFirst({
-      where: input,
+      where: { ...input, deleted: null },
       include: { content: true },
     })
 

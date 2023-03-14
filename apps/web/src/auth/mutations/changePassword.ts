@@ -23,7 +23,7 @@ export default resolver.pipe(
         )
       ),
       TE.match((e) => {
-        if (e.tag === "AuthenticationError") {
+        if ("tag" in e && e.tag === "AuthenticationError") {
           throw new NotFoundError()
         }
         return false

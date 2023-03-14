@@ -1,73 +1,81 @@
-import { resolver } from "@blitzjs/rpc"
-import { enforceSuperAdminIfNotCurrentOrganization } from "src/auth/helpers/enforceSuperAdminIfNoCurrentOrganization"
-import { ensureVenueRelatedToOrganization } from "src/auth/helpers/ensureVenueRelatedToOrganization"
-import { setDefaultOrganizationId } from "src/auth/helpers/setDefaultOrganizationId"
-import { setDefaultVenueId } from "src/auth/helpers/setDefaultVenueId"
-import { paginate } from "blitz"
 import db, { Prisma } from "db"
+import * as Effect from "@effect/io/Effect"
+import * as A from "@effect/data/ReadonlyArray"
+import * as S from "@effect/schema/Schema"
+import { pipe } from "@effect/data/Function"
+import { Ctx } from "@blitzjs/next"
+import { Session } from "src/auth"
+import { Number } from "shared/branded"
+import { Renu, Server } from "src/core/effect"
+import { prismaError } from "src/core/helpers/prisma"
 
 interface GetCategoriesArgs
   extends Pick<Prisma.CategoryFindManyArgs, "where" | "orderBy" | "skip" | "take"> {}
 
-export default resolver.pipe(
-  (input: GetCategoriesArgs) => input,
-  resolver.authorize(),
-  setDefaultOrganizationId,
-  enforceSuperAdminIfNotCurrentOrganization,
-  setDefaultVenueId,
-  ensureVenueRelatedToOrganization,
-  async ({ where: _where, orderBy, skip = 0, take = 100, venueId, organizationId }) => {
-    const where: Prisma.CategoryWhereInput = {
-      venueId,
-      organizationId,
-      deleted: null,
-      ..._where,
-    }
+const Max250Int = pipe(
+  S.number,
+  S.fromBrand(Number.PositiveInt),
+  S.lessThanOrEqualTo(250),
+  S.brand("Max250Int")
+)
 
-    const {
-      items: categories,
-      hasMore,
-      nextPage,
-      count,
-    } = await paginate({
-      skip,
-      take,
-      count: () => db.category.count({ where }),
-      query: (paginateArgs) =>
-        db.category.findMany({
-          ...paginateArgs,
-          include: {
-            content: true,
-            categoryItems: {
-              orderBy: { position: Prisma.SortOrder.asc },
-              where: {
-                Item: { deleted: null },
-              },
-              include: {
-                Item: {
-                  include: {
-                    content: true,
+const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx: Ctx) =>
+  pipe(
+    Session.ensureOrgVenuMatch,
+    Effect.flatMap(() =>
+      Session.with((s) => ({
+        venueId: s.venue.id,
+        organizationId: s.organization.id,
+        deleted: null,
+        ...where,
+      }))
+    ),
+    Effect.flatMap((where) =>
+      Server.paginate(Number.NonNegativeInt, Max250Int)(
+        (skip, take) =>
+          Effect.attemptCatchPromise(
+            () =>
+              db.category.findMany({
+                skip,
+                take,
+                include: {
+                  content: true,
+                  categoryItems: {
+                    orderBy: { position: Prisma.SortOrder.asc },
+                    where: {
+                      Item: { deleted: null },
+                    },
+                    include: {
+                      Item: {
+                        include: {
+                          content: true,
+                        },
+                      },
+                    },
                   },
                 },
-              },
-            },
-            items: { where: { deleted: null }, include: { content: true } },
-          },
-          where,
-          orderBy,
-        }),
-    })
+                where,
+                orderBy,
+              }),
+            prismaError("Category")
+          ),
+        Effect.map(
+          Effect.attemptCatchPromise(() => db.category.count({ where }), prismaError("Category")),
+          Number.NonNegativeInt
+        )
+      )(skip, take)
+    ),
+    Effect.map((bag) => ({
+      categories: A.map(A.fromIterable(bag.items), (it) => ({
+        ...it,
+        items: A.map(it.categoryItems, (ci) => ci.Item),
+      })),
+      nextPage: bag.nextPage,
+      hasMore: bag.hasMore,
+      count: bag.count,
+    })),
+    Session.authorize(ctx),
+    Renu.runPromise$
+  )
 
-    // temp
-    for (const category of categories) {
-      category.items = category.categoryItems.map((c) => c.Item)
-    }
-
-    return {
-      categories,
-      nextPage,
-      hasMore,
-      count,
-    }
-  }
-)
+export default handler

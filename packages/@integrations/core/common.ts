@@ -1,8 +1,9 @@
 import * as Layer from "@effect/io/Layer"
-import * as Context from "@fp-ts/data/Context"
+import * as Context from "@effect/data/Context"
 import * as Schedule from "@effect/io/Schedule"
-import { pipe } from "@fp-ts/data/Function"
-import * as Duration from "@fp-ts/data/Duration"
+import * as Config from "@effect/io/Config"
+import * as Duration from "@effect/data/Duration"
+import { pipe } from "@effect/data/Function"
 
 export interface IdentityService {
   name: string
@@ -14,6 +15,10 @@ export interface ScheduleService {
 }
 export const ScheduleService = Context.Tag<ScheduleService>()
 
+export const config = Config.all({
+  host: Config.string("host"),
+})
+
 export const DefaultRetrySchedule: ScheduleService = {
   retry: pipe(
     Schedule.exponential(Duration.millis(10), 2),
@@ -24,5 +29,5 @@ export const DefaultRetrySchedule: ScheduleService = {
 }
 
 export const Layers = {
-  DefaultRetrySchedule: Layer.succeed(ScheduleService)(DefaultRetrySchedule),
+  DefaultRetrySchedule: Layer.succeed(ScheduleService, DefaultRetrySchedule),
 }

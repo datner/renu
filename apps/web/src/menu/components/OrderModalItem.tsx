@@ -1,27 +1,24 @@
 import { useChain, useSpring, useSpringRef, a } from "@react-spring/web"
-import { price, titleFor, toShekel } from "src/core/helpers/content"
+import { titleFor, toShekel } from "src/core/helpers/content"
 import { useLocale } from "src/core/hooks/useLocale"
 import Image from "next/image"
 import { useState } from "react"
 import useMeasure from "react-use-measure"
 import { ResizeObserver } from "@juggle/resize-observer"
 import { AmountButtons, AmountButtonsProps } from "./AmountButtons"
-import { PrimitiveAtom, useAtomValue, useSetAtom } from "jotai"
-import { OrderItem } from "src/menu/jotai/order"
-import { useUpdateOrderItem } from "../hooks/useUpdateOrderItem"
-import { itemAtom, itemModalOpenAtom } from "src/menu/jotai/item"
+import * as Order from "src/menu/hooks/useOrder"
+import { Blurhash } from "react-blurhash"
 
 type Props = {
-  atom: PrimitiveAtom<OrderItem>
+  dispatch: Order.OrderDispatch
+  orderItem: Order.OrderItem
+  hash: Order.OrderItemKey
 }
 
 export function OrderModalItem(props: Props) {
-  const { atom } = props
-  const orderItem = useAtomValue(atom)
-  const setOrderitem = useUpdateOrderItem(atom)
-  const setItem = useSetAtom(itemAtom)
-  const setOpen = useSetAtom(itemModalOpenAtom)
-  const { item, amount, comment } = orderItem
+  const { dispatch, orderItem, hash: key } = props
+  const { item, comment } = orderItem
+  const amount = Order.isMultiOrderItem(orderItem) ? orderItem.amount : 1
   const locale = useLocale()
 
   const title = titleFor(locale)
@@ -31,30 +28,32 @@ export function OrderModalItem(props: Props) {
         <div
           className="flex-grow bg-white mr-px"
           onClick={() => {
-            setOpen(true)
-            setItem(item)
+            dispatch(Order.setExistingActiveItem(key))
           }}
         >
           <div className="flex">
             <div className="h-16 w-24 relative rounded-md overflow-hidden mx-2">
-              <Image
-                priority
-                src={item.image}
-                className="object-cover"
-                fill
-                sizes="(min-width: 370px) 12rem,
+              {item.blurHash && <Blurhash hash={item.blurHash} width={96} height={64} />}
+              {item.image && (
+                <Image
+                  priority
+                  src={item.image}
+                  className="object-cover"
+                  fill
+                  sizes="(min-width: 370px) 12rem,
               8rem"
-                placeholder={item.blurDataUrl ? "blur" : "empty"}
-                blurDataURL={item.blurDataUrl ?? undefined}
-                quality={20}
-                alt={item.identifier}
-              />
+                  placeholder={item.blurDataUrl ? "blur" : "empty"}
+                  blurDataURL={item.blurDataUrl ?? undefined}
+                  quality={20}
+                  alt={item.identifier}
+                />
+              )}
             </div>
             <p className="text-sm whitespace-pre-line">
               <span>{title(item)}</span>
               <br />
               <span className="rounded-full mx-1 text-xs font-medium text-emerald-800">
-                {toShekel(price(item) * amount)}
+                {toShekel(orderItem.cost)}
               </span>
               <br />
               <span className="text-gray-500">{comment}</span>
@@ -65,7 +64,8 @@ export function OrderModalItem(props: Props) {
           <Thing
             minimum={0}
             amount={amount}
-            onChange={(newAmount) => setOrderitem((it) => ({ ...it, amount: newAmount }))}
+            onIncrement={() => dispatch(Order.incrementItem(key))}
+            onDecrement={() => dispatch(Order.decrementItem(key))}
           />
         </div>
       </div>

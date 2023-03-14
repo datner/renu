@@ -5,6 +5,7 @@ import { Suspense } from "react"
 import { Content } from "src/admin/components/Content"
 import { ToggleVenueOpen } from "src/admin/components/ToggleVenueOpen"
 import { LoadingOverlay } from "@mantine/core"
+import { AuthenticatedSessionContext } from "@blitzjs/auth"
 
 const AdminHome: BlitzPage = () => {
   return (
@@ -26,7 +27,8 @@ AdminHome.suppressFirstRenderFlicker = true
 
 export const getServerSideProps = gSSP(async (bag) => {
   const { locale, ctx } = bag
-  const { session } = ctx
+  //  because we specify authenticate this is safe
+  const session = ctx.session as AuthenticatedSessionContext
   const { venue } = session
   if (!venue) {
     return {

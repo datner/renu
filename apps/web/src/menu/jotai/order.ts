@@ -1,70 +1,76 @@
 import { Locale } from "database"
 import { pipe } from "fp-ts/function"
-import * as A from "fp-ts/Array"
-import * as N from "fp-ts/number"
-import * as Eq from "fp-ts/Eq"
+import * as A from "@fp-ts/core/ReadonlyArray"
+import * as Data from "@effect/data/Data"
+import * as Equal from "@effect/data/Equal"
 import { atom, PrimitiveAtom } from "jotai"
 import { atomFamily, splitAtom } from "jotai/utils"
 import { ModifierConfig, ModifierEnum } from "db/itemModifierConfig"
+import { symbol } from "@effect/data/Hash"
 
-export type OrderItemItem = {
-  id: number
-  image: string
-  price: number
-  identifier: string
-  blurDataUrl: string | null
-  categoryId: number
-  content: { locale: Locale; name: string; description: string }[]
-  modifiers: { id: number; position: number; config: ModifierConfig }[]
+export interface OrderItemItem extends Data.Case {
+  readonly _tag: "OrderItemItem"
+  readonly id: number
+  readonly image: string
+  readonly price: number
+  readonly identifier: string
+  readonly blurDataUrl: string | null
+  readonly categoryId: number
+  readonly content: { locale: Locale; name: string; description: string }[]
+  readonly modifiers: { id: number; position: number; config: ModifierConfig }[]
 }
-export interface OrderItem {
-  amount: number
-  comment: string
-  modifiers: ModifierItem[]
-  item: OrderItemItem
+export const OrderItemItem = Data.tagged<OrderItemItem>("OrderItemItem")
+
+export interface OrderItem extends Data.Case {
+  readonly _tag: "OrderItem"
+  readonly amount: number
+  readonly comment: string
+  readonly modifiers: Data.Data<ModifierItem[]>
+  readonly item: OrderItemItem
 }
+export const OrderItem = Data.tagged<OrderItem>("OrderItem")
 
-export interface ModifierItem {
-  identifier: string
-  _tag: ModifierEnum
-  choice: string
-  amount: number
-  price: number
-  id: number
+export interface ModifierItem extends Data.Case {
+  readonly _tag: ModifierEnum
+  readonly identifier: string
+  readonly choice: string
+  readonly amount: number
+  readonly price: number
+  readonly id: number
 }
+export const OneOf = Data.tagged<ModifierItem>("oneOf")
+export const Extras = Data.tagged<ModifierItem>("extras")
 
-const sum = A.reduce(0, N.SemigroupSum.concat)
+export interface Order extends Data.Case {
+  readonly _tag: "Order"
+  readonly items: Data.Data<OrderItem[]>
+}
+export const Order = Data.tagged<Order>("Order")
 
-const eqItem = Eq.contramap<number, OrderItemItem>((it) => it.id)(N.Eq)
-
-export const orderAtom = atom<OrderItem["item"][]>([])
-export const orderItemsAtom = atom((get) =>
-  pipe(
-    get(orderAtom),
-    A.map((it) => get(orderAtomFamily(it)))
-  )
-)
+export const orderItemsAtom = atom([] as OrderItem[])
+export const orderItemAtomsAtom = splitAtom(orderItemsAtom, (o) => o[symbol])
 
 export const orderAtomFamily = atomFamily<OrderItem["item"], PrimitiveAtom<OrderItem>>(
-  (item) => atom({ comment: "", amount: 0, item, modifiers: [] as ModifierItem[] }),
-  eqItem.equals
+  (item) =>
+    atom(OrderItem({ comment: "", amount: 0, item, modifiers: Data.array([] as ModifierItem[]) })),
+  Equal.equals
 )
 
 export type OrderFamilyAtom = PrimitiveAtom<OrderItem>
-
-export const orderAtomsAtom = splitAtom(orderAtom)
 
 export const priceAtom = atom((get) => {
   const order = get(orderItemsAtom)
   return pipe(
     order,
-    A.foldMap(N.MonoidSum)(
-      (it) =>
+    A.reduce(
+      0,
+      (sum, it) =>
         it.amount * it.item.price +
         pipe(
           it.modifiers,
-          A.foldMap(N.MonoidSum)((m) => m.price * m.amount)
-        )
+          A.reduce(0, (sum, m) => sum + m.price * m.amount)
+        ) +
+        sum
     )
   )
 })
@@ -72,7 +78,10 @@ export const priceAtom = atom((get) => {
 export const amountAtom = atom((get) =>
   pipe(
     get(orderItemsAtom),
-    A.map((it) => it.amount),
-    sum
+    (atoms) => {
+      console.log(atoms)
+      return atoms
+    },
+    A.reduce(0, (sum, it) => sum + it.amount)
   )
 )

@@ -1,11 +1,10 @@
 import { resolver } from "@blitzjs/rpc"
 import { z } from "zod"
 import { pipe } from "fp-ts/function"
-import { Order } from "database"
-import * as E from "fp-ts/Either"
-import * as TE from "fp-ts/TaskEither"
 import { Id } from "src/core/helpers/zod"
-import { findUniqueOrder } from "src/orders/helpers/prisma"
+import * as Effect from "@effect/io/Effect"
+import db from "db"
+import { prismaError } from "src/core/helpers/prisma"
 
 const OrderSuccess = z.object({
   orderId: z
@@ -15,29 +14,28 @@ const OrderSuccess = z.object({
 })
 type OrderSuccess = z.infer<typeof OrderSuccess>
 
-const ensureOrderState = <O extends Order>(order: O) =>
-  pipe(
-    order,
-    E.fromPredicate(
-      (o: Order) => o.state === "Confirmed",
-      () => ({ tag: "StateNotConfirmedError", order } as const)
-    )
-  )
+class NoTxIdError {
+  readonly _tag = "NoTxIdError"
+}
 
-const ensureOrderTxId = <O extends Order>(order: O) =>
-  pipe(
-    order,
-    E.fromPredicate(
-      (o: Order) => o.txId != null,
-      () => ({ tag: "NoTxId", order } as const)
-    )
-  )
+class StateNotConfirmedError {
+  readonly _tag = "StateNotConfirmedError"
+}
 
-const orderSuccess = (input: OrderSuccess) =>
+export default resolver.pipe(resolver.zod(OrderSuccess), (input: OrderSuccess) =>
   pipe(
-    findUniqueOrder({ where: { id: input.orderId } }),
-    TE.chainEitherKW(ensureOrderTxId),
-    TE.chainEitherKW(ensureOrderState)
+    Effect.attemptCatchPromise(
+      () => db.order.findUniqueOrThrow({ where: { id: input.orderId } }),
+      prismaError("Order")
+    ),
+    Effect.filterOrFail(
+      (o) => o.txId != null,
+      () => new NoTxIdError()
+    ),
+    Effect.filterOrFail(
+      (o) => o.state === "Confirmed",
+      () => new StateNotConfirmedError()
+    ),
+    Effect.runPromise
   )
-
-export default resolver.pipe(resolver.zod(OrderSuccess), orderSuccess, (task) => task())
+)

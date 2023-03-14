@@ -1,40 +1,46 @@
-import * as ZL from "@effect/io/Layer"
-import * as Z from "@effect/io/Effect"
-import { pipe } from "@fp-ts/data/Function"
+import * as Layer from "@effect/io/Layer"
+import * as Effect from "@effect/io/Effect"
 import * as M from "@integrations/core/management"
 import * as Dorix from "@integrations/dorix"
 import { Order } from "database"
-import * as RuntimeUtils from "shared/effect/Runtime"
-export { ManagementService, IntegrationSettingsService } from "@integrations/core/management"
+export {
+  IntegrationSettingsService as Integration,
+  ManagementService,
+} from "@integrations/core/management"
+export *  from "@integrations/core/management-menu"
 
-const withSettings = Z.serviceWithEffect(M.IntegrationSettingsService)
 
-export const ManagementServiceLayer = ZL.fromEffect(M.ManagementService)(
-  Z.gen(function* ($) {
+export const ManagementServiceLayer = Layer.effect(
+  M.ManagementService,
+  Effect.gen(function* ($) {
     const services: Record<"DORIX" | "RENU", M.ManagementService> = {
-      DORIX: yield* $(Z.service(Dorix.DorixService)),
-      RENU: yield* $(Z.service(Dorix.DorixService)),
+      DORIX: yield* $(Effect.service(Dorix.Tag)),
+      RENU: yield* $(Effect.service(Dorix.Tag)),
     }
 
     return {
-      reportOrder: (order) => withSettings((_) => services[_.provider].reportOrder(order)),
-      getOrderStatus: (order) => withSettings((_) => services[_.provider].getOrderStatus(order)),
-      getVenueMenu: withSettings((_) => services[_.provider].getVenueMenu),
+      reportOrder: (order) =>
+        Effect.serviceWithEffect(M.IntegrationSettingsService, (_) =>
+          services[_.provider].reportOrder(order)
+        ),
+      getOrderStatus: (order) =>
+        Effect.serviceWithEffect(M.IntegrationSettingsService, (_) =>
+          services[_.provider].getOrderStatus(order)
+        ),
+      getVenueMenu: Effect.serviceWithEffect(
+        M.IntegrationSettingsService,
+        (_) => services[_.provider].getVenueMenu
+      ),
     }
   })
 )
 
-const ManagementProvidersLayer = pipe(Dorix.DorixServiceLayer)
+export const layer = Layer.provide(Dorix.layer, ManagementServiceLayer)
 
 export const reportOrder = (order: M.FullOrderWithItems) =>
-  Z.serviceWithEffect(M.ManagementService)((_) => _.reportOrder(order))
+  Effect.serviceWithEffect(M.ManagementService, (_) => _.reportOrder(order))
 
 export const getOrderStatus = (order: Order) =>
-  Z.serviceWithEffect(M.ManagementService)((_) => _.getOrderStatus(order))
+  Effect.serviceWithEffect(M.ManagementService, (_) => _.getOrderStatus(order))
 
-export const getVenueMenu = Z.serviceWithEffect(M.ManagementService)((_) => _.getVenueMenu)
-
-export const managementCleanup = Symbol.for("@integrations/management/runtime/cleanup")
-export const ManagementRuntime = RuntimeUtils.makeRuntime(ManagementProvidersLayer)
-export const getManagementRuntime = () =>
-  RuntimeUtils.getAmbientRuntime(managementCleanup)(ManagementRuntime)
+export const getVenueMenu = Effect.serviceWithEffect(M.ManagementService, (_) => _.getVenueMenu)

@@ -1,162 +1,141 @@
-import * as Schedule from "@effect/io/Schedule"
-import * as Ref from "@effect/io/Ref"
-import * as Effect from "@effect/io/Effect"
-import { pipe, constFalse, constTrue } from "@fp-ts/data/Function"
-import * as Duration from "@fp-ts/data/Duration"
-import * as Context from "@fp-ts/data/Context"
-import * as Predicate from "@fp-ts/data/Predicate"
-import { taggedError, InferError } from "shared/errors"
-import * as B from "@fp-ts/data/Boolean"
-import * as O from "@fp-ts/data/Option"
-import { Common } from "."
-import { inspect } from "node:util"
+import * as Schedule from "@effect/io/Schedule";
+import * as Ref from "@effect/io/Ref";
+import * as Effect from "@effect/io/Effect";
+import * as Duration from "@effect/data/Duration";
+import * as Context from "@effect/data/Context";
+import * as Predicate from "@effect/data/Predicate";
+import { pipe } from "@effect/data/Function";
 
-export const breakerError = taggedError("BreakerError")
-export type BreakerError = InferError<typeof breakerError>
-
-export type BreakerOpen = {
-  _tag: "BreakerOpen"
-  endTime: Duration.Duration
+export class CircuitBreakerError extends Error {
+  readonly _tag = "CircuitBreakerError";
 }
 
-export type BreakerClosed = {
-  _tag: "BreakerClosed"
-  failCount: number
+export interface BreakerConfig {
+  name?: string;
+  maxFailure?: number;
+  cooldown?: Duration.Duration;
+  retry?: Schedule.Schedule<unknown, unknown, unknown>;
+  state?: Ref.Ref<BreakerState>;
 }
 
-export type BreakerState = BreakerOpen | BreakerClosed
-
-export interface BreakerConfigService {
-  maxFailure: number
-  cooldown: Duration.Duration
-}
-export const BreakerConfigService = Context.Tag<BreakerConfigService>()
-
-const now = () => Duration.millis(Date.now())
+const now = () => Duration.millis(Date.now());
 
 const matchImpl =
-  (onClosed: (s: BreakerClosed) => any, onOpen: (s: BreakerOpen) => any) => (s: BreakerState) =>
-    s._tag === "BreakerClosed" ? onClosed(s) : onOpen(s)
+  (onClosed: (s: BreakerClosed) => any, onOpen: (s: BreakerOpen) => any) =>
+  (s: BreakerState) => s._tag === "BreakerClosed" ? onClosed(s) : onOpen(s);
 
 export const matchBreaker: <A>(
   onClosed: (s: BreakerClosed) => A,
-  onOpen: (s: BreakerOpen) => A
-) => (breakerState: BreakerState) => A = matchImpl
+  onOpen: (s: BreakerOpen) => A,
+) => (breakerState: BreakerState) => A = matchImpl;
 
 export const matchBreakerW: <A, B, C>(
   onClosed: (s: BreakerClosed) => A,
-  onOpen: (s: BreakerOpen) => C
-) => (breakerState: BreakerState) => A | B | C = matchImpl
+  onOpen: (s: BreakerOpen) => C,
+) => (breakerState: BreakerState) => A | B | C = matchImpl;
 
 export const foldBreaker: <R1, E1, A, R2, E2, B>(
   onClosed: (s: BreakerClosed) => Effect.Effect<R1, E1, A>,
-  onOpen: (s: BreakerOpen) => Effect.Effect<R2, E2, B>
-) => (breakerState: BreakerState) => Effect.Effect<R1 | R2, E1 | E2, A | B> = matchImpl
+  onOpen: (s: BreakerOpen) => Effect.Effect<R2, E2, B>,
+) => (breakerState: BreakerState) => Effect.Effect<R1 | R2, E1 | E2, A | B> =
+  matchImpl;
 
-export const open = (fromNow: Duration.Duration): BreakerState => ({
-  _tag: "BreakerOpen",
-  endTime: pipe(now(), Duration.add(fromNow)),
-})
+export class BreakerOpen {
+  readonly _tag = "BreakerOpen";
+  readonly endTime = Duration.sum(this.fromNow, now());
+  constructor(private readonly fromNow: Duration.Duration) {}
+}
 
-export const closed = (failCount: number): BreakerState => ({
-  _tag: "BreakerClosed",
-  failCount,
-})
+export class BreakerClosed {
+  readonly _tag = "BreakerClosed";
+  constructor(public readonly failCount: number) {}
+}
+
+export type BreakerState = BreakerOpen | BreakerClosed;
+
+export const open = (fromNow: Duration.Duration): BreakerState =>
+  new BreakerOpen(fromNow);
+export const closed = (failCount: number): BreakerState =>
+  new BreakerClosed(failCount);
 
 export const onClosed =
-  <A>(onClosed: (s: BreakerClosed) => A) =>
-  (s: BreakerState) =>
-    s._tag === "BreakerClosed" ? onClosed(s) : s
+  <A>(onClosed: (s: BreakerClosed) => A) => (s: BreakerState) =>
+    s._tag === "BreakerClosed" ? onClosed(s) : s;
 
-export const onOpen =
-  <A>(onOpen: (s: BreakerOpen) => A) =>
-  (s: BreakerState) =>
-    s._tag === "BreakerOpen" ? onOpen(s) : s
+export const onOpen = <A>(onOpen: (s: BreakerOpen) => A) => (s: BreakerState) =>
+  s._tag === "BreakerOpen" ? onOpen(s) : s;
 
 export interface BreakerStateService {
-  state: Ref.Ref<BreakerState>
+  state: Ref.Ref<BreakerState>;
 }
-export const BreakerStateService = Context.Tag<BreakerStateService>()
+export const BreakerStateService = Context.Tag<BreakerStateService>();
 
-export const initState = Ref.make(closed(0))
+export const initState = Ref.make(closed(0));
 
 export const makeBreakerStateProvider = () =>
   pipe(
     initState,
     Effect.tap(() => Effect.logWarning("Create new breaker state")),
-    Effect.map((state) => Effect.provideService(BreakerStateService)({ state }))
-  )
+    Effect.map((state) =>
+      Effect.provideService(BreakerStateService, { state })
+    ),
+  );
 
-export const breaker =
-  <E>(isRetryable: Predicate.Predicate<E>) =>
-  <R, A>(self: Effect.Effect<R, E, A>) =>
-    Effect.flatten(
-      Effect.gen(function* ($) {
-        const config = yield* $(Effect.service(BreakerConfigService))
-        const { state } = yield* $(Effect.service(BreakerStateService))
-        const { retry } = yield* $(Effect.service(Common.ScheduleService))
+export const defaultSchedule = pipe(
+  Schedule.exponential(Duration.millis(10), 2),
+  Schedule.either(Schedule.spaced(Duration.seconds(1))),
+  Schedule.upTo(Duration.seconds(30)),
+);
 
-        const failOnPred = (e: E) =>
-          pipe(
-            e,
-            O.liftPredicate(isRetryable),
-            O.as(
-              pipe(
-                state,
-                Ref.update(
-                  onClosed((s) =>
-                    s.failCount < config.maxFailure
-                      ? closed(s.failCount + 1)
-                      : open(config.cooldown)
-                  )
-                ),
-                Effect.flatMap(() => Effect.fail(e))
-              )
-            )
-          )
+export type CircuitBreaker = <E>(
+  isRetryable: Predicate.Predicate<E>,
+) => <R, A>(
+  self: Effect.Effect<R, E, A>,
+) => Effect.Effect<R, E | CircuitBreakerError, A>;
 
-        return pipe(
+const isClosed = (s: BreakerState) => s._tag === "BreakerClosed";
+
+export const makeBreaker = (config?: BreakerConfig | undefined) =>
+  Effect.gen(function* ($) {
+    const {
+      name = "Anonymous",
+      maxFailure = 3,
+      cooldown = Duration.seconds(10),
+      retry = defaultSchedule,
+      state = yield* $(Ref.make(closed(0))),
+    } = config ?? {};
+
+    return <E, EI extends E>(isRetryable: Predicate.Predicate<EI>) =>
+    <R, A>(self: Effect.Effect<R, E, A>) =>
+      pipe(
+        Ref.updateAndGet(
           state,
-          Ref.updateAndGet(
-            onOpen((s) =>
-              pipe(
-                s.endTime,
-                Duration.greaterThanOrEqualTo(now()),
-                B.match(
-                  () => closed(config.maxFailure),
-                  () => s
-                )
-              )
-            )
+          onOpen((
+            s,
+          ) => (Duration.lessThan(s.endTime, now()) ? closed(maxFailure) : s)),
+        ),
+        Effect.flatMap(
+          foldBreaker(
+            () =>
+              Effect.tapError(self, (e) =>
+                Ref.update(
+                  state,
+                  onClosed((s) =>
+                    isRetryable(e as EI) && s.failCount < maxFailure
+                      ? closed(s.failCount + 1)
+                      : open(cooldown)
+                  ),
+                )),
+            () =>
+              Effect.fail(new CircuitBreakerError(`Breaker ${name} is open`)),
           ),
-          Effect.flatMap(
-            foldBreaker(
-              () => pipe(self, Effect.catchSome(failOnPred)),
-              () =>
-                Effect.serviceWithEffect(Common.IdentityService)(({ name }) =>
-                  Effect.fail(breakerError(new Error(`Breaker ${name} is open`)))
-                )
-            )
+        ),
+        Effect.retry(
+          Schedule.checkEffect(
+            retry as Schedule.Schedule<R, CircuitBreakerError | E, A>,
+            () => Effect.map(Ref.get(state), isClosed),
           ),
-          Effect.tapEither(() =>
-            pipe(
-              Ref.get(state),
-              Effect.tap((s) =>
-                Effect.sync(() =>
-                  console.log(`state: ${inspect(s, { colors: true, depth: null })}`)
-                )
-              )
-            )
-          ),
-          Effect.retry(
-            pipe(
-              retry,
-              Schedule.checkEffect<E | BreakerError, A, never>(() =>
-                pipe(Ref.get(state), Effect.map(matchBreaker(constTrue, constFalse)))
-              )
-            )
-          ),
-          Effect.tap(() => Ref.set(closed(0))(state))
-        )
-      })
-    )
+        ),
+        Effect.tap(() => Ref.set(state, closed(0))),
+      );
+  });

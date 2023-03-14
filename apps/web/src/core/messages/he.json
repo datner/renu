@@ -2,7 +2,8 @@
   "admin": {
     "Components": {
       "Aside": {
-        "items": "פריטים"
+        "items": "פריטים",
+        "categories": "קטגוריות"
       },
       "FormCategoryCombobox": {
         "category": "קטגוריה"
@@ -80,7 +81,7 @@
       "OrderModal": {
         "yourOrder": "ההזמנה שלך",
         "order": "הזמן!",
-        "loading": "מעביר לעמוד תשלום..."
+        "loading": "שולח הזמנה..."
       },
       "OrderModalItem": {
         "comment": "הערות"
@@ -88,10 +89,17 @@
       "ItemData": {
         "name": "שם",
         "description": "תיאור",
-        "price": "מחיר"
+        "price": "מחיר",
+        "priced by choice": "לפי בחירה"
       },
       "ItemModal": {
         "comment": "הערות"
+      },
+      "FeedbackModal": {
+        "thank you": "תודה רבה!",
+        "please provide feedback": "תודה רבה שניסתם את רניו! אנחנו עדיין בפריסה ורוצים את הדעה *שלכם* כדי להשיג את החוויה הטובה ביותר. בבקשה, אל תחסכו בפרטים!",
+        "I loved it! but": "וואי עפתי! אבל אני חושב שניתן לשפר את....",
+        "send": "סיימתי!"
       }
     }
   }

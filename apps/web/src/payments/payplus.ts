@@ -1,82 +1,85 @@
-import { parseISO } from "date-fns/fp"
-import { z } from "zod"
+import * as S from "@effect/schema/Schema";
 
-export const PayPlusCallback = z.object({
-  transaction_type: z.enum(["Charge", "Refund"]),
-  transaction: z.object({
-    uid: z.string(),
-    payment_request_uid: z.string().optional(),
-    number: z.string(),
-    type: z.string(),
-    date: z.string().transform(parseISO),
-    status_code: z.string(),
-    amount: z.number(),
-    currency: z.literal("ILS"),
-    credit_terms: z.string(),
-    payments: z.object({
-      number_of_payments: z.number(),
-      first_payment_amount: z.number(),
-      rest_payments_amount: z.number(),
+const TransactionType = {
+  charge: "Charge",
+  refund: "Refund",
+} as const;
+export const PayPlusCallback = S.struct({
+  transaction_type: S.enums(TransactionType),
+  transaction: S.struct({
+    uid: S.string,
+    payment_request_uid: S.optional(S.string),
+    number: S.string,
+    type: S.string,
+    date: S.dateFromString,
+    status_code: S.string,
+    amount: S.number,
+    currency: S.literal("ILS"),
+    credit_terms: S.string,
+    payments: S.struct({
+      number_of_payments: S.number,
+      first_payment_amount: S.number,
+      rest_payments_amount: S.number,
     }),
-    secure3D: z.object({
-      status: z.boolean(),
-      tracking: z.null(), // no idea what this should be
+    secure3D: S.struct({
+      status: S.boolean,
+      tracking: S.null, // no idea what this should be
     }),
-    approval_number: z.string(), // not actually a number, can start with 0
-    voucher_number: z.string(), // again not number, a code XX-XXX-XX
-    more_info: z.string().transform(Number),
-    more_info_1: z.string().transform(Number),
-    more_info_2: z.string().nullish(),
-    more_info_3: z.string().nullish(),
-    more_info_4: z.string().nullish(),
-    more_info_5: z.string().nullish(),
-    recurring_charge_information: z
-      .object({
-        recurring_uid: z.string(),
-        charge_uid: z.string(),
-      })
-      .nullish(),
+    approval_number: S.string, // not actually a number, can start with 0
+    voucher_number: S.string, // again not number, a code XX-XXX-XX
+    more_info: S.numberFromString(S.string),
+    more_info_1: S.numberFromString(S.string),
+    more_info_2: S.optional(S.string),
+    more_info_3: S.optional(S.string),
+    more_info_4: S.optional(S.string),
+    more_info_5: S.optional(S.string),
+    recurring_charge_information: S.optional(
+      S.struct({
+        recurring_uid: S.string,
+        charge_uid: S.string,
+      }),
+    ),
   }),
-  data: z.object({
-    customer_uid: z.string(),
-    terminal_uid: z.string(),
-    cashier_uid: z.string().nullish(),
-    items: z
-      .object({
-        vat: z.number().nullish(),
-        name: z.string(),
-        barcode: z.string().nullish(),
-        quantity: z.number(),
-        amount_pay: z.number(),
-        product_uid: z.string(),
-        quantity_price: z.number(),
-        discount_amount: z.number(),
-        discount_type: z.null(), // todo: figure this one out
-        discount_value: z.number().nullish(),
-      })
-      .array(),
-    card_information: z.object({
-      card_holder_name: z.string().nullish(),
-      four_digits: z.string(), // "1792"
-      expiry_month: z.string(), // "01"
-      expiry_year: z.string(), // 26
-      clearing_id: z.number(),
-      brand_id: z.number(),
-      issuer_id: z.number(),
-      card_foreign: z.number(),
-      card_bin: z.string(),
+  data: S.struct({
+    customer_uid: S.string,
+    terminal_uid: S.string,
+    cashier_uid: S.optional(S.string),
+    items: S.array(S
+      .struct({
+        vat: S.optional(S.number),
+        name: S.string,
+        barcode: S.optional(S.string),
+        quantity: S.number,
+        amount_pay: S.number,
+        product_uid: S.string,
+        quantity_price: S.number,
+        discount_amount: S.number,
+        discount_type: S.null, // todo: figure this one out
+        discount_value: S.optional(S.number),
+      })),
+    card_information: S.struct({
+      card_holder_name: S.optional(S.string),
+      four_digits: S.string, // "1792"
+      expiry_month: S.string, // "01"
+      expiry_year: S.string, // 26
+      clearing_id: S.number,
+      brand_id: S.number,
+      issuer_id: S.number,
+      card_foreign: S.number,
+      card_bin: S.string,
     }),
   }),
-  invoice: z
-    .object({
-      uuid: z.string(),
-      docu_number: z.string(),
-      original_url: z.string().url(),
-      copy_url: z.string().url(),
-      integrator_name: z.string(),
-      status: z.string(), // can be Success or................. what?
-    })
-    .nullish(),
-})
+  invoice: S.optional(
+    S
+      .struct({
+        uuid: S.string,
+        docu_number: S.string,
+        original_url: S.string,
+        copy_url: S.string,
+        integrator_name: S.string,
+        status: S.string, // can be Success or................. what?
+      }),
+  ),
+});
 
-export type PayPlusCallback = z.infer<typeof PayPlusCallback>
+export interface PayPlusCallback extends S.To<typeof PayPlusCallback> {}

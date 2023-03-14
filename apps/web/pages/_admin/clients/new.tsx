@@ -102,7 +102,10 @@ function CreateOrganizationForm(props: FormProps<z.infer<typeof NoUserId>>) {
 function CreateVenueForm(props: FormProps<z.infer<typeof NoOrgInfo>>) {
   const { onSubmit } = props
   const NoOrgInfo = CreateVenueSchema.omit({ organizationId: true, memberId: true }).extend({
-    logo: z.instanceof(File).transform((a) => a as FileWithPath),
+    logo: z
+      .instanceof(File)
+      .transform((a) => a as FileWithPath)
+      .optional(),
   })
   const form = useZodForm({
     schema: NoOrgInfo,
@@ -214,28 +217,36 @@ function Forms() {
       >
         <CreateVenueForm
           onSubmit={async ({ logo, ...data }) => {
-            const { url, headers: h } = await getUrl({
-              name: `${logo.name}-${nanoid()}.${logo.name.split(".").pop()}`,
-              venue: data.identifier,
-            })
-            const headers = new Headers(h)
-            headers.append("Content-Length", `${logo.size + 5000}`)
+            if (logo) {
+              const { url, headers: h } = await getUrl({
+                name: `${logo.name}-${nanoid()}.${logo.name.split(".").pop()}`,
+                venue: data.identifier,
+              })
+              const headers = new Headers(h)
+              headers.append("Content-Length", `${logo.size + 5000}`)
 
-            const {
-              data: {
-                attributes: { origin_path },
-              },
-            } = await fetch(url, {
-              method: "POST",
-              headers,
-              body: await logo.arrayBuffer(),
-            }).then((res) => res.json())
+              const {
+                data: {
+                  attributes: { origin_path },
+                },
+              } = await fetch(url, {
+                method: "POST",
+                headers,
+                body: await logo.arrayBuffer(),
+              }).then((res) => res.json())
 
-            createVenueMutation({
+              return createVenueMutation({
+                ...data,
+                logo: origin_path,
+                memberId: createOrgBag.data!.memberships[0]!.id,
+                organizationId: createOrgBag.data!.id,
+              })
+            }
+
+            return createVenueMutation({
               ...data,
-              logo: origin_path,
-              memberId: createOrgBag.data!.memberships[0]!.id,
-              organizationId: createOrgBag.data!.id,
+              memberId: 13,
+              organizationId: 9,
             })
           }}
         />

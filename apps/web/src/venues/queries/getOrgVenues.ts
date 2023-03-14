@@ -1,20 +1,17 @@
 import { resolver } from "@blitzjs/rpc"
-import { Prisma } from "database"
-import { pipe } from "fp-ts/function"
-import * as RA from "fp-ts/ReadonlyArray"
-import * as T from "fp-ts/Task"
-import * as TE from "fp-ts/TaskEither"
-import { venueFindMany } from "../helpers/prisma"
-
-type VenueWithContent = Prisma.VenueGetPayload<{ include: { content: true } }>
+import * as Effect from "@effect/io/Effect"
+import db from "db"
+import { prismaError } from "src/core/helpers/prisma"
 
 export default resolver.pipe(resolver.authorize(), (_, ctx) =>
-  pipe(
-    venueFindMany({
-      where: { organizationId: ctx.session.organization.id },
-      include: { content: true },
-    }),
-    TE.map(RA.fromArray),
-    TE.getOrElse(() => T.of(RA.zero<VenueWithContent>()))
-  )()
+  Effect.runPromise(
+    Effect.attemptCatchPromise(
+      () =>
+        db.venue.findMany({
+          where: { organizationId: ctx.session.organization.id },
+          include: { content: true },
+        }),
+      prismaError("Venue")
+    )
+  )
 )

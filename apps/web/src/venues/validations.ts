@@ -7,7 +7,7 @@ const Content = z.object({
 
 export const CreateVenueSchema = z.object({
   identifier: Slug,
-  logo: z.string(),
+  logo: z.string().default(""),
   organizationId: Id,
   memberId: Id,
   he: Content,

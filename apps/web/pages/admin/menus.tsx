@@ -16,7 +16,7 @@ const AdminMenus: BlitzPage = () => {
       }
       aside={
         <Suspense fallback={<LoadingOverlay visible />}>
-          <Aside.Directory />
+          <Aside.Categories />
         </Suspense>
       }
     />

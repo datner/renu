@@ -3,16 +3,19 @@
   "main": "./index.ts",
   "types": "./index.ts",
   "scripts": {
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@effect/io": "0.0.63",
-    "@fp-ts/data": "0.0.39",
-    "@fp-ts/schema": "0.0.8",
+    "@effect/data": "0.6.0",
+    "@effect/io": "0.12.2",
+    "@effect/match": "0.5.1",
+    "@effect/schema": "0.5.0",
     "shared": "workspace:*"
   },
   "devDependencies": {
     "database": "workspace:*",
-    "vitest": "0.27.1"
+    "tsconfig": "workspace:*",
+    "vitest": "0.29.7"
   }
 }

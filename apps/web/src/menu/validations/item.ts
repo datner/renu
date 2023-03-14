@@ -1,12 +1,10 @@
 import { z } from "zod"
-import { Modifier } from "db/itemModifierConfig"
-import { pipe, identity, constFalse } from "fp-ts/function"
-import * as RR from "fp-ts/ReadonlyRecord"
-import * as RA from "fp-ts/ReadonlyArray"
-import * as O from "fp-ts/Option"
-import { Ord as ordS } from "fp-ts/string"
-import { MonoidSum, Ord as ordN } from "fp-ts/number"
-import { geq, leq } from "fp-ts/Ord"
+import { pipe, constFalse } from "@effect/data/Function"
+import * as RR from "@effect/data/ReadonlyRecord"
+import * as RA from "@effect/data/ReadonlyArray"
+import * as O from "@effect/data/Option"
+import * as N from "@effect/data/Number"
+import { Modifiers } from "database-helpers"
 
 export const OneOfItem = z.object({
   identifier: z.string(),
@@ -28,11 +26,7 @@ export const ItemForm = z.object({
   }),
 })
 
-const ordON = O.getOrd(ordN)
-const oGeq = geq(ordON)
-const oLeq = leq(ordON)
-
-export const getItemFormSchema = (modifiers: Modifier[]) =>
+export const getItemFormSchema = (modifiers: Modifiers.ModifierConfig[]) =>
   z.object({
     amount: z.number().int().nonnegative(),
     comment: z.string(),
@@ -43,14 +37,19 @@ export const getItemFormSchema = (modifiers: Modifier[]) =>
           (ex) =>
             pipe(
               modifiers,
-              RA.findFirst((m) => m.config.identifier === ex.identifier),
-              O.chain((m) => (m.config._tag === "extras" ? O.some(m.config) : O.none)),
+              RA.findFirst((m) => m.identifier === ex.identifier),
+              O.filter(Modifiers.isExtras),
               O.map((m) =>
+                N.between(
+                  O.getOrElse(m.min, () => 0),
+                  O.getOrElse(m.max, () => Infinity)
+                )
+              ),
+              O.ap(
                 pipe(
-                  ex.choices,
-                  RR.foldMap(ordS)(MonoidSum)(identity),
-                  O.some,
-                  (am) => oLeq(m.min, am) && (O.isNone(m.max) || oGeq(m.max, am))
+                  RR.collect(ex.choices, (_, a) => a),
+                  N.sumAll,
+                  O.some
                 )
               ),
               O.getOrElse(constFalse)

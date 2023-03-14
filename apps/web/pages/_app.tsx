@@ -9,7 +9,7 @@ import { useIsomorphicLayoutEffect } from "src/core/hooks/useIsomorphicLayoutEff
 import { AuthenticationError, AuthorizationError } from "blitz"
 import { MantineProvider } from "src/core/components/MantineProvider"
 import clsx from "clsx"
-import { Secular_One, Noto_Sans } from "@next/font/google"
+import { Secular_One, Noto_Sans } from "next/font/google"
 
 import "src/core/styles/index.css"
 

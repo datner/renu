@@ -1,35 +1,31 @@
-import { SessionContext } from "@blitzjs/auth"
-import { pipe } from "fp-ts/function"
+import { pipe } from "@effect/data/Function"
 import { api } from "src/blitz-server"
-import * as A from "fp-ts/Array"
-import * as RA from "fp-ts/ReadonlyArray"
-import * as TE from "fp-ts/TaskEither"
+import * as Effect from "@effect/io/Effect"
+import * as A from "@effect/data/ReadonlyArray"
+import * as Telegram from "integrations/telegram/sendMessage"
+import { Session } from "src/auth"
+import { Renu } from "src/core/effect"
 
 const buildPaths = (slug: string) =>
   pipe(
     ["/menu", "/kiosk"],
     A.map((u) => u + `/${slug}`),
-    A.chain((u) => [u, "/he" + u, "/en" + u]),
-    RA.fromArray
+    A.flatMap((u) => [u, "/he" + u, "/en" + u])
   )
 
-export default api((_req, res, ctx) => {
-  const session: SessionContext = ctx.session
-  session.$authorize()
-  const revalidate = pipe(
-    session.venue.identifier,
-    buildPaths,
-    TE.traverseArray((path) =>
-      TE.tryCatch(
-        () => res.revalidate(path),
-        (e) => e
-      )
+export default api((_req, res, ctx) =>
+  pipe(
+    Session.with((session) => session.venue.identifier),
+    Effect.map(buildPaths),
+    Effect.flatMap(Effect.forEachPar((p) => Effect.attemptPromise(() => res.revalidate(p)))),
+    Effect.tapError(() =>
+      Session.withEffect((s) => Telegram.notify(`failed to revalidate ${s.venue.identifier}`))
     ),
-    TE.match(
+    Effect.match(
       () => res.status(500).send("Error Revalidating"),
       () => res.json({ revalidated: true })
-    )
+    ),
+    Session.authorize(ctx),
+    Renu.runPromise$
   )
-
-  return revalidate()
-})
+)

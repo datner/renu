@@ -1,35 +1,26 @@
 import { toShekel } from "src/core/helpers/content"
+import * as _Menu from "src/menu/schema"
 import { useTranslations } from "next-intl"
-import { memo } from "react"
+import { PropsWithChildren, ReactNode } from "react"
 import { AmountCounter } from "./AmountCounter"
 import clsx from "clsx"
 
 type Props = {
   price: number
-  content: { name: string; description: string }
+  content: _Menu.Content
   amount: number
 }
 
-export const ItemData = memo(function ItemData(props: Props) {
-  const { price, content, amount } = props
+const StaticData = (
+  props: PropsWithChildren<Omit<Props, "price" | "amount"> & { price: ReactNode }>
+) => {
+  const { children, price, content } = props
   const t = useTranslations("menu.Components.ItemData")
 
   return (
     <dl className="z-10 flex h-full flex-col p-3">
       <dt className="sr-only">{t("name")}</dt>
-      <dd className="text-sm sm:text-base text-gray-800">
-        <AmountCounter
-          className={clsx([
-            "group-5nth-1:text-emerald-600",
-            "group-5nth-2:text-ocre-600",
-            "group-5nth-3:text-ginger-600",
-            "group-5nth-4:text-coral-600",
-            "group-5nth-5:text-blush-600",
-          ])}
-          label={content.name}
-          amount={amount}
-        />
-      </dd>
+      <dd className="text-sm sm:text-base text-gray-800">{children}</dd>
       <dt className="sr-only">{t("description")}</dt>
       <dd className="text-xs sm:text-sm text-gray-500 whitespace-normal line-clamp-2 ">
         {content.description}
@@ -46,9 +37,30 @@ export const ItemData = memo(function ItemData(props: Props) {
             "group-5nth-5:badge-info",
           ])}
         >
-          {toShekel(price)}
+          {price}
         </span>
       </dd>
     </dl>
   )
-})
+}
+
+export const ItemData = (props: Props) => {
+  const { price, content, amount } = props
+  const t = useTranslations("menu.Components.ItemData")
+
+  return (
+    <StaticData content={content} price={price === 0 ? t("priced by choice") : toShekel(price)}>
+      <AmountCounter
+        className={clsx([
+          "group-5nth-1:text-emerald-600",
+          "group-5nth-2:text-ocre-600",
+          "group-5nth-3:text-ginger-600",
+          "group-5nth-4:text-coral-600",
+          "group-5nth-5:text-blush-600",
+        ])}
+        label={content.name}
+        amount={amount}
+      />
+    </StaticData>
+  )
+}

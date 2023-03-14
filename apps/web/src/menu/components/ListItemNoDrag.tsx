@@ -2,14 +2,13 @@ import Image from "next/image"
 import { a, useSpring } from "@react-spring/web"
 import { useLocale } from "src/core/hooks/useLocale"
 import { pipe } from "fp-ts/function"
-import * as A from "fp-ts/Array"
+import * as A from "@fp-ts/core/ReadonlyArray"
 import { ItemData } from "./ItemData"
 import { memo } from "react"
 import { useIsRtl } from "src/core/hooks/useIsRtl"
 import { useAtomValue } from "jotai"
 import { OrderFamilyAtom } from "src/menu/jotai/order"
 import { max, multiply, add } from "src/core/helpers/number"
-import { MonoidSum } from "fp-ts/lib/number"
 
 type Props = {
   atom: OrderFamilyAtom
@@ -31,7 +30,7 @@ export const ListItemNoDrag = memo(function ListItem(props: Props) {
 
   const modPrice = pipe(
     itemInOrder.modifiers,
-    A.foldMap(MonoidSum)((m) => m.price * m.amount)
+    A.reduce(0, (sum, m) => sum + m.price * m.amount)
   )
 
   const price = pipe(itemInOrder.amount, max(1), multiply(itemInOrder.item.price), add(modPrice))

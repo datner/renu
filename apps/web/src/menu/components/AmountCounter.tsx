@@ -46,7 +46,7 @@ export const AmountCounter = memo((props: Props) => {
       >
         x{amount || prevAmount}
       </animated.span>
-      <animated.span className="block truncate">{label}</animated.span>
+      <span className="block truncate">{label}</span>
     </animated.div>
   )
 })

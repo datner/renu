@@ -2,7 +2,8 @@
   "admin": {
     "Components": {
       "Aside": {
-        "items": "Items"
+        "items": "Items",
+        "categories": "Categories"
       },
       "FormCategoryCombobox": {
         "category": "Category"
@@ -80,7 +81,7 @@
       "OrderModal": {
         "yourOrder": "Your Order",
         "order": "Order!",
-        "loading": "Redirecting..."
+        "loading": "Sending Order..."
       },
       "OrderModalItem": {
         "comment": "Comment"
@@ -88,10 +89,17 @@
       "ItemData": {
         "name": "Name",
         "description": "Description",
-        "price": "Price"
+        "price": "Price",
+        "priced by choice": "Per Choice"
       },
       "ItemModal": {
         "comment": "Comment"
+      },
+      "FeedbackModal": {
+        "thank you": "Thank you!",
+        "please provide feedback": "Thank you for trying out Renu! We are still rolling out and want *your* feedback to make the best product we can. Please, spare no detail!",
+        "I loved it! but": "I loved it! But I think it could be better if....",
+        "send": "Send!"
       }
     }
   }

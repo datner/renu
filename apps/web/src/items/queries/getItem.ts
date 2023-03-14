@@ -17,7 +17,7 @@ export default resolver.pipe(
   async (input) => {
     const item = await db.item.findFirst({
       where: { ...input },
-      include: { content: true, modifiers: true },
+      include: { content: true, modifiers: { where: { deleted: null } } },
     })
 
     if (!item) throw new NotFoundError()

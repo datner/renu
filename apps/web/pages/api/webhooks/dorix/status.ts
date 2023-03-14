@@ -1,9 +1,7 @@
 import * as E from "fp-ts/Either"
 import * as TE from "fp-ts/TaskEither"
 import { pipe } from "fp-ts/function"
-import { ORDER_STATUS } from "integrations/dorix/types"
 import { NextApiRequest, NextApiResponse } from "next"
-import { ensureMethod } from "pages/api/payments/callback"
 import { ensureType } from "src/core/helpers/zod"
 import { updateOrder } from "src/orders/helpers/prisma"
 import { z } from "zod"
@@ -11,6 +9,7 @@ import { OrderState } from "database"
 import { Format } from "telegraf"
 import { sendMessage } from "integrations/telegram/sendMessage"
 import { match, P } from "ts-pattern"
+import { ORDER_STATUS } from "@integrations/dorix/types"
 
 const DorixSuccess = z.object({
   endpoint: z.string().url(),
@@ -66,7 +65,7 @@ const ensureSuccess = (response: z.infer<typeof DorixResponse>) =>
 const handler = async (req: NextApiRequest, res: NextApiResponse) =>
   pipe(
     req,
-    ensureMethod("POST"),
+    E.fromPredicate(req => req.method?.toUpperCase() === "POST", () => new Error('this endpoint only supports POST requests')),
     E.map((req) => req.body),
     E.chainW(ensureType(DorixResponse)),
     E.chainW(ensureSuccess),
@@ -86,7 +85,11 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) =>
       sendMessage(
         Format.fmt(
           `Error in dorix callback\n\n`,
-          Format.pre("none")(e.error instanceof Error ? e.error.message : e.tag)
+          Format.pre("none")(
+            "error" in e && e.error instanceof Error
+              ? e.error.message
+              : "too complicated for me to unfurl"
+          )
         )
       )
     ),

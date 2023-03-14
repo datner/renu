@@ -1,183 +1,119 @@
-import { PayPlusCallback } from "src/payments/payplus"
-import { Method } from "got"
-import { pipe, constVoid, flow } from "fp-ts/function"
-import * as O from "fp-ts/Option"
-import * as E from "fp-ts/Either"
-import * as TE from "fp-ts/TaskEither"
-import * as RTE from "fp-ts/ReaderTaskEither"
-import * as A from "fp-ts/Array"
-import * as S from "fp-ts/string"
-import * as B from "fp-ts/boolean"
-import { NextApiRequest, NextApiResponse } from "next"
-import db, { Order, OrderState, Prisma } from "db"
-import { prismaNotFound, prismaNotValid } from "src/core/helpers/prisma"
-import { ensureType } from "src/core/helpers/zod"
-import { sendMessage } from "integrations/telegram/sendMessage"
-import { log } from "blitz"
-import { Format } from "telegraf"
-import { getOrderStatus, reportOrder } from "integrations/management"
-import { fullOrderInclude } from "integrations/clearing/clearingProvider"
-import { z } from "zod"
-import { updateOrder } from "src/orders/helpers/prisma"
+import { PayPlusCallback } from "src/payments/payplus";
+import { pipe } from "@effect/data/function";
+import * as E from "@effect/data/Either";
+import * as Effect from "@effect/io/Effect";
+import * as Str from "@effect/data/string";
+import * as P from "@effect/schema/Parser";
+import { NextApiRequest, NextApiResponse } from "next";
+import db, { OrderState } from "db";
+import {
+  prismaError,
+} from "src/core/helpers/prisma";
+import { notify } from "integrations/telegram/sendMessage";
+import { Format } from "telegraf";
+import * as Management from "@integrations/management";
+import { fullOrderInclude } from "@integrations/core/management";
+import { Renu } from "src/core/effect";
 
-type WrongMethodError = {
-  tag: "WrongMethodError"
-  error: unknown
-  req: NextApiRequest
-}
-
-type TransactionNotSuccessError = {
-  tag: "TransactionNotSuccessError"
-  error: unknown
-  status: string
-}
-
-const methods = pipe(
-  ["get", "post", "options", "put", "head", "patch", "trace", "delete"] as Method[],
-  A.chain((m) => [m, S.toUpperCase(m)])
-)
-
-const zMethods = z
-  .string()
-  .refine((m): m is Method => methods.includes(m))
-  .transform(S.toLowerCase)
-
-export const ensureMethod = (method: Method) => (req: NextApiRequest) =>
+const handler = async (request: NextApiRequest, res: NextApiResponse) =>
   pipe(
-    req.method,
-    ensureType(zMethods),
-    E.map((m) => S.Eq.equals(m, S.toLowerCase(method))),
-    E.chainW(
-      B.match(
-        () =>
-          E.left<WrongMethodError>({
-            tag: "WrongMethodError",
-            req,
-            error: new Error(`received ${req.method} but expected to get ${method}`),
-          }),
-        () => E.right(req)
-      )
-    )
-  )
-
-const ensureSuccess = (ppc: PayPlusCallback) =>
-  ppc.transaction.status_code === "000"
-    ? E.right(ppc)
-    : E.left<TransactionNotSuccessError>({
-        tag: "TransactionNotSuccessError",
-        error: new Error(`Payplus returned ${ppc.transaction.status_code} instead of 000`),
-        status: ppc.transaction.status_code,
-      })
-
-export const changeOrderState = (id: number) => (state: OrderState) =>
-  TE.tryCatch(
-    () =>
-      db.order.update({
-        where: { id },
-        data: { state },
-      }),
-    (e) => (e instanceof Prisma.PrismaClientValidationError ? prismaNotValid(e) : prismaNotFound(e))
-  )
-
-const getManagementIntegrationByVenueId = TE.tryCatchK(
-  (venueId: number) => db.managementIntegration.findUniqueOrThrow({ where: { venueId } }),
-  prismaNotFound
-)
-
-// implement refund
-declare const refund: () => TE.TaskEither<Error, void>
-
-const refundIfNeeded = (order: Order) =>
-  pipe(
-    order,
-    O.fromPredicate((o) => o.state === "Cancelled"),
-    O.map(() => {
-      log.error("Refund requested")
-      sendMessage(`Order ${order.id} needs to refund`)
-      return TE.of<never, void>(undefined)
-    }),
-    O.getOrElse(() => TE.of<never, void>(undefined))
-  )
-
-const onCharge = (ppc: PayPlusCallback) =>
-  pipe(
-    getManagementIntegrationByVenueId(ppc.transaction.more_info_1),
-    TE.chain((managementIntegration) =>
+    Effect.succeed(request),
+    Effect.filterOrDieMessage(
+      (req) => Str.toLowerCase(req.method || "") === "post",
+      "this endpoint only received POST messages",
+    ),
+    Effect.map((req) => req.body),
+    Effect.flatMap(P.parseEffect(PayPlusCallback)),
+    Effect.filterOrDieMessage(
+      (ppc) => ppc.transaction.status_code === "000",
+      "payplus returned a failed transaction. Why?",
+    ),
+    Effect.flatMap((ppc) =>
       pipe(
-        RTE.fromTaskEither(
-          updateOrder({
-            where: { id: ppc.transaction.more_info },
-            data: { txId: ppc.transaction.uid },
-            include: fullOrderInclude,
-          })
-        ),
-        RTE.chainW((o) =>
-          pipe(
-            o,
-            reportOrder,
-            RTE.orElseW((e) => {
-              const orderId = ppc.transaction.more_info
-              const venueId = ppc.transaction.more_info_1
-              const { provider } = managementIntegration
-              const pre = Format.pre("none")
-              const message =
-                e.error instanceof Error
-                  ? `Provider ${provider} reported the following error:\n ${pre(e.error.message)}`
-                  : `Please reach out to ${managementIntegration.provider} support for further details.`
+        Effect.gen(function* ($) {
+          let order = yield* $(
+            Effect.attemptCatchPromise(
+              () =>
+                db.order.update({
+                  where: { id: ppc.transaction.more_info },
+                  data: { txId: ppc.transaction.uid },
+                  include: fullOrderInclude,
+                }),
+              prismaError("Order"),
+            ),
+          );
 
-              return pipe(
-                RTE.fromTask(
-                  sendMessage(
-                    Format.fmt(
-                      ` Order ${orderId} of venue ${venueId} could not be submitted to management.\n\n${message}`
-                    )
-                  )
-                ),
-                RTE.apSecondW(RTE.throwError({ tag: "ContinueToCheckStatus", order: o } as const))
-              )
-            }),
-            RTE.apSecond(RTE.right(o))
-          )
-        ),
-        RTE.chainFirstTaskEitherKW((o) => changeOrderState(o.id)(OrderState.Unconfirmed)),
-        RTE.orElseFirstW((e) =>
-          e.tag === "ContinueToCheckStatus" ? RTE.right(e.order) : RTE.throwError(e)
-        ),
-        RTE.chainW(
-          flow(
-            getOrderStatus,
-            RTE.mapLeft((e) => ({ tag: e._tag, ...e }))
-          )
-        ),
-        RTE.chainTaskEitherKW(changeOrderState(ppc.transaction.more_info)),
-        RTE.apSecond(RTE.of(constVoid))
-      )({
-        managementIntegration,
-      })
-    )
-  )
+          const either = yield* $(Effect.either(Management.reportOrder(order)));
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) =>
-  pipe(
-    req,
-    ensureMethod("POST"),
-    E.map((req) => req.body),
-    E.chainW(ensureType(PayPlusCallback)),
-    E.chainW(ensureSuccess),
-    TE.fromEither,
-    TE.chainW(onCharge),
-    TE.orElseFirstTaskK((e) =>
-      sendMessage(
-        Format.fmt(
-          `Error in payment callback\n\n`,
-          Format.pre("none")("error" in e && e.error instanceof Error ? e.error.message : e.tag)
-        )
+          if (E.isLeft(either)) {
+            const e = either.left;
+            const orderId = ppc.transaction.more_info;
+            const venueId = ppc.transaction.more_info_1;
+            const pre = Format.pre("none");
+            const message = "error" in e && e.error instanceof Error
+              ? `Provider Payplus reported the following error:\n ${
+                pre(e.error.message)
+              }`
+              : `Please reach out to Payplus support for further details.`;
+
+            yield* $(
+              notify(
+                ` Order ${orderId} of venue ${venueId} could not be submitted to management.\n\n${message}`,
+              ),
+            );
+          }
+
+          order = yield* $(
+            Effect.attemptCatchPromise(
+              () =>
+                db.order.update({
+                  where: { id: order.id },
+                  data: { state: OrderState.Unconfirmed },
+                  include: fullOrderInclude,
+                }),
+              prismaError("Order"),
+            ),
+          );
+
+          const state = yield* $(Management.getOrderStatus(order));
+
+          return yield* $(
+            Effect.attemptCatchPromise(
+              () =>
+                db.order.update({
+                  where: { id: order.id },
+                  data: { state },
+                  include: fullOrderInclude,
+                }),
+              prismaError("Order"),
+            ),
+          );
+        }),
+        Effect.provideServiceEffect(
+          Management.Integration,
+          Effect.attemptCatchPromise(
+            () =>
+              db.managementIntegration.findUniqueOrThrow({
+                where: { venueId: ppc.transaction.more_info_1 },
+              }),
+            prismaError("ManagementIntegration"),
+          ),
+        ),
       )
     ),
-    TE.bimap(
+    Effect.catchAll((e) =>
+      notify(
+        Format.fmt(
+          `Error in payment callback\n\n`,
+          Format.pre("none")(e instanceof Error ? e.message : e._tag),
+        ),
+      )
+    ),
+    Effect.match(
       () => res.status(400).json({ success: false }),
-      () => res.status(200).json({ success: true })
-    )
-  )()
+      () => res.status(200).json({ success: true }),
+    ),
+    Renu.runPromise$,
+  );
 
-export default handler
+export default handler;

@@ -1,8 +1,8 @@
 import { PayPlusCallback } from "src/payments/payplus";
-import { pipe } from "@effect/data/function";
+import { pipe } from "@effect/data/Function";
 import * as E from "@effect/data/Either";
 import * as Effect from "@effect/io/Effect";
-import * as Str from "@effect/data/string";
+import * as Str from "@effect/data/String";
 import * as P from "@effect/schema/Parser";
 import { NextApiRequest, NextApiResponse } from "next";
 import db, { OrderState } from "db";

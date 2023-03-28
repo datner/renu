@@ -39,7 +39,7 @@ export function IntegrationsPanel() {
 
 const eqIdentified = <A extends Management.Identified>() =>
   Equivalence.make<A>((a, b) =>
-    S.Equivalence(a.name, b.name) && O.getEquivalence(S.Equivalence)(a.id, b.id)
+    S.Equivalence(a.name, b.name) && a.id === b.id
   );
 
 const eqManagementItem_ = eqIdentified<Management.Item>();

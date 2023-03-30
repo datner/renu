@@ -153,7 +153,7 @@ export default resolver.pipe(
             Effect.catchAll((e) =>
               Effect.failSync(() => {
                 if (e.cause instanceof Http.HttpNotFoundError) {
-                  return new NotFoundError(e.cause.message);
+                  return new NotFoundError();
                 }
                 if (e.cause instanceof CircuitBreaker.CircuitBreakerError) {
                   return new ManagementUnreachableError();

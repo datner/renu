@@ -2,7 +2,7 @@ import { useTranslations } from "next-intl"
 import { OrderModalItem } from "./OrderModalItem"
 import { Modal } from "./Modal"
 import { toShekel } from "src/core/helpers/content"
-import { useMutation } from "@blitzjs/rpc"
+import { useMutation, useQuery } from "@blitzjs/rpc"
 import sendOrder from "../mutations/sendOrder"
 import { useLocale } from "src/core/hooks/useLocale"
 import { useZodParams } from "src/core/hooks/useParams"
@@ -17,6 +17,8 @@ import { pipe, absurd } from "@effect/data/Function"
 import { useState } from "react"
 import { FeedbackModal } from "./FeedbackModal"
 import { Number } from "shared/schema"
+import getVenueClearingProvider from "src/venues/queries/getVenueClearingType"
+import { useParam } from "@blitzjs/next"
 
 type Props = {
   open?: boolean
@@ -27,6 +29,8 @@ type Props = {
 
 export function OrderModal(props: Props) {
   const { onClose, open, order, dispatch } = props
+  const identifier = useParam('restaurant', 'string')!
+  const [/* TODO: Implement provider */] = useQuery(getVenueClearingProvider, {identifier})
   const t = useTranslations("menu.Components.OrderModal")
   const [feedbackOpen, setFeedbackOpen] = useState(false)
   const locale = useLocale()

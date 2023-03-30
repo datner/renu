@@ -1,27 +1,18 @@
-import { resolver } from "@blitzjs/rpc"
-import { Slug } from "src/auth/validations"
-import db from "db"
-import { z } from "zod"
+import { resolver } from "@blitzjs/rpc";
+import * as Schema from "@effect/schema/Schema";
+import { Common } from "shared/schema";
+import db from "db";
+import { selectTheEntireMenu } from "../prisma";
 
-const GetMenu = z.object({
-  slug: Slug,
-})
+const GetMenu = Schema.struct({
+  identifier: Common.Slug
+});
 
-export default resolver.pipe(resolver.zod(GetMenu), ({ slug }) =>
-  db.venue.findUniqueOrThrow({
-    where: { identifier: slug },
-    include: {
-      content: true,
-      categories: {
-        include: {
-          content: true,
-          items: {
-            include: {
-              content: true,
-            },
-          },
-        },
-      },
-    },
-  })
-)
+export default resolver.pipe(
+  (i: Schema.From<typeof GetMenu>) => Schema.decode(GetMenu)(i),
+  (where) =>
+    db.venue.findUniqueOrThrow({
+      where,
+      select: selectTheEntireMenu,
+    }),
+);

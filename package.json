@@ -16,14 +16,14 @@
     "check:everything": "pnpm run typecheck lint test"
   },
   "devDependencies": {
-    "@commitlint/cli": "17.5.0",
+    "@commitlint/cli": "17.5.1",
     "@commitlint/config-conventional": "17.4.4",
-    "@types/node": "18.15.9",
-    "eslint": "8.36.0",
+    "@types/node": "18.15.11",
+    "eslint": "8.37.0",
     "eslint-config-custom": "workspace:*",
     "husky": "8.0.3",
     "lint-staged": "13.2.0",
-    "turbo": "1.8.5",
+    "turbo": "1.8.8",
     "typescript": "5.0.2"
   },
   "engines": {
@@ -31,15 +31,16 @@
   },
   "packageManager": "pnpm@7.19.0",
   "dependencies": {
-    "@effect/io": "0.12.2",
-    "@effect/match": "0.5.1",
+    "@effect/io": "0.15.1",
+    "@effect/match": "0.8.1",
     "@fp-ts/core": "0.2.1"
   },
   "pnpm": {
     "overrides": {
       "@fp-ts/data": "npm:@effect/data",
       "@effect/data": "latest",
-      "@effect/io": "$@effect/io"
+      "@effect/io": "$@effect/io",
+      "@tanstack/react-query": "4.28.0"
     },
     "patchedDependencies": {
       "@blitzjs/next@2.0.0-beta.23": "patches/@blitzjs__next@2.0.0-beta.23.patch"

@@ -9,8 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@effect/data": "0.6.0",
-    "@effect/schema": "0.5.0",
+    "@effect/data": "0.7.4",
+    "@effect/schema": "0.8.2",
     "next": "13.2.4",
     "react": "18.2.0",
     "react-dom": "18.2.0",
@@ -18,8 +18,8 @@
   },
   "devDependencies": {
     "@babel/core": "^7.21.3",
-    "@types/node": "^18.15.9",
-    "@types/react": "^18.0.29",
+    "@types/node": "^18.15.11",
+    "@types/react": "^18.0.31",
     "@types/react-dom": "^18.0.11",
     "eslint-config-custom": "workspace:*",
     "tsconfig": "workspace:*",

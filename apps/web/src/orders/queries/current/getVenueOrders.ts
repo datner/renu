@@ -72,9 +72,7 @@ const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx
             ...mod,
             modifier: {
               ...mod.modifier,
-              config: P.parse(Modifiers.ModifierConfig)(mod.modifier.config, {
-                isUnexpectedAllowed: true,
-              }),
+              config: P.parse(Modifiers.ModifierConfig)(mod.modifier.config),
             },
           })),
         })),

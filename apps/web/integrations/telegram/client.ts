@@ -25,4 +25,5 @@ export const ConstantCaseConfigProvider = pipe(
 export const TelegramConfig = Config.all({
   botToken: Config.string("telegram.bot.token"),
   chatId: Config.string("telegram.chat.id"),
+  datnerId: Config.string("telegram.datner.chat.id"),
 })

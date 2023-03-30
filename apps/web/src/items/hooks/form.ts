@@ -1,7 +1,7 @@
 import { useRouter } from "next/router";
 import { Routes } from "@blitzjs/next";
 import { invalidateQuery, invoke, setQueryData, useQuery } from "@blitzjs/rpc";
-import createItem from "../mutations/createItem";
+import createDbItem from "../mutations/createItem";
 import updateItem from "../mutations/updateItem";
 import getItem from "../queries/getItem";
 import getItems from "../queries/getItems";
@@ -34,7 +34,7 @@ const useCreate = (redirect = false) => {
         },
       };
       return pipe(
-        Effect.promise(() => invoke(createItem, dataNoFile)),
+        Effect.promise(() => invoke(createDbItem, dataNoFile)),
         Effect.tap(() => revalidate),
         Effect.tap((item) =>
           Effect.sync(() =>

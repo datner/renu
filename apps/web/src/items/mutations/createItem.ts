@@ -12,6 +12,7 @@ import * as Parser from "@effect/schema/Parser";
 import { PrismaError } from "src/core/helpers/prisma";
 import * as Renu from "src/core/effect/runtime";
 import * as O from "@effect/data/Option";
+import { Session } from "src/auth";
 
 export type CreateItemOutput = z.infer<typeof CreateItem>;
 const createDbItem = (data: Prisma.ItemCreateInput) =>
@@ -68,23 +69,15 @@ const setPositionInCategory = <T extends ReturnType<typeof toCreateItem>>(
   );
 
 const createItem = resolver.pipe(
-  (i: Schema.From<typeof CreateItemSchema>) =>
-    Parser.decode(CreateItemSchema)(i, { isUnexpectedAllowed: true }),
-  resolver.authorize(),
-  (input, ctx) =>
-    pipe(
-      Effect.succeed(input),
-      Effect.map(toCreateItem),
-      Effect.bind("blurHash", ({ image }) => getBlurHash(image)),
-      Effect.bindValue("organizationId", () => ctx.session.organization.id),
-      Effect.bindValue(
-        "Venue",
-        () => ({ connect: { id: ctx.session.venue.id } }),
-      ),
-      Effect.flatMap(setPositionInCategory),
-      Effect.flatMap(createDbItem),
-      Renu.runPromise$,
-    ),
-);
+  (i: Schema.From<typeof CreateItemSchema>) => Parser.decodeEffect(CreateItemSchema)(i),
+  Effect.map(toCreateItem),
+  Effect.bind("blurHash", ({ image }) => getBlurHash(image)),
+  Effect.bind("organizationId", () => Effect.map(Session.Organization, o => o.id)),
+  Effect.bind("Venue", () => Effect.map(Session.Venue, v => ({ connect: { id: v.id } }))),
+  Effect.flatMap(setPositionInCategory),
+  Effect.flatMap(createDbItem),
+  Session.authorizeResolver,
+  Renu.runPromise$,
+)
 
 export default createItem;

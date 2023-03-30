@@ -15,7 +15,7 @@ const AuthSessionContext = Context.Tag<AuthenticatedSessionContext>()
 
 const getItem = (id: number) =>
   pipe(
-    Effect.service(AuthSessionContext),
+    AuthSessionContext,
     Effect.map((s) => s.organization.id),
     Effect.flatMap((organizationId) =>
       Effect.attemptCatchPromise(

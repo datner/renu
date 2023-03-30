@@ -1,6 +1,7 @@
 import { Prisma } from "database"
 
 export const selectTheEntireMenu = {
+  id: true,
   open: true,
   simpleContactInfo: true,
   content: {

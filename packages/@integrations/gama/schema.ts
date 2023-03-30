@@ -1,5 +1,5 @@
-import * as P from "@effect/schema/Parser";
 import * as S from "@effect/schema/Schema";
+import * as O from "@effect/data/Option";
 import { pipe } from "@effect/data/Function";
 import * as Settings from "./settings";
 import { Price } from "../../shared/schema/number";
@@ -44,23 +44,30 @@ export type PaymentNetwork = S.To<typeof PaymentNetwork>;
 export const paymentNetwork = PaymentNetwork(PaymentNetworks.shva);
 
 export const PaymentProcesses = {
-  creditCard: "credit_card",
+  creditCard: "payment_card",
   bit: "digital_wallet",
 } as const;
 
 export const PaymentProcess = pipe(
   S.enums(PaymentProcesses),
-  S.brand("PaymentProcess"),
+  S.brand("@integrations/gama/PaymentProcess"),
 );
 export type PaymentProcess = S.To<typeof PaymentProcess>;
 export const paymentProcess = PaymentProcess(PaymentProcesses.creditCard);
 
 export const PaymentCurrency = pipe(
   S.literal("ILS"),
-  S.brand("PaymentCurrency"),
+  S.brand("@integrations/gata/PaymentCurrency"),
 );
 export type PaymentCurrency = S.To<typeof PaymentCurrency>;
 export const paymentCurrency = PaymentCurrency("ILS");
+
+export const IFrameUrl = pipe(
+  S.string,
+  S.filter((url) => Boolean(new URL(url)), { title: "Url" }),
+  S.brand("IFrameUrl"),
+);
+export type IFrameUrl = S.To<typeof IFrameUrl>;
 
 export const CreateSessionInput = S.struct({
   paymentAmount: Price,
@@ -100,58 +107,62 @@ export const PaymentResponse = S.struct({
   issuerAuthorizationNumber: AuthorizationNumber,
   cardNumber: CardNumber,
 });
+interface PaymentResponse extends S.To<typeof PaymentResponse> {}
 
-export const CreateSessionData = S.struct({
-  session: Session,
-  paymentResponse: PaymentResponse,
-});
+export const PaymentResponseOption = pipe(
+  S.union(
+    S.object,
+    S.undefined,
+    PaymentResponse,
+  ),
+  S.transform(
+    S.to(S.option(PaymentResponse)),
+    O.liftPredicate((n): n is PaymentResponse =>
+      Boolean(n && "transactionStatus" in n)
+    ),
+    O.getOrUndefined as any,
+  ),
+);
+
+export const CreateSessionData = pipe(
+  S.struct({
+    session: Session,
+    iframeUrl: IFrameUrl,
+    paymentResponse: PaymentResponseOption,
+  }),
+);
 
 export const CreateSessionSuccessBody = S.struct({
   success: S.literal(true),
   data: CreateSessionData,
   errors: pipe(S.array(S.never), S.itemsCount(0)),
+  apiVersion: S.optional(S.string),
 });
 
+
 export const CreateSessionErrorBody = S.struct({
+  apiVersion: S.optional(S.string),
   success: S.literal(false),
   data: S.null,
-  errors: S.array(S.unknown),
+  errors: S.array(S.struct({
+    msg: S.string,
+  })),
 });
 
 export const CreateSessionSuccess = pipe(
   CreateSessionSuccessBody,
   S.transform(
     CreateSessionData,
-    (res) => P.decode(CreateSessionData)(res.data),
-    (data) =>
-      P.decode(CreateSessionSuccessBody)({
-        success: true,
-        data,
-        errors: [],
-      }),
+    (res) => ({
+      ...res.data,
+      paymentResponse: O.getOrUndefined(res.data.paymentResponse),
+    }),
+    (data) => ({
+      success: true as const,
+      data: S.decode(CreateSessionData)(data),
+      errors: [],
+    }),
   ),
 );
 export interface CreateSessionSuccess
   extends S.To<typeof CreateSessionSuccess> {}
-
-export const CreateSessionFailure = pipe(
-  CreateSessionErrorBody,
-  S.transform(
-    pipe(CreateSessionErrorBody, S.pick('errors')),
-    ({errors}) => ({errors}),
-    ({errors}) => ({
-      success: false as const,
-      data: null,
-      errors,
-    }),
-  ),
-);
-export interface CreateSessionFailure
-  extends S.To<typeof CreateSessionFailure> {}
-
-type CreateSessionResponse = S.To<typeof CreateSessionResponse>;
-export const CreateSessionResponse = S.union(
-  pipe(CreateSessionFailure, S.attachPropertySignature("kind", "failure")),
-  pipe(CreateSessionSuccess, S.attachPropertySignature("kind", "success")),
-);
-

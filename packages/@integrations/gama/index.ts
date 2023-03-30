@@ -1,23 +1,27 @@
 import * as Layer from "@effect/io/Layer";
 import * as Effect from "@effect/io/Effect";
 import * as Context from "@effect/data/Context";
-import * as Data from "@effect/data/Data";
+import * as A from "@effect/data/ReadonlyArray";
 import * as P from "@effect/schema/Parser";
 import { pipe } from "@effect/data/Function";
 import { CircuitBreaker, Clearing, Http } from "@integrations/core";
 import * as Settings from "./settings";
 import {
+  CreateSessionErrorBody,
   CreateSessionInput,
   CreateSessionPayload,
-  CreateSessionResponse,
+  CreateSessionSuccess,
   maxInstallments,
   paymentCurrency,
   paymentNetwork,
   PaymentNetworks,
   paymentProcess,
   PaymentProcesses,
+  Session,
 } from "./schema";
+export * as Schema from "./schema";
 import { inspect } from "util";
+import { ClearingIntegration } from "database";
 
 interface BitPayment {
   readonly _tag: "BitPayment";
@@ -25,6 +29,7 @@ interface BitPayment {
   readonly paymentProcess: typeof PaymentProcesses.bit;
   readonly paymentNetwork: typeof PaymentNetworks.bit;
 }
+
 interface CreditPayment {
   readonly _tag: "CreditPayment";
   readonly paymentProcess: typeof PaymentProcesses.creditCard;
@@ -36,18 +41,17 @@ type Payment = BitPayment | CreditPayment;
 const toPayload = (
   input: CreateSessionInput,
 ) =>
-  Effect.serviceWithEffect(
+  pipe(
     Settings.IntegrationService,
-    (int) =>
+    Effect.flatMap((int) =>
       P.decodeEffect(CreateSessionPayload)({
         clientId: int.vendorData.id,
         clientSecret: int.vendorData.secret_key,
-        userIp: "127.0.0.1",
+        userIp: "192.168.32.193",
         maxInstallments,
         paymentRequest: {
           paymentAmount: input.paymentAmount,
           orderId: input.orderId,
-          sendSMS: true,
           payerName: input.payerName,
           autoCapture: true,
           paymentNetwork,
@@ -57,23 +61,25 @@ const toPayload = (
           paymentDescription: input.venueName,
         },
       }),
-  );
+  ))
 
 export interface Service {
   readonly _tag: "GamaService";
-  readonly createSession: (input: CreateSessionInput) => any;
+  readonly createSession: (
+    input: CreateSessionInput,
+  ) => Effect.Effect<
+    ClearingIntegration,
+    CircuitBreaker.CircuitBreakerError,
+    Session
+  >;
 }
-export const Tag = Context.Tag<Service>();
-
-class GamaError extends Data.TaggedClass("GamaError")<
-  { readonly errors: readonly unknown[] }
-> {}
+export const Gama = Context.Tag<Service>();
 
 const provideHttpConfig = Effect.provideServiceEffect(
   Http.HttpConfigService,
-  Effect.gen(function* ($) {
+  Effect.orDie(Effect.gen(function* ($) {
     const { vendorData } = yield* $(
-      Effect.service(Settings.IntegrationService),
+      Settings.IntegrationService
     );
     const { env } = vendorData;
     const config = yield* $(Effect.config(Settings.GamaConfig));
@@ -90,19 +96,19 @@ const provideHttpConfig = Effect.provideServiceEffect(
     return {
       baseUrl: url,
     };
-  }),
+  })),
 );
 
 const parseIntegration = Effect.provideServiceEffect(
   Settings.IntegrationService,
-  Effect.serviceWith(Clearing.Settings, P.parse(Settings.Integration)),
+  Effect.map(Clearing.Settings, P.parse(Settings.Integration)),
 );
 
 export const layer = Layer.effect(
-  Tag,
+  Gama,
   Effect.gen(function* ($) {
     const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "Gama" }));
-    const Client = yield* $(Http.Service);
+    const Client = yield* $(Http.Http);
 
     return {
       _tag: "GamaService" as const,
@@ -112,6 +118,9 @@ export const layer = Layer.effect(
           Effect.flatMap((body) =>
             Client.request("/api/gpapi/v1/session", {
               method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
               body: JSON.stringify(P.encode(CreateSessionPayload)(body)),
             })
           ),
@@ -119,25 +128,21 @@ export const layer = Layer.effect(
           Effect.tap((b) =>
             Effect.sync(() => console.log(inspect(b, false, null, true)))
           ),
-          Effect.flatMap(P.parseEffect(CreateSessionResponse)),
-          Effect.flatMap((data) =>
-            data.kind === "success" ? Effect.succeed(data) : pipe(
-              Effect.sync(() =>
-                console.log(inspect(data.errors, false, null, true))
-              ),
-              Effect.flatMap(() => Effect.fail(new GamaError(data))),
-            )
-          ),
+          Effect.flatMap(P.parseEffect(CreateSessionSuccess)),
           Effect.map((data) => data.session),
-          breaker(Http.isRetriable),
-          Effect.catchTag("GamaError", (e) =>
+          breaker(),
+          Effect.catchTag("HttpUnprocessableEntityError", (e) =>
             pipe(
-              Effect.sync(() =>
-                console.log(inspect(e.errors, false, null, true))
-              ),
-              Effect.flatMap(() => Effect.dieMessage("Gama returned an error")),
+              Http.toJson(e.response),
+              Effect.flatMap(P.parseEffect(CreateSessionErrorBody)),
+              Effect.tap(b => Effect.log(inspect(b,false, null, true))),
+              Effect.map((body) => body.errors),
+              Effect.map(A.map((err) => err.msg)),
+              Effect.map(A.join("\n")),
+              Effect.map(s => "\n\n" + s),
+              Effect.flatMap(Effect.dieMessage),
             )),
-          Effect.refineTagOrDie('CircuitBreakerError'),
+          Effect.refineTagOrDie("CircuitBreakerError"),
           provideHttpConfig,
           parseIntegration,
         ),

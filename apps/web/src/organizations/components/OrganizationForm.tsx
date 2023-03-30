@@ -1,5 +1,5 @@
-type Props = {}
+type Props = {};
 
 export function OrganizationForm(props: Props) {
-  return <>uh</>
+  return <>uh</>;
 }

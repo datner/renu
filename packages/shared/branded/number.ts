@@ -1,25 +1,25 @@
-import * as Brand from "@effect/data/Brand"
+import * as Brand from "@effect/data/Brand";
 
-export type Int = number & Brand.Brand<"Int">
+export type Int = number & Brand.Brand<"Int">;
 export const Int = Brand.refined<Int>(
   (n) => Number.isInteger(n),
-  (n) => Brand.error(`Expected ${n} to be an integer`)
-)
+  (n) => Brand.error(`Expected ${n} to be an integer`),
+);
 
-export type Positive = number & Brand.Brand<"Positive">
+export type Positive = number & Brand.Brand<"Positive">;
 export const Positive = Brand.refined<Positive>(
   (n) => n > 0,
-  (n) => Brand.error(`Expected ${n} to be positive`)
-)
+  (n) => Brand.error(`Expected ${n} to be positive`),
+);
 
-export type NonNegative = number & Brand.Brand<"NonNegative">
+export type NonNegative = number & Brand.Brand<"NonNegative">;
 export const NonNegative = Brand.refined<NonNegative>(
   (n) => n >= 0,
-  (n) => Brand.error(`Expected ${n} to be non-negative`)
-)
+  (n) => Brand.error(`Expected ${n} to be non-negative`),
+);
 
-export type PositiveInt = Positive & Int
-export const PositiveInt = Brand.all(Int, Positive)
+export type PositiveInt = Positive & Int;
+export const PositiveInt = Brand.all(Int, Positive);
 
-export type NonNegativeInt = NonNegative & Int
-export const NonNegativeInt = Brand.all(Int, NonNegative)
+export type NonNegativeInt = NonNegative & Int;
+export const NonNegativeInt = Brand.all(Int, NonNegative);

@@ -1,42 +1,42 @@
-import { useAuthenticatedSession } from "@blitzjs/auth"
-import { useQuery, useMutation, getQueryClient } from "@blitzjs/rpc"
-import { titleFor } from "src/core/helpers/content"
-import { useLocale } from "src/core/hooks/useLocale"
-import changeCurrentVenue from "src/venues/mutations/changeCurrentVenue"
-import getOrgVenues from "src/venues/queries/getOrgVenues"
-import { pipe } from "fp-ts/function"
-import * as RA from "fp-ts/ReadonlyArray"
-import * as O from "fp-ts/Option"
-import { Menu, Transition } from "@headlessui/react"
-import { clsx, Loader } from "@mantine/core"
-import { ChevronDownIcon } from "@heroicons/react/24/solid"
-import { Fragment } from "react"
+import { useAuthenticatedSession } from "@blitzjs/auth";
+import { getQueryClient, useMutation, useQuery } from "@blitzjs/rpc";
+import { Menu, Transition } from "@headlessui/react";
+import { ChevronDownIcon } from "@heroicons/react/24/solid";
+import { clsx, Loader } from "@mantine/core";
+import { pipe } from "fp-ts/function";
+import * as O from "fp-ts/Option";
+import * as RA from "fp-ts/ReadonlyArray";
+import { Fragment } from "react";
+import { titleFor } from "src/core/helpers/content";
+import { useLocale } from "src/core/hooks/useLocale";
+import changeCurrentVenue from "src/venues/mutations/changeCurrentVenue";
+import getOrgVenues from "src/venues/queries/getOrgVenues";
 
 export const ChangeVenueMenu = () => {
-  const [venues] = useQuery(getOrgVenues, {})
-  const { venue } = useAuthenticatedSession()
+  const [venues] = useQuery(getOrgVenues, {});
+  const { venue } = useAuthenticatedSession();
   const [changeVenue, { isLoading }] = useMutation(changeCurrentVenue, {
     onSuccess() {
-      getQueryClient().clear()
-      fetch("/api/revalidate-current")
+      getQueryClient().clear();
+      fetch("/api/revalidate-current");
     },
-  })
-  const title = titleFor(useLocale())
+  });
+  const title = titleFor(useLocale());
 
   const currentVenue = pipe(
     O.fromNullable(venue),
     O.chain(({ id }) =>
       pipe(
         venues,
-        RA.findFirst((venue) => venue.id === id)
+        RA.findFirst((venue) => venue.id === id),
       )
-    )
-  )
+    ),
+  );
 
   const currentTitle = pipe(
     currentVenue,
-    O.match(() => "unknown venue", title)
-  )
+    O.match(() => "unknown venue", title),
+  );
   return (
     <Menu as="div" className="relative shrink-0">
       <div>
@@ -80,18 +80,18 @@ export const ChangeVenueMenu = () => {
                       onClick={() => changeVenue(venue.id)}
                       className={clsx(
                         active && "bg-gray-100",
-                        "block w-full px-4 py-2 text-sm text-gray-700 text-left rtl:text-right"
+                        "block w-full px-4 py-2 text-sm text-gray-700 text-left rtl:text-right",
                       )}
                     >
                       {title(venue)}
                     </button>
                   )}
                 </Menu.Item>
-              ))
-            )
+              )),
+            ),
           )}
         </Menu.Items>
       </Transition>
     </Menu>
-  )
-}
+  );
+};

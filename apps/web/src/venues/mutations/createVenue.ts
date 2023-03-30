@@ -1,7 +1,7 @@
-import { resolver } from "@blitzjs/rpc"
-import { GlobalRole, Locale, MembershipRole } from "database"
-import { CreateVenueSchema } from "../validations"
-import db from "db"
+import { resolver } from "@blitzjs/rpc";
+import { GlobalRole, Locale, MembershipRole } from "database";
+import db from "db";
+import { CreateVenueSchema } from "../validations";
 
 export default resolver.pipe(
   resolver.zod(CreateVenueSchema),
@@ -27,6 +27,6 @@ export default resolver.pipe(
           },
         },
       },
-    })
-  }
-)
+    });
+  },
+);

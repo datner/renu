@@ -1,9 +1,9 @@
-import { RadioGroup } from "@headlessui/react"
-import { toShekel } from "src/core/helpers/content"
-import clsx from "clsx"
-import { constNull } from "fp-ts/function"
-import { none, some, matchW } from "fp-ts/Option"
-import { useState } from "react"
+import { RadioGroup } from "@headlessui/react";
+import clsx from "clsx";
+import { constNull } from "fp-ts/function";
+import { matchW, none, some } from "fp-ts/Option";
+import { useState } from "react";
+import { toShekel } from "src/core/helpers/content";
 
 const sides = [
   { id: none, name: "None", price: none },
@@ -11,14 +11,15 @@ const sides = [
   { id: some(2), name: "Okra", price: some(400) },
   { id: some(3), name: "Salad", price: none },
   { id: some(4), name: "Beans", price: none },
-]
+];
 
-const additionalPrice = matchW<null, number, JSX.Element>(constNull, (price) => (
-  <span className="text-gray-500">+ {toShekel(price)}</span>
-))
+const additionalPrice = matchW<null, number, JSX.Element>(
+  constNull,
+  (price) => <span className="text-gray-500">+ {toShekel(price)}</span>,
+);
 
 export function SideDishExtra() {
-  const [value, setValue] = useState(none)
+  const [value, setValue] = useState(none);
 
   return (
     <RadioGroup as="fieldset" value={value} onChange={setValue}>
@@ -47,7 +48,7 @@ export function SideDishExtra() {
                   <span
                     className={clsx(
                       "select-none font-medium",
-                      checked ? "text-emerald-600 font-bold" : "text-gray-700"
+                      checked ? "text-emerald-600 font-bold" : "text-gray-700",
                     )}
                   >
                     {name}
@@ -60,5 +61,5 @@ export function SideDishExtra() {
         ))}
       </div>
     </RadioGroup>
-  )
+  );
 }

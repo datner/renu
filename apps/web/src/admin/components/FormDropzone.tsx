@@ -1,27 +1,27 @@
-import Image from "next/image"
-import { useEvent } from "src/core/hooks/useEvent"
-import { useDropzone } from "react-dropzone"
-import { useTranslations } from "next-intl"
-import { useController } from "react-hook-form"
-import { z } from "zod"
-import { ItemSchema } from "src/items/validations"
+import { useTranslations } from "next-intl";
+import Image from "next/image";
+import { useDropzone } from "react-dropzone";
+import { useController } from "react-hook-form";
+import { useEvent } from "src/core/hooks/useEvent";
+import { ItemSchema } from "src/items/validations";
+import { z } from "zod";
 
 export function FormDropzone() {
-  const t = useTranslations("admin.Components.FormDropzone")
+  const t = useTranslations("admin.Components.FormDropzone");
   const { field, fieldState } = useController<z.input<typeof ItemSchema>, "image">({
     name: "image",
-  })
+  });
 
   const onDrop = useEvent((acceptedFiles: File[]) => {
-    const [file] = acceptedFiles
-    if (!file) return
-    field.onChange({ src: URL.createObjectURL(file), file })
-  })
+    const [file] = acceptedFiles;
+    if (!file) return;
+    field.onChange({ src: URL.createObjectURL(file), file });
+  });
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { "image/*": [] },
-  })
+  });
 
   return (
     <>
@@ -51,5 +51,5 @@ export function FormDropzone() {
         )}
       </div>
     </>
-  )
+  );
 }

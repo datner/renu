@@ -1,13 +1,13 @@
-import { Ctx } from "@blitzjs/next"
-import * as Effect from "@effect/io/Effect"
-import * as A from "@effect/data/ReadonlyArray"
-import * as Chunk from "@effect/data/Chunk"
-import { pipe } from "@effect/data/Function"
-import { Session } from "src/auth"
-import db from "db"
-import { prismaError } from "src/core/helpers/prisma"
-import { getBlurHash } from "src/core/helpers/plaiceholder"
-import { Renu } from "src/core/effect"
+import { Ctx } from "@blitzjs/next";
+import * as Chunk from "@effect/data/Chunk";
+import { pipe } from "@effect/data/Function";
+import * as A from "@effect/data/ReadonlyArray";
+import * as Effect from "@effect/io/Effect";
+import db from "db";
+import { Session } from "src/auth";
+import { Renu } from "src/core/effect";
+import { getBlurHash } from "src/core/helpers/plaiceholder";
+import { prismaError } from "src/core/helpers/prisma";
 
 const blurhashify = (_: null, ctx: Ctx) =>
   pipe(
@@ -25,7 +25,7 @@ const blurhashify = (_: null, ctx: Ctx) =>
                   blurHash: null,
                 },
               }),
-            prismaError("Item")
+            prismaError("Item"),
           ),
           Effect.map(A.map((it) => Effect.all(Effect.succeed(it.id), getBlurHash(it.image)))),
           Effect.flatMap((effects) => Effect.withParallelism(Effect.collectAllPar(effects), 5)),
@@ -35,18 +35,17 @@ const blurhashify = (_: null, ctx: Ctx) =>
                 Chunk.map(items, ([id, blurHash]) =>
                   Effect.attemptCatchPromise(
                     () => db.item.update({ where: { id }, data: { blurHash } }),
-                    prismaError("Item")
-                  )
-                )
+                    prismaError("Item"),
+                  )),
               ),
-              Effect.withParallelism(10)
+              Effect.withParallelism(10),
             )
-          )
+          ),
         )
       )
     ),
     Session.authorize(ctx),
-    Renu.runPromise$
-  )
+    Renu.runPromise$,
+  );
 
-export default blurhashify
+export default blurhashify;

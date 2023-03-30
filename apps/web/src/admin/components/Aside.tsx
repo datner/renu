@@ -1,20 +1,20 @@
-import Link from "next/link"
-import Image from "next/image"
-import { Routes } from "@blitzjs/next"
-import { useQuery } from "@blitzjs/rpc"
-import { priceShekel, titleFor } from "src/core/helpers/content"
-import { useLocale } from "src/core/hooks/useLocale"
-import { useTranslations } from "next-intl"
-import getCurrentVenueCategories from "src/categories/queries/getCurrentVenueCategories"
-import { Loader, LoadingOverlay } from "@mantine/core"
+import { Routes } from "@blitzjs/next";
+import { useQuery } from "@blitzjs/rpc";
+import { Loader, LoadingOverlay } from "@mantine/core";
+import { useTranslations } from "next-intl";
+import Image from "next/image";
+import Link from "next/link";
+import getCurrentVenueCategories from "src/categories/queries/getCurrentVenueCategories";
+import { priceShekel, titleFor } from "src/core/helpers/content";
+import { useLocale } from "src/core/hooks/useLocale";
 
 function AsideDirectory() {
-  const locale = useLocale()
-  const t = useTranslations("admin.Components.Aside")
-  const [queryBag, { isLoading, isRefetching }] = useQuery(getCurrentVenueCategories, {})
-  const { categories } = queryBag
+  const locale = useLocale();
+  const t = useTranslations("admin.Components.Aside");
+  const [queryBag, { isLoading, isRefetching }] = useQuery(getCurrentVenueCategories, {});
+  const { categories } = queryBag;
 
-  const title = titleFor(locale)
+  const title = titleFor(locale);
 
   return (
     <div className="flex min-h-0 grow flex-col">
@@ -66,16 +66,16 @@ function AsideDirectory() {
         ))}
       </nav>
     </div>
-  )
+  );
 }
 
 function AsideCategories() {
-  const locale = useLocale()
-  const t = useTranslations("admin.Components.Aside")
-  const [queryBag, { isLoading, isRefetching }] = useQuery(getCurrentVenueCategories, {})
-  const { categories } = queryBag
+  const locale = useLocale();
+  const t = useTranslations("admin.Components.Aside");
+  const [queryBag, { isLoading, isRefetching }] = useQuery(getCurrentVenueCategories, {});
+  const { categories } = queryBag;
 
-  const title = titleFor(locale)
+  const title = titleFor(locale);
 
   return (
     <div className="flex min-h-0 grow flex-col">
@@ -104,7 +104,7 @@ function AsideCategories() {
         </ul>
       </nav>
     </div>
-  )
+  );
 }
 
-export const Aside = { Directory: AsideDirectory, Categories: AsideCategories }
+export const Aside = { Directory: AsideDirectory, Categories: AsideCategories };

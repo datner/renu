@@ -1,9 +1,8 @@
-import { resolver } from "@blitzjs/rpc"
-import { paginate } from "blitz"
-import db, { GlobalRole, Prisma } from "db"
+import { resolver } from "@blitzjs/rpc";
+import { paginate } from "blitz";
+import db, { GlobalRole, Prisma } from "db";
 
-interface GetOrganizationsInput
-  extends Pick<Prisma.OrganizationFindManyArgs, "where" | "orderBy" | "skip" | "take"> {}
+interface GetOrganizationsInput extends Pick<Prisma.OrganizationFindManyArgs, "where" | "orderBy" | "skip" | "take"> {}
 
 export default resolver.pipe(
   resolver.authorize(GlobalRole.SUPER),
@@ -19,13 +18,13 @@ export default resolver.pipe(
       take,
       count: () => db.organization.count({ where }),
       query: (paginateArgs) => db.organization.findMany({ ...paginateArgs, where, orderBy }),
-    })
+    });
 
     return {
       organizations,
       nextPage,
       hasMore,
       count,
-    }
-  }
-)
+    };
+  },
+);

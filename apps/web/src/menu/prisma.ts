@@ -1,4 +1,4 @@
-import { Prisma } from "database"
+import { Prisma } from "database";
 
 export const selectTheEntireMenu = {
   id: true,
@@ -61,11 +61,9 @@ export const selectTheEntireMenu = {
       },
     },
   },
-} satisfies Prisma.VenueSelect
-const selectMenuItem = selectTheEntireMenu.categories.select.categoryItems.select.Item.select
-type DeepReadonly<T> = { readonly [K in keyof T]: DeepReadonly<T[K]> }
-export interface EntireMenu
-  extends DeepReadonly<Prisma.VenueGetPayload<{ select: typeof selectTheEntireMenu }>> {}
+} satisfies Prisma.VenueSelect;
+const selectMenuItem = selectTheEntireMenu.categories.select.categoryItems.select.Item.select;
+type DeepReadonly<T> = { readonly [K in keyof T]: DeepReadonly<T[K]> };
+export interface EntireMenu extends DeepReadonly<Prisma.VenueGetPayload<{ select: typeof selectTheEntireMenu }>> {}
 
-export interface MenuItem
-  extends DeepReadonly<Prisma.ItemGetPayload<{ select: typeof selectMenuItem }>> {}
+export interface MenuItem extends DeepReadonly<Prisma.ItemGetPayload<{ select: typeof selectMenuItem }>> {}

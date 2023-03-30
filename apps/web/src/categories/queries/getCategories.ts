@@ -1,21 +1,20 @@
-import { resolver } from "@blitzjs/rpc"
-import { Ctx, paginate } from "blitz"
-import db, { Prisma } from "db"
+import { resolver } from "@blitzjs/rpc";
+import { Ctx, paginate } from "blitz";
+import db, { Prisma } from "db";
 
-interface GetCategoriesArgs
-  extends Pick<Prisma.CategoryFindManyArgs, "where" | "orderBy" | "skip" | "take"> {}
+interface GetCategoriesArgs extends Pick<Prisma.CategoryFindManyArgs, "where" | "orderBy" | "skip" | "take"> {}
 
 export default resolver.pipe(
   resolver.authorize(),
   async (
     { where: _where, orderBy, skip = 0, take = 100 }: GetCategoriesArgs,
-    { session: { restaurantId } }: Ctx
+    { session: { restaurantId } }: Ctx,
   ) => {
     const where = {
       restaurantId,
       deleted: null,
       ..._where,
-    }
+    };
 
     const {
       items: categories,
@@ -36,13 +35,13 @@ export default resolver.pipe(
           where,
           orderBy,
         }),
-    })
+    });
 
     return {
       categories,
       nextPage,
       hasMore,
       count,
-    }
-  }
-)
+    };
+  },
+);

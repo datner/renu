@@ -1,24 +1,24 @@
-import Image from "next/image"
-import { useMutation } from "@blitzjs/rpc"
-import { LabeledTextField } from "src/core/components/LabeledTextField"
-import { CreateRestaurant } from "src/auth/validations"
-import { useZodForm } from "src/core/hooks/useZodForm"
-import { FormProvider } from "react-hook-form"
-import createRestaurant from "src/restaurants/mutations/createRestaurant"
-import { useDropzone } from "react-dropzone"
-import { useEvent } from "src/core/hooks/useEvent"
-import { useState } from "react"
-import getUploadUrl from "src/admin/mutations/getUploadUrl"
+import { useMutation } from "@blitzjs/rpc";
+import Image from "next/image";
+import { useState } from "react";
+import { useDropzone } from "react-dropzone";
+import { FormProvider } from "react-hook-form";
+import getUploadUrl from "src/admin/mutations/getUploadUrl";
+import { CreateRestaurant } from "src/auth/validations";
+import { LabeledTextField } from "src/core/components/LabeledTextField";
+import { useEvent } from "src/core/hooks/useEvent";
+import { useZodForm } from "src/core/hooks/useZodForm";
+import createRestaurant from "src/restaurants/mutations/createRestaurant";
 
 type SignupFormProps = {
-  onSuccess?: () => void
-}
+  onSuccess?: () => void;
+};
 
 export const RestaurantForm = (props: SignupFormProps) => {
-  const { onSuccess } = props
-  const [getAssetUrl] = useMutation(getUploadUrl)
-  const [restaurantMutation] = useMutation(createRestaurant)
-  const [file, setFile] = useState<(File & { preview: string }) | undefined>()
+  const { onSuccess } = props;
+  const [getAssetUrl] = useMutation(getUploadUrl);
+  const [restaurantMutation] = useMutation(createRestaurant);
+  const [file, setFile] = useState<(File & { preview: string }) | undefined>();
 
   const form = useZodForm({
     schema: CreateRestaurant.omit({ logo: true }),
@@ -31,31 +31,31 @@ export const RestaurantForm = (props: SignupFormProps) => {
         name: "",
       },
     },
-  })
+  });
 
-  const { formState, handleSubmit, setFormError } = form
-  const { isSubmitting } = formState
+  const { formState, handleSubmit, setFormError } = form;
+  const { isSubmitting } = formState;
 
   const onDrop = useEvent((acceptedFiles: File[]) => {
-    const [file] = acceptedFiles
-    if (!file) return
-    setFile(Object.assign(file, { preview: URL.createObjectURL(file) }))
-  })
+    const [file] = acceptedFiles;
+    if (!file) return;
+    setFile(Object.assign(file, { preview: URL.createObjectURL(file) }));
+  });
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: { "image/*": [] },
-  })
+  });
 
   const onSubmit = handleSubmit(async (data) => {
-    if (!file) return
+    if (!file) return;
     try {
       const { url, headers: h } = await getAssetUrl({
         name: `${data.slug}/logo.${file.name.split(".").pop()}`,
         restaurant: data.slug,
-      })
-      const headers = new Headers(h)
-      headers.append("Content-Length", `${file.size + 5000}`)
+      });
+      const headers = new Headers(h);
+      headers.append("Content-Length", `${file.size + 5000}`);
 
       const {
         data: {
@@ -65,19 +65,19 @@ export const RestaurantForm = (props: SignupFormProps) => {
         method: "POST",
         headers,
         body: await file.arrayBuffer(),
-      }).then((res) => res.json())
+      }).then((res) => res.json());
 
       await restaurantMutation({
         ...data,
         logo: origin_path,
         affiliate: true,
-      })
+      });
 
-      onSuccess?.()
+      onSuccess?.();
     } catch (error: any) {
-      setFormError(error.toString())
+      setFormError(error.toString());
     }
-  })
+  });
 
   return (
     <FormProvider {...form}>
@@ -102,11 +102,9 @@ export const RestaurantForm = (props: SignupFormProps) => {
               >
                 <input {...getInputProps()} />
                 <span className="text-gray-400 text-sm">
-                  {isDragActive ? (
-                    <p>Drop the files here ...</p>
-                  ) : (
-                    <p>Drag n drop some files here, or click to select files</p>
-                  )}
+                  {isDragActive
+                    ? <p>Drop the files here ...</p>
+                    : <p>Drag n drop some files here, or click to select files</p>}
                 </span>
               </div>
 
@@ -134,7 +132,7 @@ export const RestaurantForm = (props: SignupFormProps) => {
         </form>
       </div>
     </FormProvider>
-  )
-}
+  );
+};
 
-export default RestaurantForm
+export default RestaurantForm;

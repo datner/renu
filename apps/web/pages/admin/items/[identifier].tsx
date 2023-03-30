@@ -1,17 +1,17 @@
-import { gSSP } from "src/blitz-server"
-import { GetServerSidePropsContext } from "next"
-import { BlitzPage, ErrorBoundary, Routes, useParam } from "@blitzjs/next"
-import { Content } from "src/admin/components/Content"
-import { AdminLayout } from "src/core/layouts/AdminLayout"
-import { Suspense } from "react"
-import { Aside } from "src/admin/components/Aside"
-import { UpdateItemForm } from "src/admin/components/UpdateItemForm"
-import { LoadingOverlay } from "@mantine/core"
-import { useRouter } from "next/router"
+import { BlitzPage, ErrorBoundary, Routes, useParam } from "@blitzjs/next";
+import { LoadingOverlay } from "@mantine/core";
+import { GetServerSidePropsContext } from "next";
+import { useRouter } from "next/router";
+import { Suspense } from "react";
+import { Aside } from "src/admin/components/Aside";
+import { Content } from "src/admin/components/Content";
+import { UpdateItemForm } from "src/admin/components/UpdateItemForm";
+import { gSSP } from "src/blitz-server";
+import { AdminLayout } from "src/core/layouts/AdminLayout";
 
 const AdminItemsItem: BlitzPage = () => {
-  const identifier = useParam("identifier", "string")
-  const router = useRouter()
+  const identifier = useParam("identifier", "string");
+  const router = useRouter();
   return (
     <Content
       main={
@@ -32,12 +32,12 @@ const AdminItemsItem: BlitzPage = () => {
         </Suspense>
       }
     />
-  )
-}
+  );
+};
 
 export const getServerSideProps = gSSP(async (ctx: GetServerSidePropsContext) => {
-  const { locale, query } = ctx
-  const { identifier } = query
+  const { locale, query } = ctx;
+  const { identifier } = query;
   if (!identifier || Array.isArray(identifier)) {
     return {
       redirect: {
@@ -45,18 +45,18 @@ export const getServerSideProps = gSSP(async (ctx: GetServerSidePropsContext) =>
         permanent: false,
       },
       props: {},
-    }
+    };
   }
 
   return {
     props: { messages: (await import(`src/core/messages/${locale}.json`)).default },
-  }
-})
+  };
+});
 
 AdminItemsItem.authenticate = {
   redirectTo: Routes.Authentication(),
-}
+};
 
-AdminItemsItem.getLayout = (page) => <AdminLayout>{page}</AdminLayout>
+AdminItemsItem.getLayout = (page) => <AdminLayout>{page}</AdminLayout>;
 
-export default AdminItemsItem
+export default AdminItemsItem;

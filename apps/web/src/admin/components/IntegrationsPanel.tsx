@@ -1,33 +1,21 @@
 import { useQuery } from "@blitzjs/rpc";
-import {  flow, pipe } from "fp-ts/function";
-import * as S from "@effect/data/String";
-import * as Parser from "@effect/schema/Parser";
-import * as Equivalence from "@effect/data/typeclass/Equivalence";
-import * as Optic from "@fp-ts/optic";
-import * as A from "@effect/data/ReadonlyArray";
 import * as O from "@effect/data/Option";
-import { match } from "ts-pattern";
-import { Reducer, Suspense, useCallback, useEffect, useReducer } from "react";
-import { ManagementIntegration } from "database";
-import getManagementMenu from "src/management/queries/getManagementMenu";
+import * as A from "@effect/data/ReadonlyArray";
+import * as S from "@effect/data/String";
+import * as Equivalence from "@effect/data/typeclass/Equivalence";
+import * as Parser from "@effect/schema/Parser";
+import * as Optic from "@fp-ts/optic";
 import * as Management from "@integrations/management";
-import {
-  useFieldArray,
-  useFormContext,
-  UseFormGetValues,
-} from "react-hook-form";
-import {
-  ItemSchema,
-  ModifierSchema,
-  OptionsSchemaArray,
-} from "src/items/validations";
-import { useLocale } from "src/core/hooks/useLocale";
+import { ManagementIntegration } from "database";
+import { flow, pipe } from "fp-ts/function";
 import { matchSorter } from "match-sorter";
-import {
-  AutocompleteCategory,
-  AutocompleteOption,
-  NullableAutocomplete,
-} from "./Autocomplete";
+import { Reducer, Suspense, useCallback, useEffect, useReducer } from "react";
+import { useFieldArray, useFormContext, UseFormGetValues } from "react-hook-form";
+import { useLocale } from "src/core/hooks/useLocale";
+import { ItemSchema, ModifierSchema, OptionsSchemaArray } from "src/items/validations";
+import getManagementMenu from "src/management/queries/getManagementMenu";
+import { match } from "ts-pattern";
+import { AutocompleteCategory, AutocompleteOption, NullableAutocomplete } from "./Autocomplete";
 
 export function IntegrationsPanel() {
   return (
@@ -38,9 +26,7 @@ export function IntegrationsPanel() {
 }
 
 const eqIdentified = <A extends Management.Identified>() =>
-  Equivalence.make<A>((a, b) =>
-    S.Equivalence(a.name, b.name) && a.id === b.id
-  );
+  Equivalence.make<A>((a, b) => S.Equivalence(a.name, b.name) && a.id === b.id);
 
 const eqManagementItem_ = eqIdentified<Management.Item>();
 
@@ -223,8 +209,7 @@ const item_ = state_.at("item");
 
 const modifiers_ = state_.at("modifiers");
 
-const optionsIn = ([i1, i2]: [number, number]) =>
-  state_.at("options").index(i1).index(i2);
+const optionsIn = ([i1, i2]: [number, number]) => state_.at("options").index(i1).index(i2);
 
 const updateDirty = (state: State) =>
   Optic.modify(
@@ -435,9 +420,7 @@ function IntegrationMenu(props: Props) {
                             )}
                             displayValue={flow(
                               O.fromNullable,
-                              O.map((i) =>
-                                i.name
-                              ),
+                              O.map((i) => i.name),
                               O.getOrElse(() => ""),
                             )}
                             createSuggestions={createModifierSuggestions}

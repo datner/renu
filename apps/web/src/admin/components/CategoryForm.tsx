@@ -1,27 +1,27 @@
-import { PromiseReturnType } from "blitz"
-import { useTranslations } from "next-intl"
-import { DefaultValues, FormProvider, useForm } from "react-hook-form"
-import { match, P } from "ts-pattern"
-import getCategory from "src/categories/queries/getCategory"
-import { Button, createStyles, TextInput } from "@mantine/core"
+import { Button, createStyles, TextInput } from "@mantine/core";
+import { PromiseReturnType } from "blitz";
+import { useTranslations } from "next-intl";
+import { DefaultValues, FormProvider, useForm } from "react-hook-form";
+import getCategory from "src/categories/queries/getCategory";
+import { match, P } from "ts-pattern";
 
 type Props = {
-  item?: PromiseReturnType<typeof getCategory>
-  onSubmit(category: CategoryForm): Promise<void>
-  defaultValues?: DefaultValues<CategoryForm>
-}
+  item?: PromiseReturnType<typeof getCategory>;
+  onSubmit(category: CategoryForm): Promise<void>;
+  defaultValues?: DefaultValues<CategoryForm>;
+};
 
 export interface CategoryForm {
-  identifier: string
-  en: { name: string; description?: string }
-  he: { name: string; description?: string }
+  identifier: string;
+  en: { name: string; description?: string };
+  he: { name: string; description?: string };
 }
 
 const DEFAULT_VALUES: DefaultValues<CategoryForm> = {
   identifier: "",
   en: { name: "" },
   he: { name: "" },
-}
+};
 
 const useStyles = createStyles({
   mono: {
@@ -36,30 +36,30 @@ const useStyles = createStyles({
       "monospace",
     ],
   },
-})
+});
 
 export function CategoryForm(props: Props) {
-  const { defaultValues = DEFAULT_VALUES, onSubmit } = props
-  const { classes } = useStyles()
-  const t = useTranslations("admin.Components.CategoryForm")
+  const { defaultValues = DEFAULT_VALUES, onSubmit } = props;
+  const { classes } = useStyles();
+  const t = useTranslations("admin.Components.CategoryForm");
   const form = useForm<CategoryForm>({
     defaultValues,
-  })
+  });
 
-  const { handleSubmit, formState, register } = form
-  const { isSubmitting } = formState
+  const { handleSubmit, formState, register } = form;
+  const { isSubmitting } = formState;
 
   const result = {
     defaultValues: props.defaultValues?.identifier,
     isSubmitting,
-  }
+  };
 
   const message = match(result)
     .with({ defaultValues: P.nullish, isSubmitting: true }, () => t("create.category"))
     .with({ defaultValues: P._, isSubmitting: true }, () => t("update.category"))
     .with({ defaultValues: P.nullish }, () => t("create.initial"))
     .with({ defaultValues: P._ }, () => t("update.initial"))
-    .exhaustive()
+    .exhaustive();
 
   return (
     <FormProvider {...form}>
@@ -77,8 +77,7 @@ export function CategoryForm(props: Props) {
                 {...register("identifier", {
                   pattern: {
                     value: /^[a-z0-9-]+[^-]$/,
-                    message:
-                      "Slug should contain only lowercase letters, and numbers. Seperated by dashes",
+                    message: "Slug should contain only lowercase letters, and numbers. Seperated by dashes",
                   },
                 })}
                 label={t("identifier")}
@@ -102,5 +101,5 @@ export function CategoryForm(props: Props) {
         </form>
       </div>
     </FormProvider>
-  )
+  );
 }

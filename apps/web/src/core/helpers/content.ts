@@ -1,18 +1,18 @@
-import { Locale } from "database"
-import { get } from "./common"
-import { flow, pipe } from "fp-ts/function"
-import * as O from "monocle-ts/Optional"
-import { Nullish } from "src/menu/types/utils"
-import { divide } from "./number"
+import { Locale } from "database";
+import { flow, pipe } from "fp-ts/function";
+import * as O from "monocle-ts/Optional";
+import { Nullish } from "src/menu/types/utils";
+import { get } from "./common";
+import { divide } from "./number";
 
 interface ContentPartial {
-  locale: Locale
-  name: string
-  description?: Nullish<string>
+  locale: Locale;
+  name: string;
+  description?: Nullish<string>;
 }
 
 interface ContentfulPartial {
-  content: readonly ContentPartial[]
+  content: readonly ContentPartial[];
 }
 
 export const contentOption = (prop: keyof ContentPartial, locale: Locale) =>
@@ -22,25 +22,24 @@ export const contentOption = (prop: keyof ContentPartial, locale: Locale) =>
     O.prop("content"),
     O.findFirst((it) => it.locale === locale),
     O.prop(prop),
-    O.fromNullable
-  ).getOption
+    O.fromNullable,
+  ).getOption;
 
 export const shekel = Intl.NumberFormat("us-IL", {
   style: "currency",
   currency: "ILS",
-})
+});
 
 export const priceOption = pipe(
   O.id<{ price: number } | null>(),
   O.fromNullable,
-  O.prop("price")
-).getOption
+  O.prop("price"),
+).getOption;
 
-export const price = get(priceOption, 0)
-export const toShekel = flow(divide(100), shekel.format)
-export const priceShekel = flow(price, toShekel)
-export const titleFor = (locale: Locale) => get(contentOption("name", locale), "")
-export const descriptionFor = (locale: Locale) => get(contentOption("description", locale), "")
+export const price = get(priceOption, 0);
+export const toShekel = flow(divide(100), shekel.format);
+export const priceShekel = flow(price, toShekel);
+export const titleFor = (locale: Locale) => get(contentOption("name", locale), "");
+export const descriptionFor = (locale: Locale) => get(contentOption("description", locale), "");
 
-export const contentGet = (prop: keyof ContentPartial, locale: Locale) =>
-  get(contentOption(prop, locale), "")
+export const contentGet = (prop: keyof ContentPartial, locale: Locale) => get(contentOption(prop, locale), "");

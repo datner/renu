@@ -1,10 +1,10 @@
-import { BlitzPage, Routes } from "@blitzjs/next"
-import { Aside } from "src/admin/components/Aside"
-import { Content } from "src/admin/components/Content"
-import { Suspense } from "react"
-import { LoadingOverlay } from "@mantine/core"
-import { gSSP } from "src/blitz-server"
-import { AdminLayout } from "src/core/layouts/AdminLayout"
+import { BlitzPage, Routes } from "@blitzjs/next";
+import { LoadingOverlay } from "@mantine/core";
+import { Suspense } from "react";
+import { Aside } from "src/admin/components/Aside";
+import { Content } from "src/admin/components/Content";
+import { gSSP } from "src/blitz-server";
+import { AdminLayout } from "src/core/layouts/AdminLayout";
 
 const AdminMenus: BlitzPage = () => {
   return (
@@ -20,30 +20,30 @@ const AdminMenus: BlitzPage = () => {
         </Suspense>
       }
     />
-  )
-}
+  );
+};
 
 AdminMenus.authenticate = {
   redirectTo: Routes.Authentication(),
-}
+};
 
-AdminMenus.getLayout = (page) => <AdminLayout>{page}</AdminLayout>
+AdminMenus.getLayout = (page) => <AdminLayout>{page}</AdminLayout>;
 
 export const getServerSideProps = gSSP(async (bag) => {
-  const { locale, ctx } = bag
-  const { session } = ctx
-  const { venue } = session
+  const { locale, ctx } = bag;
+  const { session } = ctx;
+  const { venue } = session;
   if (!venue) {
     return {
       redirect: {
         destination: Routes.RestaurantSignupPage(),
         permanent: false,
       },
-    }
+    };
   }
   return {
     props: { messages: (await import(`src/core/messages/${locale}.json`)).default },
-  }
-})
+  };
+});
 
-export default AdminMenus
+export default AdminMenus;

@@ -1,15 +1,15 @@
-import { resolver } from "@blitzjs/rpc"
-import db, { GlobalRole } from "db"
-import { z } from "zod"
-import { isNonEmpty } from "fp-ts/Array"
-import { NotFoundError } from "blitz"
-import { getMembership } from "../helpers/getMembership"
-import * as E from "fp-ts/Either"
-import { pipe } from "fp-ts/function"
+import { resolver } from "@blitzjs/rpc";
+import { NotFoundError } from "blitz";
+import db, { GlobalRole } from "db";
+import { isNonEmpty } from "fp-ts/Array";
+import * as E from "fp-ts/Either";
+import { pipe } from "fp-ts/function";
+import { z } from "zod";
+import { getMembership } from "../helpers/getMembership";
 
 export const ImpersonateUserInput = z.object({
   email: z.string().email(),
-})
+});
 
 export default resolver.pipe(
   resolver.zod(ImpersonateUserInput),
@@ -20,10 +20,11 @@ export default resolver.pipe(
       include: {
         membership: { include: { affiliations: { include: { Venue: true } }, organization: true } },
       },
-    })
-    if (!user) throw new NotFoundError(`Could not find user with email ${email}`)
-    if (!isNonEmpty(user.membership))
-      throw new NotFoundError(`${email} is not associated with any organizations`)
+    });
+    if (!user) throw new NotFoundError(`Could not find user with email ${email}`);
+    if (!isNonEmpty(user.membership)) {
+      throw new NotFoundError(`${email} is not associated with any organizations`);
+    }
 
     await pipe(
       getMembership(user),
@@ -38,10 +39,10 @@ export default resolver.pipe(
         })
       ),
       E.getOrElseW((e) => {
-        throw e
-      })
-    )
+        throw e;
+      }),
+    );
 
-    return user
-  }
-)
+    return user;
+  },
+);

@@ -1,7 +1,7 @@
-import { BlitzPage, Routes } from "@blitzjs/next"
-import { Content } from "src/admin/components/Content"
-import { gSSP } from "src/blitz-server"
-import { AdminLayout } from "src/core/layouts/AdminLayout"
+import { BlitzPage, Routes } from "@blitzjs/next";
+import { Content } from "src/admin/components/Content";
+import { gSSP } from "src/blitz-server";
+import { AdminLayout } from "src/core/layouts/AdminLayout";
 
 const AdminOrganization: BlitzPage = () => {
   return (
@@ -13,30 +13,30 @@ const AdminOrganization: BlitzPage = () => {
       }
       aside={null}
     />
-  )
-}
+  );
+};
 
 AdminOrganization.authenticate = {
   redirectTo: Routes.Authentication(),
-}
+};
 
-AdminOrganization.getLayout = (page) => <AdminLayout>{page}</AdminLayout>
+AdminOrganization.getLayout = (page) => <AdminLayout>{page}</AdminLayout>;
 
 export const getServerSideProps = gSSP(async (bag) => {
-  const { locale, ctx } = bag
-  const { session } = ctx
-  const { venue } = session
+  const { locale, ctx } = bag;
+  const { session } = ctx;
+  const { venue } = session;
   if (!venue) {
     return {
       redirect: {
         destination: Routes.RestaurantSignupPage(),
         permanent: false,
       },
-    }
+    };
   }
   return {
     props: { messages: (await import(`src/core/messages/${locale}.json`)).default },
-  }
-})
+  };
+});
 
-export default AdminOrganization
+export default AdminOrganization;

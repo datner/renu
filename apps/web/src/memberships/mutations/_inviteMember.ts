@@ -1,14 +1,14 @@
-import { generateToken, hash256, SecurePassword } from "@blitzjs/auth"
-import { resolver } from "@blitzjs/rpc"
-import { GlobalRole, MembershipRole } from "database"
-import { nanoid } from "nanoid"
-import { InviteMemberSchema } from "../validations"
-import { addHours } from "date-fns/fp"
-import { pipe } from "fp-ts/function"
-import db from "db"
+import { generateToken, hash256, SecurePassword } from "@blitzjs/auth";
+import { resolver } from "@blitzjs/rpc";
+import { GlobalRole, MembershipRole } from "database";
+import { addHours } from "date-fns/fp";
+import db from "db";
+import { pipe } from "fp-ts/function";
+import { nanoid } from "nanoid";
+import { InviteMemberSchema } from "../validations";
 
-const RESET_PASSWORD_TOKEN_EXPIRATION_IN_HOURS = 4
-const getExpiresAt = () => pipe(new Date(), addHours(RESET_PASSWORD_TOKEN_EXPIRATION_IN_HOURS))
+const RESET_PASSWORD_TOKEN_EXPIRATION_IN_HOURS = 4;
+const getExpiresAt = () => pipe(new Date(), addHours(RESET_PASSWORD_TOKEN_EXPIRATION_IN_HOURS));
 
 export default resolver.pipe(
   resolver.zod(InviteMemberSchema),
@@ -39,25 +39,25 @@ export default resolver.pipe(
         },
         affiliations: input.venue
           ? {
-              create: {
-                role: MembershipRole.ADMIN,
-                organization: {
-                  connect: {
-                    identifier: input.organization,
-                  },
-                },
-                Venue: {
-                  connect: {
-                    identifier: input.venue,
-                  },
+            create: {
+              role: MembershipRole.ADMIN,
+              organization: {
+                connect: {
+                  identifier: input.organization,
                 },
               },
-            }
+              Venue: {
+                connect: {
+                  identifier: input.venue,
+                },
+              },
+            },
+          }
           : undefined,
       },
     }),
   (member) =>
     db.token.findFirst({
       where: { type: "RESET_PASSWORD", userId: member.userId!, expiresAt: { gte: new Date() } },
-    })
-)
+    }),
+);

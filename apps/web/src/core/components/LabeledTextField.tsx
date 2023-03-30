@@ -1,25 +1,25 @@
-import { ExclamationCircleIcon } from "@heroicons/react/24/solid"
-import { ComponentPropsWithoutRef, memo } from "react"
-import { RegisterOptions, useFormContext } from "react-hook-form"
-import { InputBase } from "./InputBase"
+import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
+import { ComponentPropsWithoutRef, memo } from "react";
+import { RegisterOptions, useFormContext } from "react-hook-form";
+import { InputBase } from "./InputBase";
 
 export interface LabeledTextFieldProps extends ComponentPropsWithoutRef<"input"> {
   /** Field name. */
-  name: string
+  name: string;
   /** Field label. */
-  label: string
+  label: string;
   /** Field type. Doesn't include radio buttons and checkboxes */
-  type?: "text" | "password" | "email" | "number"
-  registerOptions?: RegisterOptions
-  outerProps?: ComponentPropsWithoutRef<"div">
-  labelProps?: ComponentPropsWithoutRef<"label">
+  type?: "text" | "password" | "email" | "number";
+  registerOptions?: RegisterOptions;
+  outerProps?: ComponentPropsWithoutRef<"div">;
+  labelProps?: ComponentPropsWithoutRef<"label">;
 }
 
 export const LabeledTextField = memo<LabeledTextFieldProps>(
   ({ label, outerProps, labelProps, name, registerOptions, ...props }) => {
-    const { register, getFieldState, formState } = useFormContext()
-    const { error } = getFieldState(name, formState)
-    const errorId = `${name}-error`
+    const { register, getFieldState, formState } = useFormContext();
+    const { error } = getFieldState(name, formState);
+    const errorId = `${name}-error`;
     return (
       <div {...outerProps}>
         <label {...labelProps}>
@@ -45,9 +45,9 @@ export const LabeledTextField = memo<LabeledTextFieldProps>(
           </p>
         )}
       </div>
-    )
-  }
-)
-LabeledTextField.displayName = "LabeledTextField"
+    );
+  },
+);
+LabeledTextField.displayName = "LabeledTextField";
 
-export default LabeledTextField
+export default LabeledTextField;

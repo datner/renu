@@ -1,20 +1,20 @@
-import { useLocale } from "src/core/hooks/useLocale"
-import { Locale } from "database"
-import { useIsomorphicLayoutEffect } from "src/core/hooks/useIsomorphicLayoutEffect"
-import { MantineProvider as MantineProvider_ } from "@mantine/core"
-import { getEmotionCache } from "src/core/helpers/rtl-cache"
-import { RouterTransition } from "src/core/components/RouterTransition"
-import { ReactNode } from "react"
+import { MantineProvider as MantineProvider_ } from "@mantine/core";
+import { Locale } from "database";
+import { ReactNode } from "react";
+import { RouterTransition } from "src/core/components/RouterTransition";
+import { getEmotionCache } from "src/core/helpers/rtl-cache";
+import { useIsomorphicLayoutEffect } from "src/core/hooks/useIsomorphicLayoutEffect";
+import { useLocale } from "src/core/hooks/useLocale";
 
 export function MantineProvider({ children }: { children: ReactNode }) {
-  const locale = useLocale()
-  const isRtl = locale === Locale.he
-  const dir = isRtl ? "rtl" : "ltr"
+  const locale = useLocale();
+  const isRtl = locale === Locale.he;
+  const dir = isRtl ? "rtl" : "ltr";
 
   useIsomorphicLayoutEffect(() => {
-    document.dir = dir
-    document.documentElement.lang = locale
-  }, [locale, dir])
+    document.dir = dir;
+    document.documentElement.lang = locale;
+  }, [locale, dir]);
 
   return (
     <MantineProvider_
@@ -43,5 +43,5 @@ export function MantineProvider({ children }: { children: ReactNode }) {
       <RouterTransition />
       {children}
     </MantineProvider_>
-  )
+  );
 }

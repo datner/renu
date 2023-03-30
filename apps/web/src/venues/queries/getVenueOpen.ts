@@ -1,9 +1,9 @@
-import { resolver } from "@blitzjs/rpc"
-import { pipe } from "fp-ts/function"
-import * as Effect from "@effect/io/Effect"
-import db from "db"
-import { prismaError } from "src/core/helpers/prisma"
-import { belongsToOrg, isVenue } from "../helpers/queryFilters"
+import { resolver } from "@blitzjs/rpc";
+import * as Effect from "@effect/io/Effect";
+import db from "db";
+import { pipe } from "fp-ts/function";
+import { prismaError } from "src/core/helpers/prisma";
+import { belongsToOrg, isVenue } from "../helpers/queryFilters";
 
 export default resolver.pipe(resolver.authorize(), (_, ctx) =>
   pipe(
@@ -15,9 +15,8 @@ export default resolver.pipe(resolver.authorize(), (_, ctx) =>
           },
           select: { open: true },
         }),
-      prismaError("Venue")
+      prismaError("Venue"),
     ),
     Effect.catchTag("PrismaError", () => Effect.succeed({ open: false })),
-    Effect.runPromise
-  )
-)
+    Effect.runPromise,
+  ));

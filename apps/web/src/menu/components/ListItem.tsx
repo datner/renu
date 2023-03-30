@@ -1,91 +1,91 @@
-import Image from "next/image"
-import { a, useSpring } from "@react-spring/web"
-import { useLocale } from "src/core/hooks/useLocale"
-import { ItemData } from "./ItemData"
-import { memo, useMemo } from "react"
-import { useDrag } from "@use-gesture/react"
-import { PlusCircleIcon, MinusCircleIcon, XCircleIcon } from "@heroicons/react/24/outline"
-import { useIsRtl } from "src/core/hooks/useIsRtl"
-import * as N from "@effect/data/Number"
-import * as B from "@effect/data/Boolean"
-import * as Equal from "@effect/data/Equal"
-import { clsx } from "clsx"
-import type { OrderDispatch } from "../hooks/useOrder"
-import * as Order from "../hooks/useOrder"
-import * as _Menu from "../schema"
-import { Blurhash } from "react-blurhash"
+import * as B from "@effect/data/Boolean";
+import * as Equal from "@effect/data/Equal";
+import * as N from "@effect/data/Number";
+import { MinusCircleIcon, PlusCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
+import { a, useSpring } from "@react-spring/web";
+import { useDrag } from "@use-gesture/react";
+import { clsx } from "clsx";
+import Image from "next/image";
+import { memo, useMemo } from "react";
+import { Blurhash } from "react-blurhash";
+import { useIsRtl } from "src/core/hooks/useIsRtl";
+import { useLocale } from "src/core/hooks/useLocale";
+import type { OrderDispatch } from "../hooks/useOrder";
+import * as Order from "../hooks/useOrder";
+import * as _Menu from "../schema";
+import { ItemData } from "./ItemData";
 
 type Props = {
-  item: Order.ActiveItem
-  dispatch: OrderDispatch
-}
+  item: Order.ActiveItem;
+  dispatch: OrderDispatch;
+};
 
-const PlusCircle = a(PlusCircleIcon)
-const MinusCircle = a(MinusCircleIcon)
-const XCircle = a(XCircleIcon)
+const PlusCircle = a(PlusCircleIcon);
+const MinusCircle = a(MinusCircleIcon);
+const XCircle = a(XCircleIcon);
 
-const isNegative = N.lessThan(0)
+const isNegative = N.lessThan(0);
 
 export const ListItem = memo(
   function ListItem(props: Props) {
-    const { item: _, dispatch } = props
-    const item = Order.getActiveMenuItem(_)
-    const amount = Order.getActiveAmount(_)
-    const cost = Order.getActiveCost(_)
-    const locale = useLocale()
-    const isRtl = useIsRtl()
-    const content = item.content.find((it) => it.locale === locale)
-    const isInOrder = Order.isExistingActiveItem(_)
-    const hideIndicator = isRtl ? 40 : -40
+    const { item: _, dispatch } = props;
+    const item = Order.getActiveMenuItem(_);
+    const amount = Order.getActiveAmount(_);
+    const cost = Order.getActiveCost(_);
+    const locale = useLocale();
+    const isRtl = useIsRtl();
+    const content = item.content.find((it) => it.locale === locale);
+    const isInOrder = Order.isExistingActiveItem(_);
+    const hideIndicator = isRtl ? 40 : -40;
     const [{ x, scale }, api] = useSpring(() => ({
       x: 0,
       scale: 1,
-    }))
+    }));
     const bind = useDrag(
       ({ down: active, last, offset: [ox] }) => {
-        const offset = N.clamp(ox, -70, 70)
+        const offset = N.clamp(ox, -70, 70);
         api.start({
           x: active ? offset : 0,
           scale: active ? 1.02 : 1,
           immediate: (name) => active && name === "x",
-        })
+        });
 
-        const isIncrement = B.not(B.xor(isNegative(offset), isRtl))
+        const isIncrement = B.not(B.xor(isNegative(offset), isRtl));
 
         // not active, last event, outside of -69 -- 69
-        const isRelevant = B.every([B.not(active), last, B.not(N.between(offset, -69, 69))])
+        const isRelevant = B.every([B.not(active), last, B.not(N.between(offset, -69, 69))]);
         if (isRelevant) {
           if (isInOrder) {
             requestAnimationFrame(() =>
               B.match(
                 isIncrement,
                 () => {
-                  return dispatch(Order.decrementItem(_.key))
+                  return dispatch(Order.decrementItem(_.key));
                 },
-                () => dispatch(Order.incrementItem(_.key))
+                () => dispatch(Order.incrementItem(_.key)),
               )
-            )
+            );
           } else if (isIncrement) {
-            requestAnimationFrame(() => dispatch(Order.addEmptyItem(_.item)))
+            requestAnimationFrame(() => dispatch(Order.addEmptyItem(_.item)));
           }
         }
       },
-      { axis: "x", from: () => [x.get(), 0] }
-    )
+      { axis: "x", from: () => [x.get(), 0] },
+    );
     const styles = useSpring({
       x: isInOrder ? 0 : hideIndicator,
       opacity: isInOrder ? 1 : 0,
-    })
+    });
 
     const opacity = useMemo(() => {
-      const output = [isInOrder ? 1 : 0.1, 0.1, 0.1, 1]
+      const output = [isInOrder ? 1 : 0.1, 0.1, 0.1, 1];
       return x.to({
         range: [-70, -60, 60, 70],
         output: isRtl ? output.reverse() : output,
-      })
-    }, [isInOrder, isRtl, x])
+      });
+    }, [isInOrder, isRtl, x]);
 
-    const overOne = amount > 1
+    const overOne = amount > 1;
 
     const bg = useMemo(
       () => (
@@ -98,29 +98,23 @@ export const ListItem = memo(
             <PlusCircle style={{ opacity }} className="w-10 h-10 mx-3" />
           </div>
           <div
-            className={`flex-1 flex flex-row-reverse ${
-              isInOrder ? "text-red-700" : "text-gray-700"
-            }`}
+            className={`flex-1 flex flex-row-reverse ${isInOrder ? "text-red-700" : "text-gray-700"}`}
           >
-            {overOne ? (
-              <MinusCircle style={{ opacity }} className="w-10 h-10 mx-3" />
-            ) : (
-              <XCircle style={{ opacity }} className="w-10 h-10 mx-3" />
-            )}
+            {overOne
+              ? <MinusCircle style={{ opacity }} className="w-10 h-10 mx-3" />
+              : <XCircle style={{ opacity }} className="w-10 h-10 mx-3" />}
           </div>
         </a.div>
       ),
-      [overOne, isInOrder, opacity]
-    )
+      [overOne, isInOrder, opacity],
+    );
 
-    if (!content) return null
+    if (!content) return null;
 
     return (
       <a.li
         {...bind()}
-        onClick={() =>
-          dispatch(isInOrder ? Order.setExistingActiveItem(_.key) : Order.setNewActiveItem(item))
-        }
+        onClick={() => dispatch(isInOrder ? Order.setExistingActiveItem(_.key) : Order.setNewActiveItem(item))}
         className="relative touch-pan-y px-2 sm:px-6"
       >
         {bg}
@@ -160,7 +154,7 @@ export const ListItem = memo(
           </div>
         </a.div>
       </a.li>
-    )
+    );
   },
-  (prev, next) => Equal.equals(prev.item, next.item)
-)
+  (prev, next) => Equal.equals(prev.item, next.item),
+);

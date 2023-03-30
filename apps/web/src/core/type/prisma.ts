@@ -1,11 +1,11 @@
-import { Prisma } from "database"
+import { Prisma } from "database";
 
 export type PrismaNotFoundError = {
-  tag: "prismaNotFoundError"
-  error: Prisma.NotFoundError
-}
+  tag: "prismaNotFoundError";
+  error: Prisma.NotFoundError;
+};
 
 export type PrismaValidationError = {
-  tag: "prismaValidationError"
-  error: Prisma.PrismaClientValidationError
-}
+  tag: "prismaValidationError";
+  error: Prisma.PrismaClientValidationError;
+};

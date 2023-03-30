@@ -1,22 +1,16 @@
-import * as Effect from "@effect/io/Effect"
-import * as Layer from "@effect/io/Layer"
-import * as Config from "@effect/io/Config"
-import * as ConfigSecret from "@effect/io/Config/Secret"
-import * as Context from "@effect/data/Context"
-import * as Parser from "@effect/schema/Parser"
-import { pipe } from "@effect/data/Function"
-import { CircuitBreaker, Http, Management } from "@integrations/core"
-import { ManagementProvider, OrderState } from "database"
-import { DorixMenu, toMenu } from "./menu"
-import { ManagementError } from "@integrations/core/management"
-import { HttpService } from "@integrations/core/http"
-import {
-  Integration,
-  IntegrationService,
-  SendOrderResponse,
-  StatusResponse,
-  toOrder,
-} from "./helpers"
+import * as Context from "@effect/data/Context";
+import { pipe } from "@effect/data/Function";
+import * as Config from "@effect/io/Config";
+import * as ConfigSecret from "@effect/io/Config/Secret";
+import * as Effect from "@effect/io/Effect";
+import * as Layer from "@effect/io/Layer";
+import * as Parser from "@effect/schema/Parser";
+import { CircuitBreaker, Http, Management } from "@integrations/core";
+import { HttpService } from "@integrations/core/http";
+import { ManagementError } from "@integrations/core/management";
+import { ManagementProvider, OrderState } from "database";
+import { Integration, IntegrationService, SendOrderResponse, StatusResponse, toOrder } from "./helpers";
+import { DorixMenu, toMenu } from "./menu";
 
 const DorixConfig = Config.all({
   qa: Config.all({
@@ -25,38 +19,38 @@ const DorixConfig = Config.all({
   }),
   url: Config.string(`dorixApiUrl`),
   apiKey: Config.secret(`dorixApiKey`),
-})
+});
 
 const provideDorixIntegration = Effect.provideServiceEffect(
   IntegrationService,
-  Effect.map(Management.IntegrationSettingsService, Parser.parse(Integration))
-)
+  Effect.map(Management.IntegrationSettingsService, Parser.parse(Integration)),
+);
 
 const provideHttpConfig = Effect.provideServiceEffect(
   Http.HttpConfigService,
-  Effect.gen(function* ($) {
-    const { vendorData } = yield* $(IntegrationService)
-    const { isQA = false } = vendorData
-    const config = yield* $(Effect.config(DorixConfig))
-    const { url, apiKey } = isQA ? config.qa : config
+  Effect.gen(function*($) {
+    const { vendorData } = yield* $(IntegrationService);
+    const { isQA = false } = vendorData;
+    const config = yield* $(Effect.config(DorixConfig));
+    const { url, apiKey } = isQA ? config.qa : config;
 
     return {
       baseUrl: url,
       headers: { Authorization: `Bearer ${ConfigSecret.value(apiKey)}` },
-    }
-  })
-)
+    };
+  }),
+);
 
 interface DorixService extends Management.ManagementService {
-  _tag: typeof ManagementProvider.DORIX
+  _tag: typeof ManagementProvider.DORIX;
 }
-export const Dorix = Context.Tag<DorixService>()
+export const Dorix = Context.Tag<DorixService>();
 
 export const layer = Layer.effect(
   Dorix,
-  Effect.gen(function* ($) {
-    const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "Dorix" }))
-    const client = yield* $(HttpService)
+  Effect.gen(function*($) {
+    const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "Dorix" }));
+    const client = yield* $(HttpService);
 
     return {
       _tag: ManagementProvider.DORIX,
@@ -77,13 +71,11 @@ export const layer = Layer.effect(
           breaker((e) => e instanceof Http.HttpRequestError),
           Effect.flatMap(Http.toJson),
           Effect.map(Parser.parse(SendOrderResponse)),
-          Effect.flatMap((res) =>
-            res.ack ? Effect.succeed(res) : Effect.fail(new Error(res.message))
-          ),
+          Effect.flatMap((res) => res.ack ? Effect.succeed(res) : Effect.fail(new Error(res.message))),
           provideHttpConfig,
           provideDorixIntegration,
           Effect.mapError((cause) => new ManagementError("failed to get order status", { cause })),
-          Effect.asUnit
+          Effect.asUnit,
         ),
 
       getOrderStatus: (order) =>
@@ -92,7 +84,7 @@ export const layer = Layer.effect(
           Effect.zipRight(IntegrationService),
           Effect.map(
             // ?branchId={branchId}&source=RENU
-            ({ vendorData: { branchId } }) => new URLSearchParams({ branchId, source: "RENU" })
+            ({ vendorData: { branchId } }) => new URLSearchParams({ branchId, source: "RENU" }),
           ),
           Effect.flatMap((qs) => client.request(`/v1/order/${order.id}/status?${qs.toString()}`)),
           breaker((e) => e instanceof Http.HttpRequestError),
@@ -102,22 +94,22 @@ export const layer = Layer.effect(
             switch (p.order.status) {
               case "FAILED":
               case "UNREACHABLE":
-                return OrderState.Cancelled
+                return OrderState.Cancelled;
 
               case "AWAITING_TO_BE_RECEIVED":
-                return OrderState.Unconfirmed
+                return OrderState.Unconfirmed;
 
               default:
-                return OrderState.Confirmed
+                return OrderState.Confirmed;
             }
           }),
           provideHttpConfig,
           provideDorixIntegration,
-          Effect.mapError((cause) => new ManagementError("failed to get order status", { cause }))
+          Effect.mapError((cause) => new ManagementError("failed to get order status", { cause })),
         ),
 
       getVenueMenu: pipe(
-        Effect.map(IntegrationService,(is) => is.vendorData.branchId),
+        Effect.map(IntegrationService, (is) => is.vendorData.branchId),
         Effect.flatMap((branchId) => client.request(`/v1/menu/branch/${branchId}`)),
         breaker(),
         Effect.flatMap(Http.toJson),
@@ -125,8 +117,8 @@ export const layer = Layer.effect(
         Effect.map(toMenu),
         provideHttpConfig,
         provideDorixIntegration,
-        Effect.mapError((cause) => new ManagementError("failed to get order status", { cause }))
+        Effect.mapError((cause) => new ManagementError("failed to get order status", { cause })),
       ),
-    }
-  })
-)
+    };
+  }),
+);

@@ -1,5 +1,5 @@
-import { Prisma } from "database"
-import { QueryFilter } from "src/core/helpers/prisma"
+import { Prisma } from "database";
+import { QueryFilter } from "src/core/helpers/prisma";
 
 export const { isVenue, belongsToOrg } = {
   belongsToOrg: (id: number) => ({
@@ -8,4 +8,4 @@ export const { isVenue, belongsToOrg } = {
   isVenue: (id: number) => ({
     id,
   }),
-} satisfies Record<string, QueryFilter<Prisma.VenueWhereInput>>
+} satisfies Record<string, QueryFilter<Prisma.VenueWhereInput>>;

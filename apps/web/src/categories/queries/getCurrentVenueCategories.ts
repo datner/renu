@@ -1,23 +1,22 @@
-import db, { Prisma } from "db"
-import * as Effect from "@effect/io/Effect"
-import * as A from "@effect/data/ReadonlyArray"
-import * as S from "@effect/schema/Schema"
-import { pipe } from "@effect/data/Function"
-import { Ctx } from "@blitzjs/next"
-import { Session } from "src/auth"
-import { Number } from "shared/branded"
-import { Renu, Server } from "src/core/effect"
-import { prismaError } from "src/core/helpers/prisma"
+import { Ctx } from "@blitzjs/next";
+import { pipe } from "@effect/data/Function";
+import * as A from "@effect/data/ReadonlyArray";
+import * as Effect from "@effect/io/Effect";
+import * as S from "@effect/schema/Schema";
+import db, { Prisma } from "db";
+import { Number } from "shared/branded";
+import { Session } from "src/auth";
+import { Renu, Server } from "src/core/effect";
+import { prismaError } from "src/core/helpers/prisma";
 
-interface GetCategoriesArgs
-  extends Pick<Prisma.CategoryFindManyArgs, "where" | "orderBy" | "skip" | "take"> {}
+interface GetCategoriesArgs extends Pick<Prisma.CategoryFindManyArgs, "where" | "orderBy" | "skip" | "take"> {}
 
 const Max250Int = pipe(
   S.number,
   S.fromBrand(Number.PositiveInt),
   S.lessThanOrEqualTo(250),
-  S.brand("Max250Int")
-)
+  S.brand("Max250Int"),
+);
 
 const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx: Ctx) =>
   pipe(
@@ -57,12 +56,12 @@ const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx
                 where,
                 orderBy,
               }),
-            prismaError("Category")
+            prismaError("Category"),
           ),
         Effect.map(
           Effect.attemptCatchPromise(() => db.category.count({ where }), prismaError("Category")),
-          Number.NonNegativeInt
-        )
+          Number.NonNegativeInt,
+        ),
       )(skip, take)
     ),
     Effect.map((bag) => ({
@@ -75,7 +74,7 @@ const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx
       count: bag.count,
     })),
     Session.authorize(ctx),
-    Renu.runPromise$
-  )
+    Renu.runPromise$,
+  );
 
-export default handler
+export default handler;

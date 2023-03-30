@@ -1,48 +1,48 @@
-import * as Layer from "@effect/io/Layer"
-import * as Effect from "@effect/io/Effect"
-import * as Context from "@effect/data/Context"
-import * as A from "@effect/data/ReadonlyArray"
-import * as P from "@effect/schema/Parser"
-import { divide } from "@effect/data/Number"
-import { pipe } from "@effect/data/Function"
-import crypto from "crypto"
-import { ClearingProvider } from "database"
-import { ClearingError } from "@integrations/core/clearing"
-import { CircuitBreaker, Clearing, Common, Http } from "@integrations/core"
-import { Integration, IntegrationService, PayPlusConfig } from "./settings"
-import { GeneratePaymentLinkResponse, GetStatusResponse, StatusSuccess } from "./responses"
-import { GeneratePaymentLinkBody, PaymentItem } from "./types"
+import * as Context from "@effect/data/Context";
+import { pipe } from "@effect/data/Function";
+import { divide } from "@effect/data/Number";
+import * as A from "@effect/data/ReadonlyArray";
+import * as Effect from "@effect/io/Effect";
+import * as Layer from "@effect/io/Layer";
+import * as P from "@effect/schema/Parser";
+import { CircuitBreaker, Clearing, Common, Http } from "@integrations/core";
+import { ClearingError } from "@integrations/core/clearing";
+import crypto from "crypto";
+import { ClearingProvider } from "database";
+import { GeneratePaymentLinkResponse, GetStatusResponse, StatusSuccess } from "./responses";
+import { Integration, IntegrationService, PayPlusConfig } from "./settings";
+import { GeneratePaymentLinkBody, PaymentItem } from "./types";
 
 export interface PayPlusService extends Clearing.ClearingService {
-  _tag: typeof ClearingProvider.PAY_PLUS
+  _tag: typeof ClearingProvider.PAY_PLUS;
 }
-export const Tag = Context.Tag<PayPlusService>()
+export const Tag = Context.Tag<PayPlusService>();
 
 const provideHttpConfig = Effect.provideServiceEffect(
   Http.HttpConfigService,
-  Effect.gen(function* ($) {
-    const { vendorData } = yield* $(IntegrationService)
-    const { isQA = false, ...creds } = vendorData
-    const config = yield* $(Effect.config(PayPlusConfig))
-    const { url } = isQA ? config.qa : config
+  Effect.gen(function*($) {
+    const { vendorData } = yield* $(IntegrationService);
+    const { isQA = false, ...creds } = vendorData;
+    const config = yield* $(Effect.config(PayPlusConfig));
+    const { url } = isQA ? config.qa : config;
 
     return {
       baseUrl: url,
       headers: { Authorization: JSON.stringify(creds) },
-    }
-  })
-)
+    };
+  }),
+);
 
 const toPayload = ({ items, id, venueId }: Clearing.FullOrderWithItems) =>
-  Effect.gen(function* ($) {
-    const integration = yield* $(IntegrationService)
-    const { host } = yield* $(Effect.config(Common.config))
-    const successUrl = new URL(`payments/success`, host)
-    const errorUrl = new URL(`payments/error`, host)
-    const callbackUrl = new URL(`payments/callback`, host)
+  Effect.gen(function*($) {
+    const integration = yield* $(IntegrationService);
+    const { host } = yield* $(Effect.config(Common.config));
+    const successUrl = new URL(`payments/success`, host);
+    const errorUrl = new URL(`payments/error`, host);
+    const callbackUrl = new URL(`payments/callback`, host);
 
     // to satisfy typescript I need the double negative
-    if (!A.isNonEmptyArray(items)) return yield* $(Effect.die(new Error("order has no items")))
+    if (!A.isNonEmptyArray(items)) return yield* $(Effect.die(new Error("order has no items")));
 
     return {
       items: pipe(
@@ -55,8 +55,8 @@ const toPayload = ({ items, id, venueId }: Clearing.FullOrderWithItems) =>
             image_url: `http://renu.imgix.net${it.item.image}?auto=format&fix=max&w=256&q=20`,
             product_invoice_extra_details: it.comment,
             vat_type: 0,
-          })
-        )
+          }),
+        ),
       ),
       payment_page_uid: integration.terminal,
       more_info: String(id),
@@ -65,7 +65,7 @@ const toPayload = ({ items, id, venueId }: Clearing.FullOrderWithItems) =>
       amount: pipe(
         items,
         A.reduce(0, (sum, item) => sum + item.quantity * item.price),
-        divide(100)
+        divide(100),
       ),
       customer: {
         customer_name: "",
@@ -82,8 +82,8 @@ const toPayload = ({ items, id, venueId }: Clearing.FullOrderWithItems) =>
       refURL_success: successUrl,
       refURL_failure: errorUrl,
       refURL_callback: callbackUrl,
-    } as GeneratePaymentLinkBody
-  })
+    } as GeneratePaymentLinkBody;
+  });
 
 const authorizeResponse = (res: Response) =>
   Effect.flatMap(IntegrationService, (integration) =>
@@ -94,8 +94,8 @@ const authorizeResponse = (res: Response) =>
         () =>
           new Clearing.ClearingError(
             `Payplus user agent is ${res.headers.get("user-agent")} and not as expected`,
-            { provider: "PAY_PLUS" }
-          )
+            { provider: "PAY_PLUS" },
+          ),
       ),
       Effect.tap((res) =>
         pipe(
@@ -109,24 +109,23 @@ const authorizeResponse = (res: Response) =>
             () =>
               new Clearing.ClearingError(
                 `PayPlus response hash does not match. Man in the middle attack suspected`,
-                { provider: "PAY_PLUS" }
-              )
-          )
+                { provider: "PAY_PLUS" },
+              ),
+          ),
         )
-      )
-    )
-  )
+      ),
+    ));
 
 const parseIntegration = Effect.provideServiceEffect(
   IntegrationService,
-  Effect.map(Clearing.Settings, P.parse(Integration))
-)
+  Effect.map(Clearing.Settings, P.parse(Integration)),
+);
 
 export const layer = Layer.effect(
   Tag,
-  Effect.gen(function* ($) {
-    const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "Gama" }))
-    const Client = yield* $(Http.Http)
+  Effect.gen(function*($) {
+    const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "Gama" }));
+    const Client = yield* $(Http.Http);
 
     return {
       _tag: ClearingProvider.PAY_PLUS,
@@ -145,7 +144,7 @@ export const layer = Layer.effect(
           Effect.flatMap(authorizeResponse),
           Effect.flatMap(Http.toJson),
           breaker((e) => {
-            return e instanceof Http.HttpRequestError
+            return e instanceof Http.HttpRequestError;
           }),
           provideHttpConfig,
           parseIntegration,
@@ -155,26 +154,26 @@ export const layer = Layer.effect(
             () =>
               new ClearingError("Failed to get a payment page status from payplus", {
                 provider: "PAY_PLUS",
-              })
+              }),
           ),
           Effect.filterOrFail(
             (res) => res.data.status_code === "000",
             () =>
               new ClearingError("Transaction failed", {
                 provider: "PAY_PLUS",
-              })
+              }),
           ),
           Effect.mapBoth(
             (cause) => {
-              if (cause instanceof Clearing.ClearingError) return cause
+              if (cause instanceof Clearing.ClearingError) return cause;
 
               return new Clearing.ClearingError("could not generate payment link", {
                 cause,
                 provider: "PAY_PLUS",
-              })
+              });
             },
-            (r) => Clearing.TxId(r.data.transaction_uid)
-          )
+            (r) => Clearing.TxId(r.data.transaction_uid),
+          ),
         ),
 
       getClearingPageLink: (order) =>
@@ -200,15 +199,14 @@ export const layer = Layer.effect(
           breaker((e) => e instanceof Http.HttpRequestError || e instanceof Http.HttpResponseError),
           provideHttpConfig,
           Effect.mapError((cause) => {
-            if (cause instanceof Clearing.ClearingError) return cause
+            if (cause instanceof Clearing.ClearingError) return cause;
 
             return new Clearing.ClearingError("could not generate payment link", {
               cause,
               provider: "GAMA",
-            })
+            });
           }),
-
         ),
-    }
-  })
-)
+    };
+  }),
+);

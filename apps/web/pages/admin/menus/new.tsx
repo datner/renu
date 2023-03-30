@@ -1,10 +1,10 @@
-import { BlitzPage } from "@blitzjs/next"
-import AdminMenusMenu from "./[identifier]"
-import { Aside } from "src/admin/components/Aside"
-import { Content } from "src/admin/components/Content"
-import { Suspense } from "react"
-import { LoadingOverlay } from "@mantine/core"
-import { gSSP } from "src/blitz-server"
+import { BlitzPage } from "@blitzjs/next";
+import { LoadingOverlay } from "@mantine/core";
+import { Suspense } from "react";
+import { Aside } from "src/admin/components/Aside";
+import { Content } from "src/admin/components/Content";
+import { gSSP } from "src/blitz-server";
+import AdminMenusMenu from "./[identifier]";
 
 const AdminMenusNew: BlitzPage = () => {
   return (
@@ -20,19 +20,19 @@ const AdminMenusNew: BlitzPage = () => {
         </Suspense>
       }
     />
-  )
-}
+  );
+};
 
-AdminMenusNew.authenticate = AdminMenusMenu.authenticate
+AdminMenusNew.authenticate = AdminMenusMenu.authenticate;
 
-AdminMenusNew.getLayout = AdminMenusMenu.getLayout
+AdminMenusNew.getLayout = AdminMenusMenu.getLayout;
 
 export const getServerSideProps = gSSP(async (ctx) => {
-  const { locale } = ctx
+  const { locale } = ctx;
 
   return {
     props: { messages: (await import(`src/core/messages/${locale}.json`)).default },
-  }
-})
+  };
+});
 
-export default AdminMenusNew
+export default AdminMenusNew;

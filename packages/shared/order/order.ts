@@ -1,13 +1,13 @@
-import * as Chunk from "@effect/data/Chunk"
-import { pipe } from "@effect/data/Function"
-import { Order, OrderItem, OrderState  } from "database"
+import * as Chunk from "@effect/data/Chunk";
+import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as Str from "@effect/data/String";
 import * as S from "@effect/schema/Schema";
-import * as Venue from "../venue";
+import { Order, OrderItem, OrderState } from "database";
 import * as Common from "../schema/common";
+import * as Venue from "../venue";
 
-export const Id = Common.Id('OrderId')
+export const Id = Common.Id("OrderId");
 export type Id = S.To<typeof Id>;
 
 export const TxId = pipe(S.string, S.brand("TxId"));
@@ -34,10 +34,8 @@ export const Schema = S.struct({
 });
 export interface Decoded extends S.To<typeof Schema> {}
 
-
 export const total = (o: Order & { items: OrderItem[] }) =>
   pipe(
     Chunk.fromIterable(o.items),
-    Chunk.reduce(0, (s, it) => s + it.price * it.quantity)
-  )
-
+    Chunk.reduce(0, (s, it) => s + it.price * it.quantity),
+  );

@@ -1,41 +1,41 @@
-import { useMutation } from "@blitzjs/rpc"
-import { useZodForm } from "src/core/hooks/useZodForm"
-import { useRouter } from "next/router"
-import login from "src/auth/mutations/login"
-import { Login } from "src/auth/validations"
-import { Routes } from "@blitzjs/next"
-import { AuthenticationError } from "blitz"
-import { Anchor, Button, Group, Loader, Paper, PasswordInput, TextInput } from "@mantine/core"
+import { Routes } from "@blitzjs/next";
+import { useMutation } from "@blitzjs/rpc";
+import { Anchor, Button, Group, Loader, Paper, PasswordInput, TextInput } from "@mantine/core";
+import { AuthenticationError } from "blitz";
+import { useRouter } from "next/router";
+import login from "src/auth/mutations/login";
+import { Login } from "src/auth/validations";
+import { useZodForm } from "src/core/hooks/useZodForm";
 
 export function LoginForm() {
-  const router = useRouter()
-  const [loginMutation] = useMutation(login)
+  const router = useRouter();
+  const [loginMutation] = useMutation(login);
   const form = useZodForm({
     schema: Login,
     defaultValues: {
       email: "",
       password: "",
     },
-  })
+  });
 
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
-      await loginMutation(data)
-      router.push(Routes.AdminHome())
+      await loginMutation(data);
+      router.push(Routes.AdminHome());
     } catch (error: unknown) {
       if (error instanceof AuthenticationError) {
-        return form.setFormError("Sorry, those credentials are invalid")
+        return form.setFormError("Sorry, those credentials are invalid");
       }
 
       if (error instanceof Error) {
         return form.setFormError(
-          "Sorry, we had an unexpected error. Please try again. - " + error.toString()
-        )
+          "Sorry, we had an unexpected error. Please try again. - " + error.toString(),
+        );
       }
 
-      return form.setFormError("Sorry, we had an unexpected error. Please try again.")
+      return form.setFormError("Sorry, we had an unexpected error. Please try again.");
     }
-  })
+  });
 
   return (
     <Paper
@@ -69,5 +69,5 @@ export function LoginForm() {
         {form.formState.isSubmitting ? <Loader /> : "Sign In"}
       </Button>
     </Paper>
-  )
+  );
 }

@@ -1,21 +1,21 @@
-import { toShekel } from "src/core/helpers/content"
-import * as _Menu from "src/menu/schema"
-import { useTranslations } from "next-intl"
-import { PropsWithChildren, ReactNode } from "react"
-import { AmountCounter } from "./AmountCounter"
-import clsx from "clsx"
+import clsx from "clsx";
+import { useTranslations } from "next-intl";
+import { PropsWithChildren, ReactNode } from "react";
+import { toShekel } from "src/core/helpers/content";
+import * as _Menu from "src/menu/schema";
+import { AmountCounter } from "./AmountCounter";
 
 type Props = {
-  price: number
-  content: _Menu.Content
-  amount: number
-}
+  price: number;
+  content: _Menu.Content;
+  amount: number;
+};
 
 const StaticData = (
-  props: PropsWithChildren<Omit<Props, "price" | "amount"> & { price: ReactNode }>
+  props: PropsWithChildren<Omit<Props, "price" | "amount"> & { price: ReactNode }>,
 ) => {
-  const { children, price, content } = props
-  const t = useTranslations("menu.Components.ItemData")
+  const { children, price, content } = props;
+  const t = useTranslations("menu.Components.ItemData");
 
   return (
     <dl className="z-10 flex h-full flex-col p-3">
@@ -41,12 +41,12 @@ const StaticData = (
         </span>
       </dd>
     </dl>
-  )
-}
+  );
+};
 
 export const ItemData = (props: Props) => {
-  const { price, content, amount } = props
-  const t = useTranslations("menu.Components.ItemData")
+  const { price, content, amount } = props;
+  const t = useTranslations("menu.Components.ItemData");
 
   return (
     <StaticData content={content} price={price === 0 ? t("priced by choice") : toShekel(price)}>
@@ -62,5 +62,5 @@ export const ItemData = (props: Props) => {
         amount={amount}
       />
     </StaticData>
-  )
-}
+  );
+};

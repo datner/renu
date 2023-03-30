@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest"
+import { beforeEach, describe, expect, it, vi } from "vitest";
 // import { hash256, SecurePassword } from "@blitzjs/auth"
 // import resetPassword from "./resetPassword"
 // import db from "db"
@@ -15,7 +15,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest"
 
 describe.skip("resetPassword mutation", () => {
   it("works correctly", async () => {
-    expect(true).toBe(true)
+    expect(true).toBe(true);
 
     // Create test user
     // const goodToken = "randomPasswordResetToken"
@@ -85,5 +85,5 @@ describe.skip("resetPassword mutation", () => {
     // expect(await SecurePassword.verify(updatedUser!.hashedPassword, newPassword)).toBe(
     //   SecurePassword.VALID
     // )
-  })
-})
+  });
+});

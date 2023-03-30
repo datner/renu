@@ -1,21 +1,21 @@
-import { Dialog, Transition } from "@headlessui/react"
-import { Fragment, PropsWithChildren } from "react"
-import { NiceModalHandler } from "@ebay/nice-modal-react"
+import { NiceModalHandler } from "@ebay/nice-modal-react";
+import { Dialog, Transition } from "@headlessui/react";
+import { Fragment, PropsWithChildren } from "react";
 
 type Props = {
-  show?: boolean
-  onClose(): void
-  afterLeave?(): void
-}
+  show?: boolean;
+  onClose(): void;
+  afterLeave?(): void;
+};
 
 export const renuModal = (modal: NiceModalHandler): Props => ({
   show: modal.visible,
   onClose: modal.hide,
   afterLeave: modal.remove,
-})
+});
 
 export const Modal = (props: PropsWithChildren<Props>) => {
-  const { children, show, onClose, afterLeave } = props
+  const { children, show, onClose, afterLeave } = props;
 
   return (
     <Transition appear show={show} as={Fragment}>
@@ -52,5 +52,5 @@ export const Modal = (props: PropsWithChildren<Props>) => {
         </div>
       </Dialog>
     </Transition>
-  )
-}
+  );
+};

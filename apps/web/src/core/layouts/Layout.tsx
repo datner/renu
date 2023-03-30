@@ -1,5 +1,5 @@
-import Head from "next/head"
-import { BlitzLayout } from "@blitzjs/next"
+import { BlitzLayout } from "@blitzjs/next";
+import Head from "next/head";
 
 const Layout: BlitzLayout<{ title?: string; children?: React.ReactNode }> = ({
   title,
@@ -14,7 +14,7 @@ const Layout: BlitzLayout<{ title?: string; children?: React.ReactNode }> = ({
 
       {children}
     </>
-  )
-}
+  );
+};
 
-export default Layout
+export default Layout;

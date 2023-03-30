@@ -1,11 +1,11 @@
-import * as E from "fp-ts/Either"
-import { pipe, Lazy } from "fp-ts/function"
+import * as E from "fp-ts/Either";
+import { Lazy, pipe } from "fp-ts/function";
 
 export type NoEnvVarError = {
-  tag: "NoEnvVarError"
-  error: unknown
-  key: keyof NodeJS.ProcessEnv
-}
+  tag: "NoEnvVarError";
+  error: unknown;
+  key: keyof NodeJS.ProcessEnv;
+};
 
 export const getEnvVar = (key: keyof ProcessEnvVars) =>
   pipe(
@@ -14,8 +14,8 @@ export const getEnvVar = (key: keyof ProcessEnvVars) =>
       tag: "NoEnvVarError",
       key,
       error: new Error(`${key} could not be found in environment`),
-    })
-  )
+    }),
+  );
 
 export const host: Lazy<string> = () =>
-  process.env.NODE_ENV === "production" ? "https://renu.menu" : "http://localhost:3000"
+  process.env.NODE_ENV === "production" ? "https://renu.menu" : "http://localhost:3000";

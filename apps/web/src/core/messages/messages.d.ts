@@ -1,2 +1,2 @@
-type Messages = typeof import("./en.json")
+type Messages = typeof import("./en.json");
 declare interface IntlMessages extends Messages {}

@@ -1,41 +1,41 @@
-import Image from "next/image"
-import { a, useSpring } from "@react-spring/web"
-import { useLocale } from "src/core/hooks/useLocale"
-import { pipe } from "fp-ts/function"
-import * as A from "@fp-ts/core/ReadonlyArray"
-import { ItemData } from "./ItemData"
-import { memo } from "react"
-import { useIsRtl } from "src/core/hooks/useIsRtl"
-import { useAtomValue } from "jotai"
-import { OrderFamilyAtom } from "src/menu/jotai/order"
-import { max, multiply, add } from "src/core/helpers/number"
+import * as A from "@fp-ts/core/ReadonlyArray";
+import { a, useSpring } from "@react-spring/web";
+import { pipe } from "fp-ts/function";
+import { useAtomValue } from "jotai";
+import Image from "next/image";
+import { memo } from "react";
+import { add, max, multiply } from "src/core/helpers/number";
+import { useIsRtl } from "src/core/hooks/useIsRtl";
+import { useLocale } from "src/core/hooks/useLocale";
+import { OrderFamilyAtom } from "src/menu/jotai/order";
+import { ItemData } from "./ItemData";
 
 type Props = {
-  atom: OrderFamilyAtom
-  onClick(): void
-}
+  atom: OrderFamilyAtom;
+  onClick(): void;
+};
 
 export const ListItemNoDrag = memo(function ListItem(props: Props) {
-  const { atom, onClick } = props
-  const itemInOrder = useAtomValue(atom)
-  const locale = useLocale()
-  const isRtl = useIsRtl()
-  const content = itemInOrder.item.content.find((it) => it.locale === locale)
-  const isInOrder = itemInOrder.amount > 0
-  const hideIndicator = isRtl ? 40 : -40
+  const { atom, onClick } = props;
+  const itemInOrder = useAtomValue(atom);
+  const locale = useLocale();
+  const isRtl = useIsRtl();
+  const content = itemInOrder.item.content.find((it) => it.locale === locale);
+  const isInOrder = itemInOrder.amount > 0;
+  const hideIndicator = isRtl ? 40 : -40;
   const styles = useSpring({
     x: isInOrder ? 0 : hideIndicator,
     opacity: isInOrder ? 1 : 0,
-  })
+  });
 
   const modPrice = pipe(
     itemInOrder.modifiers,
-    A.reduce(0, (sum, m) => sum + m.price * m.amount)
-  )
+    A.reduce(0, (sum, m) => sum + m.price * m.amount),
+  );
 
-  const price = pipe(itemInOrder.amount, max(1), multiply(itemInOrder.item.price), add(modPrice))
+  const price = pipe(itemInOrder.amount, max(1), multiply(itemInOrder.item.price), add(modPrice));
 
-  if (!content) return null
+  if (!content) return null;
 
   return (
     <li onClick={onClick} className="relative touch-pan-y px-2 sm:px-6">
@@ -63,5 +63,5 @@ export const ListItemNoDrag = memo(function ListItem(props: Props) {
         </div>
       </div>
     </li>
-  )
-})
+  );
+});

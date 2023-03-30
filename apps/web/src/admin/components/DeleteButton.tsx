@@ -1,35 +1,35 @@
-import { useRouter } from "next/router"
-import { useMutation } from "@blitzjs/rpc"
-import { Routes } from "@blitzjs/next"
-import { useSpring, a } from "@react-spring/web"
-import { useState } from "react"
-import useMeasure from "react-use-measure"
-import removeItem from "src/items/mutations/removeItem"
-import { toast } from "react-toastify"
-import { usePrevious } from "src/core/hooks/usePrevious"
+import { Routes } from "@blitzjs/next";
+import { useMutation } from "@blitzjs/rpc";
+import { a, useSpring } from "@react-spring/web";
+import { useRouter } from "next/router";
+import { useState } from "react";
+import { toast } from "react-toastify";
+import useMeasure from "react-use-measure";
+import { usePrevious } from "src/core/hooks/usePrevious";
+import removeItem from "src/items/mutations/removeItem";
 
 type Props = {
-  identifier: string
-  onRemove(): void
-}
+  identifier: string;
+  onRemove(): void;
+};
 
 export function DeleteButton(props: Props) {
-  const { identifier, onRemove: onDelete } = props
-  const router = useRouter()
+  const { identifier, onRemove: onDelete } = props;
+  const router = useRouter();
   const [removeItemMutation, { isLoading, isIdle, isSuccess }] = useMutation(removeItem, {
     onSuccess() {
-      fetch("/api/revalidate-current")
+      fetch("/api/revalidate-current");
     },
-  })
-  const [ref, { width }] = useMeasure()
-  const isNoWidth = usePrevious(width) === 0
-  const { w } = useSpring({ w: width + 32, immediate: isNoWidth })
-  const { angle } = useSpring({ angle: 0, config: { duration: 3000 } })
-  const [isConsideringDeletion, setConsideration] = useState(false)
+  });
+  const [ref, { width }] = useMeasure();
+  const isNoWidth = usePrevious(width) === 0;
+  const { w } = useSpring({ w: width + 32, immediate: isNoWidth });
+  const { angle } = useSpring({ angle: 0, config: { duration: 3000 } });
+  const [isConsideringDeletion, setConsideration] = useState(false);
 
   const handleClick = async () => {
     if (angle.isAnimating) {
-      onDelete()
+      onDelete();
       toast.promise(
         removeItemMutation({ identifier }),
         {
@@ -37,15 +37,15 @@ export function DeleteButton(props: Props) {
           success: `${identifier} deleted successfully`,
           error: `Oops! Couldn't delete ${identifier}`,
         },
-        { onClose: () => router.push(Routes.AdminItemsNew()) }
-      )
-      return
+        { onClose: () => router.push(Routes.AdminItemsNew()) },
+      );
+      return;
     }
-    setConsideration(true)
-    angle.set(360)
-    await angle.start(0)
-    setConsideration(false)
-  }
+    setConsideration(true);
+    angle.set(360);
+    await angle.start(0);
+    setConsideration(false);
+  };
   return (
     <a.button
       type="button"
@@ -55,9 +55,7 @@ export function DeleteButton(props: Props) {
       onClick={handleClick}
     >
       <div ref={ref} className="inline-flex flex-nowrap whitespace-nowrap gap-2 items-center">
-        {isLoading || isSuccess ? (
-          <span>deleting...</span>
-        ) : (
+        {isLoading || isSuccess ? <span>deleting...</span> : (
           <>
             <span>{isConsideringDeletion ? "Are you sure?" : "Delete"}</span>
             {isConsideringDeletion && (
@@ -84,5 +82,5 @@ export function DeleteButton(props: Props) {
         )}
       </div>
     </a.button>
-  )
+  );
 }

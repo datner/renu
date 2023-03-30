@@ -1,23 +1,23 @@
-import { animated, useTransition } from "@react-spring/web"
-import { toShekel } from "src/core/helpers/content"
-import * as Order from "src/menu/hooks/useOrder"
-import { useTranslations } from "next-intl"
+import { animated, useTransition } from "@react-spring/web";
+import { useTranslations } from "next-intl";
+import { toShekel } from "src/core/helpers/content";
+import * as Order from "src/menu/hooks/useOrder";
 
 type Props = {
-  onClick(): void
-  order: Order.Order
-}
+  onClick(): void;
+  order: Order.Order;
+};
 
 export function ViewOrderButton(props: Props) {
-  const { onClick, order } = props
-  const show = Order.isActiveOrder(order)
-  const t = useTranslations("menu.Components.ViewOrderButton")
+  const { onClick, order } = props;
+  const show = Order.isActiveOrder(order);
+  const t = useTranslations("menu.Components.ViewOrderButton");
   const transition = useTransition(show, {
     from: { y: 200, opacity: 0 },
     enter: { y: 0, opacity: 1 },
     leave: { y: 200, opacity: 0 },
     reverse: show,
-  })
+  });
 
   return transition(
     (styles, show) =>
@@ -35,8 +35,8 @@ export function ViewOrderButton(props: Props) {
             {toShekel((order as Order.ActiveOrder).totalCost)}
           </span>
         </animated.button>
-      )
-  )
+      ),
+  );
 }
 
-export default ViewOrderButton
+export default ViewOrderButton;

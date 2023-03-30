@@ -1,4 +1,4 @@
-import * as S from "@effect/schema/Schema"
+import * as S from "@effect/schema/Schema";
 
 // ============= Get Status ====================
 
@@ -15,7 +15,7 @@ export const StatusSuccess = S.struct({
     type: S.string,
     method: S.string,
     number: S.string,
-    date: S.string, //"2022-12-13 13:19:44"
+    date: S.string, // "2022-12-13 13:19:44"
     status: S.string,
     status_code: S.string,
     status_description: S.string,
@@ -61,7 +61,7 @@ export const StatusSuccess = S.struct({
     brand_name: S.string,
     issuer_name: S.string,
   }),
-})
+});
 export interface StatusSuccess extends S.To<typeof StatusSuccess> {}
 
 export const StatusError = S.struct({
@@ -71,7 +71,7 @@ export const StatusError = S.struct({
     description: S.literal("can-not-find-transaction"),
   }),
   data: S.struct({}),
-})
+});
 export interface StatusError extends S.To<typeof StatusError> {}
 
 export const StatusUnexpected = S.struct({
@@ -81,11 +81,11 @@ export const StatusUnexpected = S.struct({
     description: S.string,
   }),
   data: S.record(S.string, S.unknown),
-})
+});
 export interface StatusUnexpected extends S.To<typeof StatusUnexpected> {}
 
-export const GetStatusResponse = S.union(StatusSuccess, StatusError, StatusUnexpected)
-export type GetStatusResponse = StatusSuccess | StatusError | StatusUnexpected
+export const GetStatusResponse = S.union(StatusSuccess, StatusError, StatusUnexpected);
+export type GetStatusResponse = StatusSuccess | StatusError | StatusUnexpected;
 
 // ============= Get Payment Page Link ====================
 
@@ -93,7 +93,7 @@ export const ResponseResults = S.struct({
   status: S.literal("success"),
   code: S.number,
   description: S.string,
-})
+});
 
 export const GeneratePaymentLinkResponse = S.struct({
   results: ResponseResults,
@@ -102,4 +102,4 @@ export const GeneratePaymentLinkResponse = S.struct({
     payment_page_link: S.string,
     qr_code_image: S.string,
   }),
-})
+});

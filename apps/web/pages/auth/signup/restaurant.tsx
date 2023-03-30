@@ -1,10 +1,10 @@
-import { BlitzPage, Routes } from "@blitzjs/next"
-import { useRouter } from "next/router"
-import Layout from "src/core/layouts/Layout"
-import { RestaurantForm } from "src/auth/components/ResuaurantForm"
+import { BlitzPage, Routes } from "@blitzjs/next";
+import { useRouter } from "next/router";
+import { RestaurantForm } from "src/auth/components/ResuaurantForm";
+import Layout from "src/core/layouts/Layout";
 
 const RestaurantSignupPage: BlitzPage = () => {
-  const router = useRouter()
+  const router = useRouter();
 
   return (
     <div className="min-h-full flex bg-gray-50 flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -12,10 +12,10 @@ const RestaurantSignupPage: BlitzPage = () => {
         <RestaurantForm onSuccess={() => router.push(Routes.AdminHome())} />
       </div>
     </div>
-  )
-}
+  );
+};
 
-RestaurantSignupPage.authenticate = true
-RestaurantSignupPage.getLayout = (page) => <Layout title="Sign Up">{page}</Layout>
+RestaurantSignupPage.authenticate = true;
+RestaurantSignupPage.getLayout = (page) => <Layout title="Sign Up">{page}</Layout>;
 
-export default RestaurantSignupPage
+export default RestaurantSignupPage;

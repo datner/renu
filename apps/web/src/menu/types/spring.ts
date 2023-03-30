@@ -1,4 +1,4 @@
-import { AnimatedProps } from "@react-spring/web"
-import { ComponentProps } from "react"
+import { AnimatedProps } from "@react-spring/web";
+import { ComponentProps } from "react";
 
-export type AnimatedStyle = AnimatedProps<ComponentProps<"div">>["style"]
+export type AnimatedStyle = AnimatedProps<ComponentProps<"div">>["style"];

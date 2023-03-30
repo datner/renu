@@ -1,12 +1,12 @@
-import { resolver } from "@blitzjs/rpc"
-import { setDefaultOrganizationId } from "src/auth/helpers/setDefaultOrganizationId"
-import * as TE from "fp-ts/TaskEither"
-import { z } from "zod"
-import db from "db"
-import { prismaNotFound } from "src/core/helpers/prisma"
-import { pipe } from "fp-ts/lib/function"
+import { resolver } from "@blitzjs/rpc";
+import db from "db";
+import { pipe } from "fp-ts/lib/function";
+import * as TE from "fp-ts/TaskEither";
+import { setDefaultOrganizationId } from "src/auth/helpers/setDefaultOrganizationId";
+import { prismaNotFound } from "src/core/helpers/prisma";
+import { z } from "zod";
 
-const ChangeVenue = z.number()
+const ChangeVenue = z.number();
 
 export default resolver.pipe(
   resolver.zod(ChangeVenue),
@@ -16,6 +16,6 @@ export default resolver.pipe(
   (where, ctx) =>
     pipe(
       TE.tryCatch(() => db.venue.findFirstOrThrow({ where }), prismaNotFound),
-      TE.chainTaskK((venue) => () => ctx.session.$setPublicData({ venue: venue }))
-    )()
-)
+      TE.chainTaskK((venue) => () => ctx.session.$setPublicData({ venue: venue })),
+    )(),
+);

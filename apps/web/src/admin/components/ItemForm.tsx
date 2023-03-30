@@ -1,70 +1,70 @@
-import { useMutation, useQuery } from "@blitzjs/rpc"
-import { useZodForm } from "src/core/hooks/useZodForm"
-import { GetItemResult, ItemSchema, toDefaults } from "src/items/validations"
-import { useTranslations } from "next-intl"
-import { FormProvider, useController } from "react-hook-form"
-import getUploadUrl from "../mutations/getUploadUrl"
-import { FormDropzone } from "./FormDropzone"
-import { useReducer } from "react"
-import { match } from "ts-pattern"
-import { FormCategoryCombobox } from "./FormCategoryCombobox"
-import { DeleteButton } from "./DeleteButton"
-import { pipe, constNull, constTrue } from "fp-ts/function"
-import * as O from "fp-ts/Option"
-import * as Eq from "fp-ts/Eq"
-import { useStableEffect } from "fp-ts-react-stable-hooks"
-import { eqItem } from "src/items/helpers/eqItem"
-import { nanoid } from "nanoid"
-import { toast } from "react-toastify"
-import { Button, NumberInput, Paper, Tabs, Textarea, TextInput } from "@mantine/core"
-import { DocumentTextIcon, AdjustmentsVerticalIcon } from "@heroicons/react/20/solid"
-import { ModifierPanel } from "./ModifierPanel"
-import { shekelFormatter, shekelParser } from "src/core/helpers/form"
-import { PuzzlePieceIcon } from "@heroicons/react/24/solid"
-import { IntegrationsPanel } from "./IntegrationsPanel"
-import getVenueManagementIntegration from "src/venues/queries/current/getVenueManagementIntegration"
+import { useMutation, useQuery } from "@blitzjs/rpc";
+import { AdjustmentsVerticalIcon, DocumentTextIcon } from "@heroicons/react/20/solid";
+import { PuzzlePieceIcon } from "@heroicons/react/24/solid";
+import { Button, NumberInput, Paper, Tabs, Textarea, TextInput } from "@mantine/core";
+import { useStableEffect } from "fp-ts-react-stable-hooks";
+import * as Eq from "fp-ts/Eq";
+import { constNull, constTrue, pipe } from "fp-ts/function";
+import * as O from "fp-ts/Option";
+import { nanoid } from "nanoid";
+import { useTranslations } from "next-intl";
+import { useReducer } from "react";
+import { FormProvider, useController } from "react-hook-form";
+import { toast } from "react-toastify";
+import { shekelFormatter, shekelParser } from "src/core/helpers/form";
+import { useZodForm } from "src/core/hooks/useZodForm";
+import { eqItem } from "src/items/helpers/eqItem";
+import { GetItemResult, ItemSchema, toDefaults } from "src/items/validations";
+import getVenueManagementIntegration from "src/venues/queries/current/getVenueManagementIntegration";
+import { match } from "ts-pattern";
+import getUploadUrl from "../mutations/getUploadUrl";
+import { DeleteButton } from "./DeleteButton";
+import { FormCategoryCombobox } from "./FormCategoryCombobox";
+import { FormDropzone } from "./FormDropzone";
+import { IntegrationsPanel } from "./IntegrationsPanel";
+import { ModifierPanel } from "./ModifierPanel";
 
 type Props = {
-  item: O.Option<GetItemResult>
-  onSubmit(data: ItemSchema): void
-}
+  item: O.Option<GetItemResult>;
+  onSubmit(data: ItemSchema): void;
+};
 
 export function ItemForm(props: Props) {
-  const { onSubmit: onSubmit_, item } = props
-  const [integration] = useQuery(getVenueManagementIntegration, null)
-  const t = useTranslations("admin.Components.ItemForm")
-  const isEdit = O.isSome(item)
-  const defaultValues = toDefaults(integration)(item)
+  const { onSubmit: onSubmit_, item } = props;
+  const [integration] = useQuery(getVenueManagementIntegration, null);
+  const t = useTranslations("admin.Components.ItemForm");
+  const isEdit = O.isSome(item);
+  const defaultValues = toDefaults(integration)(item);
   const form = useZodForm({
     schema: ItemSchema,
     defaultValues,
-  })
-  const [getAssetUrl, uploadUrl] = useMutation(getUploadUrl)
-  const [isRemoving, remove] = useReducer(() => true, false)
+  });
+  const [getAssetUrl, uploadUrl] = useMutation(getUploadUrl);
+  const [isRemoving, remove] = useReducer(() => true, false);
 
-  const { handleSubmit, setFormError, formState, reset, control, formError } = form
-  const { isSubmitting, isDirty } = formState
+  const { handleSubmit, setFormError, formState, reset, control, formError } = form;
+  const { isSubmitting, isDirty } = formState;
 
   useStableEffect(
     () => {
-      pipe(item, toDefaults(integration), reset)
+      pipe(item, toDefaults(integration), reset);
     },
     [item, reset, integration],
-    Eq.tuple(O.getEq(eqItem), { equals: constTrue }, { equals: constTrue })
-  )
+    Eq.tuple(O.getEq(eqItem), { equals: constTrue }, { equals: constTrue }),
+  );
 
   const onSubmit = handleSubmit(
     async (data) => {
       async function doAction() {
-        const { image } = data
-        const file = image.file
+        const { image } = data;
+        const file = image.file;
         try {
           if (file) {
             const { url, headers: h } = await getAssetUrl({
               name: `${data.identifier}-${nanoid()}.${file.name.split(".").pop()}`,
-            })
-            const headers = new Headers(h)
-            headers.append("Content-Length", `${file.size + 5000}`)
+            });
+            const headers = new Headers(h);
+            headers.append("Content-Length", `${file.size + 5000}`);
 
             const {
               data: {
@@ -74,28 +74,28 @@ export function ItemForm(props: Props) {
               method: "POST",
               headers,
               body: await file.arrayBuffer(),
-            }).then((res) => res.json())
-            image.src = origin_path
+            }).then((res) => res.json());
+            image.src = origin_path;
           }
-          onSubmit_(data)
+          onSubmit_(data);
         } catch (error: any) {
-          setFormError(error.toString())
+          setFormError(error.toString());
         }
       }
-      const isCreate = O.isNone(item)
+      const isCreate = O.isNone(item);
       await toast.promise(doAction(), {
         pending: `${isCreate ? "Creating" : "Updating"} in progress...`,
         success: `${data.identifier} ${isCreate ? "created" : "updated"} successfully!`,
         error: `Oops! Couldn't ${isCreate ? "create" : "update"} ${data.identifier}`,
-      })
+      });
     },
-    (e) => console.log(e)
-  )
+    (e) => console.log(e),
+  );
 
   const result = {
     isEdit,
     isSubmitting,
-  }
+  };
 
   const message = match(uploadUrl.isLoading)
     .with(true, () => t("upload"))
@@ -106,24 +106,24 @@ export function ItemForm(props: Props) {
         .with({ isEdit: false }, () => t("create.initial"))
         .with({ isEdit: true }, () => t("update.initial"))
         .exhaustive()
-    )
+    );
 
   const title = pipe(
     item,
     O.match(
       () => t("title.new"),
-      () => t("title.edit")
-    )
-  )
+      () => t("title.edit"),
+    ),
+  );
 
   const deleteButton = pipe(
     item,
-    O.matchW(constNull, (it) => <DeleteButton identifier={it.identifier!} onRemove={remove} />)
-  )
+    O.matchW(constNull, (it) => <DeleteButton identifier={it.identifier!} onRemove={remove} />),
+  );
 
-  const { field: priceProps } = useController({ control, name: "price" })
+  const { field: priceProps } = useController({ control, name: "price" });
 
-  if (formError) console.log(formError)
+  if (formError) console.log(formError);
 
   return (
     <FormProvider {...form}>
@@ -230,5 +230,5 @@ export function ItemForm(props: Props) {
         </form>
       </Paper>
     </FormProvider>
-  )
+  );
 }

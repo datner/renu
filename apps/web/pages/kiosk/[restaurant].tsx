@@ -1,1 +1,1 @@
-export { default, getStaticPaths, getStaticProps } from "../menu/[restaurant]"
+export { default, getStaticPaths, getStaticProps } from "../menu/[restaurant]";

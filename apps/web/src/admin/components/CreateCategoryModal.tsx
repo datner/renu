@@ -1,37 +1,37 @@
-import { create, useModal } from "@ebay/nice-modal-react"
-import { useLocale } from "src/core/hooks/useLocale"
-import * as P from "@effect/schema/Parser"
-import { category } from "src/categories/hooks/form"
-import { CreateCategory } from "src/categories/validations"
-import { DefaultValues } from "react-hook-form"
-import { CategoryForm } from "./CategoryForm"
-import { Modal, renuModal } from "./Modal"
+import { create, useModal } from "@ebay/nice-modal-react";
+import * as P from "@effect/schema/Parser";
+import { DefaultValues } from "react-hook-form";
+import { category } from "src/categories/hooks/form";
+import { CreateCategory } from "src/categories/validations";
+import { useLocale } from "src/core/hooks/useLocale";
+import { CategoryForm } from "./CategoryForm";
+import { Modal, renuModal } from "./Modal";
 
 type Props = {
-  name: string
-}
+  name: string;
+};
 
 export const CreateCategoryModal = create<Props>(({ name }) => {
-  const modal = useModal()
-  const locale = useLocale()
-  const { onSubmit } = category.useCreate()
+  const modal = useModal();
+  const locale = useLocale();
+  const { onSubmit } = category.useCreate();
   const defaultValues = {
     [locale]: {
       name,
     },
-  } satisfies DefaultValues<CreateCategory>
+  } satisfies DefaultValues<CreateCategory>;
 
   return (
     <Modal {...renuModal(modal)}>
       <CategoryForm
         onSubmit={async (form) => {
-          const data = P.decode(CreateCategory)(form)
-          const category = await onSubmit(data)
-          modal.resolve(category)
-          modal.hide()
+          const data = P.decode(CreateCategory)(form);
+          const category = await onSubmit(data);
+          modal.resolve(category);
+          modal.hide();
         }}
         defaultValues={defaultValues}
       />
     </Modal>
-  )
-})
+  );
+});

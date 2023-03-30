@@ -1,16 +1,16 @@
-import * as Eq from "fp-ts/Eq"
-import * as N from "fp-ts/number"
-import * as S from "fp-ts/string"
-import * as D from "fp-ts/Date"
-import { Item, Prisma } from "database"
+import { Item, Prisma } from "database";
+import * as D from "fp-ts/Date";
+import * as Eq from "fp-ts/Eq";
+import * as N from "fp-ts/number";
+import * as S from "fp-ts/string";
 
 const eqDateOrNull: Eq.Eq<Date | null> = {
   equals: (a, b) => (a !== null && b !== null && D.Eq.equals(a, b)) || a === b,
-}
+};
 
 const eqManagement: Eq.Eq<Prisma.JsonValue> = {
   equals: (a, b) => S.Eq.equals(JSON.stringify(a), JSON.stringify(b)),
-}
+};
 
 export const eqItem = Eq.struct<Item>({
   id: N.Eq,
@@ -27,4 +27,4 @@ export const eqItem = Eq.struct<Item>({
   blurDataUrl: Eq.eqStrict,
   managementRepresentation: eqManagement,
   blurHash: Eq.eqStrict,
-})
+});

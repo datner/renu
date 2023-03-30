@@ -1,18 +1,18 @@
 import { resolver } from "@blitzjs/rpc";
-import { flow, pipe } from "@fp-ts/core/Function";
-import { Id } from "src/core/helpers/zod";
-import { prismaError } from "src/core/helpers/prisma";
-import { z } from "zod";
-import { NotFoundError } from "blitz";
-import { ManagementUnreachableError } from "src/core/errors";
 import * as Effect from "@effect/io/Effect";
 import * as Ref from "@effect/io/Ref";
+import { flow, pipe } from "@fp-ts/core/Function";
 import * as Optic from "@fp-ts/optic";
-import * as Management from "@integrations/management";
 import * as Clearing from "@integrations/clearing";
-import db, { OrderState, Prisma } from "db";
 import { CircuitBreaker, Http } from "@integrations/core";
+import * as Management from "@integrations/management";
+import { NotFoundError } from "blitz";
+import db, { OrderState, Prisma } from "db";
 import * as Renu from "src/core/effect/runtime";
+import { ManagementUnreachableError } from "src/core/errors";
+import { prismaError } from "src/core/helpers/prisma";
+import { Id } from "src/core/helpers/zod";
+import { z } from "zod";
 
 const ValidateStatus = z.object({
   orderId: z
@@ -26,18 +26,18 @@ const ValidateStatus = z.object({
 });
 
 const fullOrderInclude = {
-    items: {
-      include: { item: true, modifiers: { include: { modifier: true } } },
-    },
-} satisfies Prisma.OrderInclude
+  items: {
+    include: { item: true, modifiers: { include: { modifier: true } } },
+  },
+} satisfies Prisma.OrderInclude;
 
-type DeepOrder = Prisma.OrderGetPayload<{include: typeof fullOrderInclude}>;
+type DeepOrder = Prisma.OrderGetPayload<{ include: typeof fullOrderInclude }>;
 
 const orderState = Optic.id<DeepOrder>().at("state");
 const orderTxId = Optic.id<DeepOrder>().at("txId");
 
 const runOperations = (order: DeepOrder) =>
-  Effect.gen(function* ($) {
+  Effect.gen(function*($) {
     const orderRef = yield* $(Ref.make(order));
     const confirmPaidFor = pipe(
       Ref.get(orderRef),
@@ -76,9 +76,7 @@ const runOperations = (order: DeepOrder) =>
           prismaError("Order"),
         )
       ),
-      Effect.flatMap((updated) =>
-        Ref.updateAndGet(orderRef, Optic.replace(orderState)(updated.state))
-      ),
+      Effect.flatMap((updated) => Ref.updateAndGet(orderRef, Optic.replace(orderState)(updated.state))),
     );
 
     const updateOrder = pipe(
@@ -90,9 +88,7 @@ const runOperations = (order: DeepOrder) =>
           prismaError("Order"),
         )
       ),
-      Effect.flatMap((updated) =>
-        Ref.updateAndGet(orderRef, Optic.replace(orderState)(updated.state))
-      ),
+      Effect.flatMap((updated) => Ref.updateAndGet(orderRef, Optic.replace(orderState)(updated.state))),
     );
 
     switch (order.state) {

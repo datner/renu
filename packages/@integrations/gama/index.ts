@@ -1,11 +1,10 @@
-import * as Layer from "@effect/io/Layer";
-import * as Effect from "@effect/io/Effect";
 import * as Context from "@effect/data/Context";
-import * as A from "@effect/data/ReadonlyArray";
-import * as P from "@effect/schema/Parser";
 import { pipe } from "@effect/data/Function";
+import * as A from "@effect/data/ReadonlyArray";
+import * as Effect from "@effect/io/Effect";
+import * as Layer from "@effect/io/Layer";
+import * as P from "@effect/schema/Parser";
 import { CircuitBreaker, Clearing, Http } from "@integrations/core";
-import * as Settings from "./settings";
 import {
   CreateSessionErrorBody,
   CreateSessionInput,
@@ -19,9 +18,10 @@ import {
   PaymentProcesses,
   Session,
 } from "./schema";
+import * as Settings from "./settings";
 export * as Schema from "./schema";
-import { inspect } from "util";
 import { ClearingIntegration } from "database";
+import { inspect } from "util";
 
 interface BitPayment {
   readonly _tag: "BitPayment";
@@ -60,8 +60,9 @@ const toPayload = (
           payerPhoneNumber: input.payerPhoneNumber,
           paymentDescription: input.venueName,
         },
-      }),
-  ))
+      })
+    ),
+  );
 
 export interface Service {
   readonly _tag: "GamaService";
@@ -77,9 +78,9 @@ export const Gama = Context.Tag<Service>();
 
 const provideHttpConfig = Effect.provideServiceEffect(
   Http.HttpConfigService,
-  Effect.orDie(Effect.gen(function* ($) {
+  Effect.orDie(Effect.gen(function*($) {
     const { vendorData } = yield* $(
-      Settings.IntegrationService
+      Settings.IntegrationService,
     );
     const { env } = vendorData;
     const config = yield* $(Effect.config(Settings.GamaConfig));
@@ -106,7 +107,7 @@ const parseIntegration = Effect.provideServiceEffect(
 
 export const layer = Layer.effect(
   Gama,
-  Effect.gen(function* ($) {
+  Effect.gen(function*($) {
     const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "Gama" }));
     const Client = yield* $(Http.Http);
 
@@ -125,9 +126,7 @@ export const layer = Layer.effect(
             })
           ),
           Effect.flatMap(Http.toJson),
-          Effect.tap((b) =>
-            Effect.sync(() => console.log(inspect(b, false, null, true)))
-          ),
+          Effect.tap((b) => Effect.sync(() => console.log(inspect(b, false, null, true)))),
           Effect.flatMap(P.parseEffect(CreateSessionSuccess)),
           Effect.map((data) => data.session),
           breaker(),
@@ -135,7 +134,7 @@ export const layer = Layer.effect(
             pipe(
               Http.toJson(e.response),
               Effect.flatMap(P.parseEffect(CreateSessionErrorBody)),
-              Effect.tap(b => Effect.log(inspect(b,false, null, true))),
+              Effect.tap(b => Effect.log(inspect(b, false, null, true))),
               Effect.map((body) => body.errors),
               Effect.map(A.map((err) => err.msg)),
               Effect.map(A.join("\n")),

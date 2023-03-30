@@ -1,21 +1,21 @@
-import { getLabel } from "./helpers"
-import { useLocale } from "src/core/hooks/useLocale"
-import { useFormContext } from "react-hook-form"
-import { ItemForm } from "../validations/item"
+import { useFormContext } from "react-hook-form";
+import { useLocale } from "src/core/hooks/useLocale";
+import { ItemForm } from "../validations/item";
+import { getLabel } from "./helpers";
 
-import { toShekel } from "src/core/helpers/content"
-import * as _Menu from "src/menu/schema"
-import { Modifiers } from "database-helpers"
+import { Modifiers } from "database-helpers";
+import { toShekel } from "src/core/helpers/content";
+import * as _Menu from "src/menu/schema";
 
 type Props = {
-  modifier: _Menu.ItemModifier<Modifiers.OneOf>
-}
+  modifier: _Menu.ItemModifier<Modifiers.OneOf>;
+};
 
 export const OneOfComponent = (props: Props) => {
-  const { modifier } = props
-  const { id, config } = modifier
-  const { register } = useFormContext<ItemForm>()
-  const locale = useLocale()
+  const { modifier } = props;
+  const { id, config } = modifier;
+  const { register } = useFormContext<ItemForm>();
+  const locale = useLocale();
   return (
     <fieldset className="field-control">
       <legend className="label">
@@ -34,6 +34,6 @@ export const OneOfComponent = (props: Props) => {
         </label>
       ))}
     </fieldset>
-  )
-}
-OneOfComponent.displayName = "OneOf"
+  );
+};
+OneOfComponent.displayName = "OneOf";

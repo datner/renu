@@ -1,42 +1,42 @@
-import { NumberInput, TextInput, Select, Button, ActionIcon } from "@mantine/core"
-import { shekelFormatter, shekelParser } from "src/core/helpers/form"
-import { useZodForm } from "src/core/hooks/useZodForm"
-import { ItemSchema, OneOfSchema } from "src/items/validations"
-import * as A from "fp-ts/Array"
-import { pipe } from "fp-ts/function"
-import { useEffect } from "react"
-import { Control, Controller, useFieldArray, UseFieldArrayUpdate } from "react-hook-form"
-import { PlusIcon } from "@heroicons/react/20/solid"
-import { XMarkIcon } from "@heroicons/react/24/solid"
+import { PlusIcon } from "@heroicons/react/20/solid";
+import { XMarkIcon } from "@heroicons/react/24/solid";
+import { ActionIcon, Button, NumberInput, Select, TextInput } from "@mantine/core";
+import * as A from "fp-ts/Array";
+import { pipe } from "fp-ts/function";
+import { useEffect } from "react";
+import { Control, Controller, useFieldArray, UseFieldArrayUpdate } from "react-hook-form";
+import { shekelFormatter, shekelParser } from "src/core/helpers/form";
+import { useZodForm } from "src/core/hooks/useZodForm";
+import { ItemSchema, OneOfSchema } from "src/items/validations";
 
 type Props = {
-  control: Control<ItemSchema>
-  update: UseFieldArrayUpdate<ItemSchema, "modifiers">
-  onDuplicate(): void
-  field: { config: OneOfSchema }
-  index: number
-}
+  control: Control<ItemSchema>;
+  update: UseFieldArrayUpdate<ItemSchema, "modifiers">;
+  onDuplicate(): void;
+  field: { config: OneOfSchema };
+  index: number;
+};
 
 export const OneOfForm = (props: Props) => {
-  const { index, update, field, onDuplicate } = props
+  const { index, update, field, onDuplicate } = props;
   const { register, reset, control, watch, handleSubmit, formState } = useZodForm({
     schema: OneOfSchema,
     defaultValues: field.config,
-  })
+  });
   useEffect(() => {
-    reset(field.config)
-  }, [reset, field.config])
+    reset(field.config);
+  }, [reset, field.config]);
 
-  const { fields, append, remove } = useFieldArray({ control, name: "options" })
+  const { fields, append, remove } = useFieldArray({ control, name: "options" });
 
   const handleUpdate = handleSubmit(
     (data) => {
-      return update(index, { config: data })
+      return update(index, { config: data });
     },
-    (err) => console.log(err)
-  )
+    (err) => console.log(err),
+  );
 
-  const controlledFields = A.zipWith(fields, watch("options"), (f, o) => Object.assign(f, o))
+  const controlledFields = A.zipWith(fields, watch("options"), (f, o) => Object.assign(f, o));
   return (
     <div className="grow overflow-auto min-h-0 p-4 bg-gray-50">
       <div className="flex gap-4">
@@ -54,7 +54,7 @@ export const OneOfForm = (props: Props) => {
                 searchable
                 data={pipe(
                   controlledFields,
-                  A.mapWithIndex((i, f) => ({ label: f.identifier, value: String(i) }))
+                  A.mapWithIndex((i, f) => ({ label: f.identifier, value: String(i) })),
                 )}
               />
             )}
@@ -107,7 +107,7 @@ export const OneOfForm = (props: Props) => {
                 <TextInput {...register(`options.${i}.content.he.name`)} label="Hebrew Name" />
               </div>
             </div>
-          ))
+          )),
         )}
       </div>
       <Button
@@ -121,8 +121,7 @@ export const OneOfForm = (props: Props) => {
               he: { name: "", description: "" },
             },
             price: 0,
-          })
-        }
+          })}
         type="button"
         variant="outline"
         leftIcon={<PlusIcon className="h-5 w-5" />}
@@ -133,5 +132,5 @@ export const OneOfForm = (props: Props) => {
         Update Modifier
       </Button>
     </div>
-  )
-}
+  );
+};

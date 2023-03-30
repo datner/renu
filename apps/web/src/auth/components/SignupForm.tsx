@@ -1,17 +1,17 @@
-import { useMutation } from "@blitzjs/rpc"
-import { LabeledTextField } from "src/core/components/LabeledTextField"
-import signup from "src/auth/mutations/signup"
-import { Signup } from "src/auth/validations"
-import { useZodForm } from "src/core/hooks/useZodForm"
-import { FormProvider } from "react-hook-form"
+import { useMutation } from "@blitzjs/rpc";
+import { FormProvider } from "react-hook-form";
+import signup from "src/auth/mutations/signup";
+import { Signup } from "src/auth/validations";
+import { LabeledTextField } from "src/core/components/LabeledTextField";
+import { useZodForm } from "src/core/hooks/useZodForm";
 
 type SignupFormProps = {
-  onSuccess?: () => void
-}
+  onSuccess?: () => void;
+};
 
 export const SignupForm = (props: SignupFormProps) => {
-  const { onSuccess } = props
-  const [signupMutation] = useMutation(signup)
+  const { onSuccess } = props;
+  const [signupMutation] = useMutation(signup);
 
   const form = useZodForm({
     schema: Signup,
@@ -19,24 +19,24 @@ export const SignupForm = (props: SignupFormProps) => {
       email: "",
       password: "",
     },
-  })
+  });
 
-  const { formState, handleSubmit, setFormError, setError } = form
-  const { isSubmitting } = formState
+  const { formState, handleSubmit, setFormError, setError } = form;
+  const { isSubmitting } = formState;
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      await signupMutation(data)
-      onSuccess?.()
+      await signupMutation(data);
+      onSuccess?.();
     } catch (error: any) {
       if (error.code === "P2002" && error.meta?.target?.includes("email")) {
         // This error comes from Prisma
-        setError("email", { message: "This email is already being used" })
+        setError("email", { message: "This email is already being used" });
       } else {
-        setFormError(error.toString())
+        setFormError(error.toString());
       }
     }
-  })
+  });
 
   return (
     <FormProvider {...form}>
@@ -66,7 +66,7 @@ export const SignupForm = (props: SignupFormProps) => {
         </form>
       </div>
     </FormProvider>
-  )
-}
+  );
+};
 
-export default SignupForm
+export default SignupForm;

@@ -1,29 +1,24 @@
-import {
-  ExtrasSchemaInput,
-  ItemSchema,
-  ModifierSchema,
-  OneOfSchemaInput,
-} from "src/items/validations"
-import * as L from "monocle-ts/Lens"
-import * as A from "fp-ts/Array"
-import * as O from "fp-ts/Option"
-import * as T from "fp-ts/Task"
-import * as TO from "fp-ts/TaskOption"
-import * as NA from "fp-ts/NonEmptyArray"
-import { pipe } from "fp-ts/function"
-import { match } from "ts-pattern"
-import { useFieldArray, useFormContext } from "react-hook-form"
-import { ModifiersSortableList } from "./ModifiersSortableList"
-import { useStableO } from "fp-ts-react-stable-hooks"
-import { ModifierField } from "src/items/helpers/form"
-import { useModal } from "@ebay/nice-modal-react"
-import { NewModifierModal } from "./NewModiferModal"
-import { ModifierEnum } from "db/itemModifierConfig"
-import { OneOfForm } from "../modifier-forms/OneOfForm"
-import { ExtrasForm } from "../modifier-forms/ExtrasForm"
+import { useModal } from "@ebay/nice-modal-react";
+import { ModifierEnum } from "db/itemModifierConfig";
+import { useStableO } from "fp-ts-react-stable-hooks";
+import * as A from "fp-ts/Array";
+import { pipe } from "fp-ts/function";
+import * as NA from "fp-ts/NonEmptyArray";
+import * as O from "fp-ts/Option";
+import * as T from "fp-ts/Task";
+import * as TO from "fp-ts/TaskOption";
+import * as L from "monocle-ts/Lens";
+import { useFieldArray, useFormContext } from "react-hook-form";
+import { ModifierField } from "src/items/helpers/form";
+import { ExtrasSchemaInput, ItemSchema, ModifierSchema, OneOfSchemaInput } from "src/items/validations";
+import { match } from "ts-pattern";
+import { ExtrasForm } from "../modifier-forms/ExtrasForm";
+import { OneOfForm } from "../modifier-forms/OneOfForm";
+import { ModifiersSortableList } from "./ModifiersSortableList";
+import { NewModifierModal } from "./NewModiferModal";
 
 const getInitialModifierValues = (mod: {
-  _tag: ModifierEnum
+  _tag: ModifierEnum;
 }): OneOfSchemaInput | ExtrasSchemaInput => {
   switch (mod._tag) {
     case ModifierEnum.enum.oneOf:
@@ -45,7 +40,7 @@ const getInitialModifierValues = (mod: {
           identifier: "",
           price: 0,
         }),
-      }
+      };
     case ModifierEnum.enum.extras:
       return {
         _tag: "extras",
@@ -67,34 +62,34 @@ const getInitialModifierValues = (mod: {
         }),
         min: 0,
         max: 0,
-      }
+      };
   }
-}
+};
 
 const addCopy = pipe(
   L.id<ModifierSchema>(),
   L.prop("config"),
   L.prop("identifier"),
-  L.modify((id) => `${id}-copy`)
-)
+  L.modify((id) => `${id}-copy`),
+);
 
 export function ModifierPanel() {
-  const modal = useModal(NewModifierModal)
-  const { control, getValues } = useFormContext<ItemSchema>()
-  const { fields, move, append, update } = useFieldArray({ control, name: "modifiers" })
-  const [fieldIndex, setFieldIndex] = useStableO<number>(O.none)
+  const modal = useModal(NewModifierModal);
+  const { control, getValues } = useFormContext<ItemSchema>();
+  const { fields, move, append, update } = useFieldArray({ control, name: "modifiers" });
+  const [fieldIndex, setFieldIndex] = useStableO<number>(O.none);
 
   const updateConfig: typeof update = (i, m) => {
-    update(i, Object.assign(getValues(`modifiers.${i}`), m))
-  }
+    update(i, Object.assign(getValues(`modifiers.${i}`), m));
+  };
 
   const handleAddModifier = pipe(
     (() => modal.show()) as T.Task<{ _tag: ModifierEnum } | undefined>,
     T.map(O.fromNullable),
     TO.map(getInitialModifierValues),
     TO.bindTo("config"),
-    TO.map(append)
-  )
+    TO.map(append),
+  );
 
   return (
     <div className="flex grow min-h-0 divide-x rtl:divide-x-reverse gap-1">
@@ -114,9 +109,7 @@ export function ModifierPanel() {
         O.let("control", () => control),
         O.let(
           "onDuplicate",
-          ({ field: { id, ...rest } }) =>
-            () =>
-              pipe(rest, addCopy, append)
+          ({ field: { id, ...rest } }) => () => pipe(rest, addCopy, append),
         ),
         O.match(
           () => <PickAction />,
@@ -124,18 +117,18 @@ export function ModifierPanel() {
             match(props)
               .with({ field: { config: { _tag: "oneOf" } } }, (props) => <OneOfForm {...props} />)
               .with({ field: { config: { _tag: "extras" } } }, (props) => <ExtrasForm {...props} />)
-              .otherwise((props) => <EditOrCreate {...props} />)
-        )
+              .otherwise((props) => <EditOrCreate {...props} />),
+        ),
       )}
     </div>
-  )
+  );
 }
 
 function PickAction() {
-  return <div className="grow">pick or create a modifier</div>
+  return <div className="grow">pick or create a modifier</div>;
 }
 
 function EditOrCreate(props: { field: ModifierField }) {
-  const { field } = props
-  return <pre className="flex grow overflow-auto min-h-0">{JSON.stringify(field, null, 2)}</pre>
+  const { field } = props;
+  return <pre className="flex grow overflow-auto min-h-0">{JSON.stringify(field, null, 2)}</pre>;
 }

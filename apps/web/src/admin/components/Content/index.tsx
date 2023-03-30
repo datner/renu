@@ -1,15 +1,15 @@
-import { Header as ContentHeader } from "src/admin/components/Content/Header"
-import { Main as ContentMain } from "src/admin/components/Content/Main"
-import { Aside as ContentAside } from "src/admin/components/Content/Aside"
-import { ReactNode } from "react"
+import { ReactNode } from "react";
+import { Aside as ContentAside } from "src/admin/components/Content/Aside";
+import { Header as ContentHeader } from "src/admin/components/Content/Header";
+import { Main as ContentMain } from "src/admin/components/Content/Main";
 
 type ContentAreaProps = {
-  main: ReactNode
-  aside: ReactNode
-}
+  main: ReactNode;
+  aside: ReactNode;
+};
 
 export function Content(props: ContentAreaProps) {
-  const { main, aside } = props
+  const { main, aside } = props;
   return (
     <div className="grow min-h-0 flex-1 flex flex-col bg-gray-50">
       <ContentHeader />
@@ -19,5 +19,5 @@ export function Content(props: ContentAreaProps) {
         {aside && <ContentAside>{aside}</ContentAside>}
       </div>
     </div>
-  )
+  );
 }

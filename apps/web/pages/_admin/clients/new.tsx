@@ -1,44 +1,36 @@
-import Image from "next/image"
-import { useMutation } from "@blitzjs/rpc"
-import { useZodForm } from "src/core/hooks/useZodForm"
-import { FieldValues, SubmitHandler } from "react-hook-form"
-import { z } from "zod"
-import {
-  Paper,
-  Button,
-  Container,
-  LoadingOverlay,
-  TextInput,
-  PasswordInput,
-  Stepper,
-} from "@mantine/core"
-import * as O from "fp-ts/Option"
-import { pipe } from "fp-ts/function"
-import { Suspense, useState } from "react"
-import createUser from "src/users/mutations/createUser"
-import { CreateClientSchema } from "src/users/validations"
-import createOrganization from "src/organizations/mutations/createOrganization"
-import { CreateOrganizationSchema } from "src/organizations/validations"
-import { CreateVenueSchema } from "src/venues/validations"
-import { Dropzone, IMAGE_MIME_TYPE, FileWithPath } from "@mantine/dropzone"
-import createVenue from "src/venues/mutations/createVenue"
-import getImgixUploadUrl from "src/admin/mutations/getImgixUploadUrl"
-import { nanoid } from "nanoid"
+import { useMutation } from "@blitzjs/rpc";
+import { Button, Container, LoadingOverlay, Paper, PasswordInput, Stepper, TextInput } from "@mantine/core";
+import { Dropzone, FileWithPath, IMAGE_MIME_TYPE } from "@mantine/dropzone";
+import { pipe } from "fp-ts/function";
+import * as O from "fp-ts/Option";
+import { nanoid } from "nanoid";
+import Image from "next/image";
+import { Suspense, useState } from "react";
+import { FieldValues, SubmitHandler } from "react-hook-form";
+import getImgixUploadUrl from "src/admin/mutations/getImgixUploadUrl";
+import { useZodForm } from "src/core/hooks/useZodForm";
+import createOrganization from "src/organizations/mutations/createOrganization";
+import { CreateOrganizationSchema } from "src/organizations/validations";
+import createUser from "src/users/mutations/createUser";
+import { CreateClientSchema } from "src/users/validations";
+import createVenue from "src/venues/mutations/createVenue";
+import { CreateVenueSchema } from "src/venues/validations";
+import { z } from "zod";
 
 interface FormProps<T extends FieldValues> {
-  onSubmit: SubmitHandler<T>
+  onSubmit: SubmitHandler<T>;
 }
 
 function CreateClientForm(props: FormProps<z.infer<typeof CreateClientSchema>>) {
-  const { onSubmit } = props
+  const { onSubmit } = props;
   const form = useZodForm({
     schema: CreateClientSchema,
     defaultValues: {
       email: "",
       password: "",
     },
-  })
-  const { handleSubmit, register } = form
+  });
+  const { handleSubmit, register } = form;
 
   return (
     <Paper
@@ -60,21 +52,21 @@ function CreateClientForm(props: FormProps<z.infer<typeof CreateClientSchema>>) 
         {form.formState.isSubmitting ? "Creating..." : "Create User"}
       </Button>
     </Paper>
-  )
+  );
 }
 
-const NoUserId = CreateOrganizationSchema.omit({ userId: true })
+const NoUserId = CreateOrganizationSchema.omit({ userId: true });
 
 function CreateOrganizationForm(props: FormProps<z.infer<typeof NoUserId>>) {
-  const { onSubmit } = props
+  const { onSubmit } = props;
   const form = useZodForm({
     schema: NoUserId,
     defaultValues: {
       name: "",
       identifier: "",
     },
-  })
-  const { handleSubmit, register } = form
+  });
+  const { handleSubmit, register } = form;
 
   return (
     <Paper
@@ -96,17 +88,17 @@ function CreateOrganizationForm(props: FormProps<z.infer<typeof NoUserId>>) {
         {form.formState.isSubmitting ? "Creating..." : "Create Organization"}
       </Button>
     </Paper>
-  )
+  );
 }
 
 function CreateVenueForm(props: FormProps<z.infer<typeof NoOrgInfo>>) {
-  const { onSubmit } = props
+  const { onSubmit } = props;
   const NoOrgInfo = CreateVenueSchema.omit({ organizationId: true, memberId: true }).extend({
     logo: z
       .instanceof(File)
       .transform((a) => a as FileWithPath)
       .optional(),
-  })
+  });
   const form = useZodForm({
     schema: NoOrgInfo,
     defaultValues: {
@@ -118,8 +110,8 @@ function CreateVenueForm(props: FormProps<z.infer<typeof NoOrgInfo>>) {
         name: "",
       },
     },
-  })
-  const { handleSubmit, register, watch, setValue } = form
+  });
+  const { handleSubmit, register, watch, setValue } = form;
 
   const preview = pipe(
     watch("logo"),
@@ -136,8 +128,8 @@ function CreateVenueForm(props: FormProps<z.infer<typeof NoOrgInfo>>) {
         onLoad={() => URL.revokeObjectURL(src)}
       />
     )),
-    O.getOrElseW(() => null)
-  )
+    O.getOrElseW(() => null),
+  );
 
   return (
     <Paper
@@ -158,7 +150,7 @@ function CreateVenueForm(props: FormProps<z.infer<typeof NoOrgInfo>>) {
         <Dropzone
           accept={IMAGE_MIME_TYPE}
           onDrop={([file]) => {
-            if (file) setValue("logo", file)
+            if (file) setValue("logo", file);
           }}
         >
           <p className="text-center">Drop logo here</p>
@@ -169,25 +161,25 @@ function CreateVenueForm(props: FormProps<z.infer<typeof NoOrgInfo>>) {
         {form.formState.isSubmitting ? "Creating..." : "Create Venue"}
       </Button>
     </Paper>
-  )
+  );
 }
 
 function Forms() {
-  const [active, setActive] = useState(0)
+  const [active, setActive] = useState(0);
 
   const [createUserMutation, createUserBag] = useMutation(createUser, {
     onSuccess: () => setActive(1),
-  })
+  });
 
   const [createOrgMutation, createOrgBag] = useMutation(createOrganization, {
     onSuccess: () => setActive(2),
-  })
+  });
 
-  const [getUrl] = useMutation(getImgixUploadUrl)
+  const [getUrl] = useMutation(getImgixUploadUrl);
 
   const [createVenueMutation, createVenueBag] = useMutation(createVenue, {
     onSuccess: () => setActive(3),
-  })
+  });
 
   return (
     <Stepper active={active} onStepClick={setActive}>
@@ -221,9 +213,9 @@ function Forms() {
               const { url, headers: h } = await getUrl({
                 name: `${logo.name}-${nanoid()}.${logo.name.split(".").pop()}`,
                 venue: data.identifier,
-              })
-              const headers = new Headers(h)
-              headers.append("Content-Length", `${logo.size + 5000}`)
+              });
+              const headers = new Headers(h);
+              headers.append("Content-Length", `${logo.size + 5000}`);
 
               const {
                 data: {
@@ -233,27 +225,27 @@ function Forms() {
                 method: "POST",
                 headers,
                 body: await logo.arrayBuffer(),
-              }).then((res) => res.json())
+              }).then((res) => res.json());
 
               return createVenueMutation({
                 ...data,
                 logo: origin_path,
                 memberId: createOrgBag.data!.memberships[0]!.id,
                 organizationId: createOrgBag.data!.id,
-              })
+              });
             }
 
             return createVenueMutation({
               ...data,
               memberId: 13,
               organizationId: 9,
-            })
+            });
           }}
         />
       </Stepper.Step>
       <Stepper.Completed>Done! New client created</Stepper.Completed>
     </Stepper>
-  )
+  );
 }
 
 export default function _AdminClientsNew() {
@@ -263,5 +255,5 @@ export default function _AdminClientsNew() {
         <Forms />
       </Container>
     </Suspense>
-  )
+  );
 }

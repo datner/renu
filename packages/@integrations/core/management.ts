@@ -1,13 +1,7 @@
-import * as Effect from "@effect/io/Effect";
 import * as Context from "@effect/data/Context";
+import * as Effect from "@effect/io/Effect";
 import * as S from "@effect/schema/Schema";
-import {
-  ManagementIntegration,
-  ManagementProvider,
-  Order,
-  OrderState,
-  Prisma,
-} from "database";
+import { ManagementIntegration, ManagementProvider, Order, OrderState, Prisma } from "database";
 
 export const fullOrderInclude = {
   items: {

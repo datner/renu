@@ -1,34 +1,34 @@
-import { useChain, useSpring, useSpringRef, a } from "@react-spring/web"
-import { titleFor, toShekel } from "src/core/helpers/content"
-import { useLocale } from "src/core/hooks/useLocale"
-import Image from "next/image"
-import { useState } from "react"
-import useMeasure from "react-use-measure"
-import { ResizeObserver } from "@juggle/resize-observer"
-import { AmountButtons, AmountButtonsProps } from "./AmountButtons"
-import * as Order from "src/menu/hooks/useOrder"
-import { Blurhash } from "react-blurhash"
+import { ResizeObserver } from "@juggle/resize-observer";
+import { a, useChain, useSpring, useSpringRef } from "@react-spring/web";
+import Image from "next/image";
+import { useState } from "react";
+import { Blurhash } from "react-blurhash";
+import useMeasure from "react-use-measure";
+import { titleFor, toShekel } from "src/core/helpers/content";
+import { useLocale } from "src/core/hooks/useLocale";
+import * as Order from "src/menu/hooks/useOrder";
+import { AmountButtons, AmountButtonsProps } from "./AmountButtons";
 
 type Props = {
-  dispatch: Order.OrderDispatch
-  orderItem: Order.OrderItem
-  hash: Order.OrderItemKey
-}
+  dispatch: Order.OrderDispatch;
+  orderItem: Order.OrderItem;
+  hash: Order.OrderItemKey;
+};
 
 export function OrderModalItem(props: Props) {
-  const { dispatch, orderItem, hash: key } = props
-  const { item, comment } = orderItem
-  const amount = Order.isMultiOrderItem(orderItem) ? orderItem.amount : 1
-  const locale = useLocale()
+  const { dispatch, orderItem, hash: key } = props;
+  const { item, comment } = orderItem;
+  const amount = Order.isMultiOrderItem(orderItem) ? orderItem.amount : 1;
+  const locale = useLocale();
 
-  const title = titleFor(locale)
+  const title = titleFor(locale);
   return (
     <li className="pt-8 pb-6">
       <div className="h-14 flex items-center">
         <div
           className="flex-grow bg-white mr-px"
           onClick={() => {
-            dispatch(Order.setExistingActiveItem(key))
+            dispatch(Order.setExistingActiveItem(key));
           }}
         >
           <div className="flex">
@@ -70,27 +70,27 @@ export function OrderModalItem(props: Props) {
         </div>
       </div>
     </li>
-  )
+  );
 }
 
 function Thing(props: AmountButtonsProps) {
-  const [show, setShow] = useState(false)
-  const [ref, { width: containerWidth }] = useMeasure({ polyfill: ResizeObserver })
-  const firstApi = useSpringRef()
+  const [show, setShow] = useState(false);
+  const [ref, { width: containerWidth }] = useMeasure({ polyfill: ResizeObserver });
+  const firstApi = useSpringRef();
   const { width } = useSpring({
     ref: firstApi,
     width: show ? containerWidth : 40,
-  })
+  });
 
-  const secondApi = useSpringRef()
+  const secondApi = useSpringRef();
   const { opacity, pointerEvents } = useSpring({
     ref: secondApi,
     opacity: show ? 1 : 0,
     pointerEvents: show ? ("auto" as const) : ("none" as const),
     config: { mass: 5, tension: 500, friction: 80 },
-  })
+  });
 
-  useChain([firstApi, secondApi], [0, 0.3])
+  useChain([firstApi, secondApi], [0, 0.3]);
 
   return (
     <div
@@ -116,5 +116,5 @@ function Thing(props: AmountButtonsProps) {
         <AmountButtons {...props} />
       </a.div>
     </div>
-  )
+  );
 }

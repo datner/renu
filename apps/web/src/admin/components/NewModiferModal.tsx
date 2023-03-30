@@ -1,22 +1,22 @@
-import { create, useModal } from "@ebay/nice-modal-react"
-import clsx from "clsx"
-import { ModifierEnum } from "db/itemModifierConfig"
-import { ComponentPropsWithoutRef } from "react"
-import { renuModal, Modal } from "./Modal"
+import { create, useModal } from "@ebay/nice-modal-react";
+import clsx from "clsx";
+import { ModifierEnum } from "db/itemModifierConfig";
+import { ComponentPropsWithoutRef } from "react";
+import { Modal, renuModal } from "./Modal";
 
 export const NewModifierModal = create(() => {
-  const modal = useModal()
+  const modal = useModal();
 
   const handleModifierType = (_tag: ModifierEnum) => () => {
-    console.log("resolving: ", { _tag })
-    modal.resolve({ _tag })
-    modal.hide()
-  }
+    console.log("resolving: ", { _tag });
+    modal.resolve({ _tag });
+    modal.hide();
+  };
 
   return (
     <Modal {...renuModal(modal)}>
       <div className="p-5">
-        <div> pick a modifier type</div>
+        <div>pick a modifier type</div>
         <div className="my-3 grid grid-cols-4 gap-4">
           <ModifierBox
             onClick={handleModifierType(ModifierEnum.enum.oneOf)}
@@ -69,8 +69,8 @@ export const NewModifierModal = create(() => {
         </div>
       </div>
     </Modal>
-  )
-})
+  );
+});
 
 const ModifierBox = ({ className, ...props }: ComponentPropsWithoutRef<"button">) => (
   <button
@@ -78,7 +78,7 @@ const ModifierBox = ({ className, ...props }: ComponentPropsWithoutRef<"button">
     {...props}
     className={clsx(
       className,
-      "border-gray-400 rounded border shadow-md aspect-square text-xl font-bold text-center justify-center flex items-center hover:scale-105 hover:rotate-3 transition-all"
+      "border-gray-400 rounded border shadow-md aspect-square text-xl font-bold text-center justify-center flex items-center hover:scale-105 hover:rotate-3 transition-all",
     )}
   />
-)
+);

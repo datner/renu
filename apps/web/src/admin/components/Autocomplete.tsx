@@ -1,31 +1,31 @@
-import { Combobox } from "@headlessui/react"
-import { ByComparator } from "@headlessui/react/dist/types"
-import { CheckIcon } from "@heroicons/react/20/solid"
-import { ChevronUpDownIcon } from "@heroicons/react/24/solid"
-import { useElementSize } from "@mantine/hooks"
-import { ReactNode, useDeferredValue, useEffect, useMemo, useState } from "react"
+import { Combobox } from "@headlessui/react";
+import { ByComparator } from "@headlessui/react/dist/types";
+import { CheckIcon } from "@heroicons/react/20/solid";
+import { ChevronUpDownIcon } from "@heroicons/react/24/solid";
+import { useElementSize } from "@mantine/hooks";
+import { ReactNode, useDeferredValue, useEffect, useMemo, useState } from "react";
 
 type NullableAutocompleteProps<A> = {
-  value: A | null
-  displayValue(v: A | null): string
-  by?: ByComparator<A | null>
-  onChange(v: A | null): void
-  disabled?: boolean
-  createSuggestions(query: string): JSX.Element[]
-}
+  value: A | null;
+  displayValue(v: A | null): string;
+  by?: ByComparator<A | null>;
+  onChange(v: A | null): void;
+  disabled?: boolean;
+  createSuggestions(query: string): JSX.Element[];
+};
 
 type AutocompleteCategoryProps = {
-  title: string
-  children: ReactNode[]
-}
+  title: string;
+  children: ReactNode[];
+};
 
 type AutocompleteOptionProps<A = {}[] | undefined> = {
-  value: A
-  displayValue: (v: A) => string
-}
+  value: A;
+  displayValue: (v: A) => string;
+};
 
 export function AutocompleteOption<A>(props: AutocompleteOptionProps<A>) {
-  const { value, displayValue } = props
+  const { value, displayValue } = props;
   return (
     <Combobox.Option
       value={value}
@@ -34,7 +34,7 @@ export function AutocompleteOption<A>(props: AutocompleteOptionProps<A>) {
       <span className="grow">{displayValue(value)}</span>
       <CheckIcon className="h-5 w-5 invisible ui-selected:visible ui-active:text-white text-emerald-600" />
     </Combobox.Option>
-  )
+  );
 }
 
 export const AutocompleteCategory = (props: AutocompleteCategoryProps) => (
@@ -42,16 +42,16 @@ export const AutocompleteCategory = (props: AutocompleteCategoryProps) => (
     <div className="divider text-emerald-800">{props.title}</div>
     {props.children}
   </div>
-)
+);
 
 export function NullableAutocomplete<A>(props: NullableAutocompleteProps<A>) {
-  const { displayValue, onChange, by, value, createSuggestions, disabled } = props
-  const { ref, width } = useElementSize()
-  const [setQuery, query, suggestions] = useSuggestions(createSuggestions)
+  const { displayValue, onChange, by, value, createSuggestions, disabled } = props;
+  const { ref, width } = useElementSize();
+  const [setQuery, query, suggestions] = useSuggestions(createSuggestions);
   useEffect(() => {
     // when value changes (on select or on form reset), clear the query
-    setQuery("")
-  }, [value, setQuery])
+    setQuery("");
+  }, [value, setQuery]);
 
   return (
     <Combobox
@@ -80,15 +80,15 @@ export function NullableAutocomplete<A>(props: NullableAutocompleteProps<A>) {
         {suggestions}
       </Combobox.Options>
     </Combobox>
-  )
+  );
 }
 
 export function useSuggestions<A>(createSuggestions: (query: string) => A) {
-  const [query, setQuery] = useState("")
-  const defferedQuery = useDeferredValue(query)
+  const [query, setQuery] = useState("");
+  const defferedQuery = useDeferredValue(query);
   const suggestions = useMemo(
     () => createSuggestions(defferedQuery),
-    [defferedQuery, createSuggestions]
-  )
-  return [setQuery, query, suggestions] as const
+    [defferedQuery, createSuggestions],
+  );
+  return [setQuery, query, suggestions] as const;
 }

@@ -7,9 +7,9 @@
     3. toIndex   (Object) : The index to move item at moveIndex to. (required)
   */
 export function move<T>(array: T[], moveIndex: number, toIndex: number) {
-  const item = array[moveIndex]
-  const length = array.length
-  const diff = moveIndex - toIndex
+  const item = array[moveIndex];
+  const length = array.length;
+  const diff = moveIndex - toIndex;
 
   if (diff > 0) {
     // move left
@@ -18,27 +18,27 @@ export function move<T>(array: T[], moveIndex: number, toIndex: number) {
       item,
       ...array.slice(toIndex, moveIndex),
       ...array.slice(moveIndex + 1, length),
-    ] as T[]
+    ] as T[];
   } else if (diff < 0) {
     // move right
-    const targetIndex = toIndex + 1
+    const targetIndex = toIndex + 1;
     return [
       ...array.slice(0, moveIndex),
       ...array.slice(moveIndex + 1, targetIndex),
       item,
       ...array.slice(targetIndex, length),
-    ] as T[]
+    ] as T[];
   }
-  return array
+  return array;
 }
 
 export function swap<T>(array: T[], a: number, b: number) {
-  const tempArray = Array.from(array)
+  const tempArray = Array.from(array);
   if (a < 0 || a >= array.length || b < 0 || b >= array.length) {
-    return tempArray
+    return tempArray;
   }
-  const temp = tempArray[a] as T
-  tempArray[a] = tempArray[b] as T
-  tempArray[b] = temp
-  return tempArray
+  const temp = tempArray[a] as T;
+  tempArray[a] = tempArray[b] as T;
+  tempArray[b] = temp;
+  return tempArray;
 }

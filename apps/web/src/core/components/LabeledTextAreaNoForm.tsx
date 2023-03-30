@@ -1,22 +1,22 @@
-import { ExclamationCircleIcon } from "@heroicons/react/24/solid"
-import { ComponentPropsWithoutRef, memo } from "react"
-import { TextAreaBase, TextAreaProps } from "./TextAreaBase"
+import { ExclamationCircleIcon } from "@heroicons/react/24/solid";
+import { ComponentPropsWithoutRef, memo } from "react";
+import { TextAreaBase, TextAreaProps } from "./TextAreaBase";
 
 export interface LabeledTextAreaProps extends TextAreaProps {
   /** Field name. */
-  name: string
+  name: string;
   /** Field label. */
-  label: string
+  label: string;
   /** Field type. Doesn't include radio buttons and checkboxes */
-  type?: "text" | "password" | "email" | "number"
-  outerProps?: ComponentPropsWithoutRef<"div">
-  labelProps?: ComponentPropsWithoutRef<"label">
-  error?: string
+  type?: "text" | "password" | "email" | "number";
+  outerProps?: ComponentPropsWithoutRef<"div">;
+  labelProps?: ComponentPropsWithoutRef<"label">;
+  error?: string;
 }
 
 export const LabeledTextAreaNoForm = memo<LabeledTextAreaProps>(
   ({ label, error, outerProps, labelProps, name, ...props }) => {
-    const errorId = `${name}-error`
+    const errorId = `${name}-error`;
     return (
       <div {...outerProps}>
         <label {...labelProps}>
@@ -41,9 +41,9 @@ export const LabeledTextAreaNoForm = memo<LabeledTextAreaProps>(
           </p>
         )}
       </div>
-    )
-  }
-)
-LabeledTextAreaNoForm.displayName = "LabeledTextAreaNoForm"
+    );
+  },
+);
+LabeledTextAreaNoForm.displayName = "LabeledTextAreaNoForm";
 
-export default LabeledTextAreaNoForm
+export default LabeledTextAreaNoForm;

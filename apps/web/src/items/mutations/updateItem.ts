@@ -1,17 +1,17 @@
-import { resolver } from "@blitzjs/rpc"
-import db, { Prisma } from "db"
-import * as A from "@effect/data/ReadonlyArray"
-import * as O from "@effect/data/Option"
-import * as Effect from "@effect/io/Effect"
-import * as Context from "@effect/data/Context"
-import { pipe } from "@effect/data/Function"
-import { OptionsSchemaArray, UpdateItem } from "../validations"
-import { PrismaError } from "src/core/helpers/prisma"
-import { AuthenticatedSessionContext } from "@blitzjs/auth"
-import { getBlurHash } from "src/core/helpers/plaiceholder"
-import * as Renu from "src/core/effect/runtime"
+import { AuthenticatedSessionContext } from "@blitzjs/auth";
+import { resolver } from "@blitzjs/rpc";
+import * as Context from "@effect/data/Context";
+import { pipe } from "@effect/data/Function";
+import * as O from "@effect/data/Option";
+import * as A from "@effect/data/ReadonlyArray";
+import * as Effect from "@effect/io/Effect";
+import db, { Prisma } from "db";
+import * as Renu from "src/core/effect/runtime";
+import { getBlurHash } from "src/core/helpers/plaiceholder";
+import { PrismaError } from "src/core/helpers/prisma";
+import { OptionsSchemaArray, UpdateItem } from "../validations";
 
-const AuthSessionContext = Context.Tag<AuthenticatedSessionContext>()
+const AuthSessionContext = Context.Tag<AuthenticatedSessionContext>();
 
 const getItem = (id: number) =>
   pipe(
@@ -33,10 +33,10 @@ const getItem = (id: number) =>
           new PrismaError("Didn't find the specified item within the organization", {
             cause,
             resource: "Item",
-          })
+          }),
       )
-    )
-  )
+    ),
+  );
 
 export default resolver.pipe(resolver.zod(UpdateItem), resolver.authorize(), (input, ctx) =>
   pipe(
@@ -47,8 +47,7 @@ export default resolver.pipe(resolver.zod(UpdateItem), resolver.authorize(), (in
         Effect.bind("blurHash", () =>
           preItem.image === input.image
             ? Effect.succeed(preItem.blurHash)
-            : getBlurHash(preItem.image)
-        ),
+            : getBlurHash(preItem.image)),
         Effect.flatMap(({ id, modifiers, managementId, categoryId, ...data }) =>
           Effect.attemptCatchPromise(
             () =>
@@ -61,23 +60,22 @@ export default resolver.pipe(resolver.zod(UpdateItem), resolver.authorize(), (in
                   categoryItems: pipe(
                     A.findFirst(
                       preItem.categoryItems,
-                      (ci) => ci.categoryId === preItem.categoryId
+                      (ci) => ci.categoryId === preItem.categoryId,
                     ),
                     O.map(
-                      (catItem) =>
-                        ({
-                          update: {
-                            where: {
-                              id: catItem.id,
-                            },
-                            data: {
-                              Category: { connect: { id: categoryId } },
-                              position: 100,
-                            },
+                      (catItem) => ({
+                        update: {
+                          where: {
+                            id: catItem.id,
                           },
-                        } satisfies Prisma.CategoryItemUpdateManyWithoutItemNestedInput)
+                          data: {
+                            Category: { connect: { id: categoryId } },
+                            position: 100,
+                          },
+                        },
+                      } satisfies Prisma.CategoryItemUpdateManyWithoutItemNestedInput),
                     ),
-                    O.getOrUndefined
+                    O.getOrUndefined,
                   ),
                   managementRepresentation: { id: managementId },
                   modifiers: {
@@ -109,62 +107,60 @@ export default resolver.pipe(resolver.zod(UpdateItem), resolver.authorize(), (in
                               A.map((o, i) =>
                                 config._tag === "oneOf"
                                   ? {
-                                      ...o,
-                                      default: config.defaultOption === String(i),
-                                    }
+                                    ...o,
+                                    default: config.defaultOption === String(i),
+                                  }
                                   : o
-                              )
+                              ),
                             ),
                           },
                         },
-                      }))
+                      })),
                     ),
                     create: pipe(
                       modifiers,
                       A.filter((m) => m.modifierId == null),
                       A.map(
-                        (m, p) =>
-                          ({
-                            position: p,
-                            managementRepresentation: { id: m.managementId },
-                            config: {
-                              ...m.config,
-                              content: [
-                                { locale: "en", ...m.config.content.en },
-                                { locale: "he", ...m.config.content.he },
-                              ],
-                              options: pipe(
-                                m.config.options as OptionsSchemaArray,
-                                A.map((o, i) => ({
-                                  ...o,
-                                  position: i,
-                                  content: [
-                                    { locale: "en", ...o.content.en },
-                                    { locale: "he", ...o.content.he },
-                                  ],
-                                })),
-                                A.map((o) =>
-                                  m.config._tag === "oneOf"
-                                    ? {
-                                        ...o,
-                                        default: m.config.defaultOption === o.identifier,
-                                      }
-                                    : o
-                                )
+                        (m, p) => ({
+                          position: p,
+                          managementRepresentation: { id: m.managementId },
+                          config: {
+                            ...m.config,
+                            content: [
+                              { locale: "en", ...m.config.content.en },
+                              { locale: "he", ...m.config.content.he },
+                            ],
+                            options: pipe(
+                              m.config.options as OptionsSchemaArray,
+                              A.map((o, i) => ({
+                                ...o,
+                                position: i,
+                                content: [
+                                  { locale: "en", ...o.content.en },
+                                  { locale: "he", ...o.content.he },
+                                ],
+                              })),
+                              A.map((o) =>
+                                m.config._tag === "oneOf"
+                                  ? {
+                                    ...o,
+                                    default: m.config.defaultOption === o.identifier,
+                                  }
+                                  : o
                               ),
-                            },
-                          } satisfies Prisma.ItemModifierCreateWithoutItemInput)
-                      )
+                            ),
+                          },
+                        } satisfies Prisma.ItemModifierCreateWithoutItemInput),
+                      ),
                     ),
                   } satisfies Prisma.ItemModifierUncheckedUpdateManyWithoutItemNestedInput,
                 },
               }),
-            (cause) => new PrismaError("Updating item failed", { cause, resource: "Item" })
+            (cause) => new PrismaError("Updating item failed", { cause, resource: "Item" }),
           )
-        )
+        ),
       )
     ),
     Effect.provideService(AuthSessionContext, ctx.session),
-    Renu.runPromise$
-  )
-)
+    Renu.runPromise$,
+  ));

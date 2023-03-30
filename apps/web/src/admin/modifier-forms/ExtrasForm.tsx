@@ -1,41 +1,41 @@
-import { NumberInput, TextInput, Button, ActionIcon, Switch } from "@mantine/core"
-import { shekelFormatter, shekelParser } from "src/core/helpers/form"
-import { useZodForm } from "src/core/hooks/useZodForm"
-import { ExtrasSchema, ItemSchema } from "src/items/validations"
-import * as A from "fp-ts/Array"
-import { pipe } from "fp-ts/function"
-import { useEffect } from "react"
-import { Control, Controller, useFieldArray, UseFieldArrayUpdate } from "react-hook-form"
-import { PlusIcon } from "@heroicons/react/20/solid"
-import { XMarkIcon } from "@heroicons/react/24/solid"
+import { PlusIcon } from "@heroicons/react/20/solid";
+import { XMarkIcon } from "@heroicons/react/24/solid";
+import { ActionIcon, Button, NumberInput, Switch, TextInput } from "@mantine/core";
+import * as A from "fp-ts/Array";
+import { pipe } from "fp-ts/function";
+import { useEffect } from "react";
+import { Control, Controller, useFieldArray, UseFieldArrayUpdate } from "react-hook-form";
+import { shekelFormatter, shekelParser } from "src/core/helpers/form";
+import { useZodForm } from "src/core/hooks/useZodForm";
+import { ExtrasSchema, ItemSchema } from "src/items/validations";
 
 type Props = {
-  control: Control<ItemSchema>
-  update: UseFieldArrayUpdate<ItemSchema, "modifiers">
-  onDuplicate(): void
-  field: { config: ExtrasSchema }
-  index: number
-}
+  control: Control<ItemSchema>;
+  update: UseFieldArrayUpdate<ItemSchema, "modifiers">;
+  onDuplicate(): void;
+  field: { config: ExtrasSchema };
+  index: number;
+};
 
 export const ExtrasForm = (props: Props) => {
-  const { index, update, field, onDuplicate } = props
+  const { index, update, field, onDuplicate } = props;
   const { register, reset, control, handleSubmit, formState } = useZodForm({
     schema: ExtrasSchema,
     defaultValues: field.config,
-  })
+  });
 
   useEffect(() => {
-    reset(field.config)
-  }, [reset, field.config])
+    reset(field.config);
+  }, [reset, field.config]);
 
-  const { fields, append, remove } = useFieldArray({ control, name: "options" })
+  const { fields, append, remove } = useFieldArray({ control, name: "options" });
 
   const handleUpdate = handleSubmit(
     (data) => {
-      return update(index, { config: data })
+      return update(index, { config: data });
     },
-    (err) => console.log(err)
-  )
+    (err) => console.log(err),
+  );
 
   return (
     <div className="grow overflow-auto min-h-0 p-4 bg-gray-50">
@@ -109,7 +109,7 @@ export const ExtrasForm = (props: Props) => {
                 />
               </div>
             </div>
-          ))
+          )),
         )}
       </div>
       <Button
@@ -124,8 +124,7 @@ export const ExtrasForm = (props: Props) => {
             },
             price: 0,
             multi: false,
-          })
-        }
+          })}
         type="button"
         variant="outline"
         leftIcon={<PlusIcon className="h-5 w-5" />}
@@ -136,5 +135,5 @@ export const ExtrasForm = (props: Props) => {
         Update Modifier
       </Button>
     </div>
-  )
-}
+  );
+};

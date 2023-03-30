@@ -1,30 +1,30 @@
-import { useRouter } from "next/router"
-import { Routes } from "@blitzjs/next"
-import { getQueryClient, useMutation, useQuery } from "@blitzjs/rpc"
-import { useZodForm } from "src/core/hooks/useZodForm"
-import { useController } from "react-hook-form"
-import { z } from "zod"
-import impersonateUser from "src/auth/mutations/impersonateUser"
+import { Routes } from "@blitzjs/next";
+import { getQueryClient, useMutation, useQuery } from "@blitzjs/rpc";
 import {
-  Paper,
+  Autocomplete,
+  AutocompleteProps,
   Button,
+  Container,
   Input,
   Loader,
-  Container,
-  Autocomplete,
-  SegmentedControl,
   LoadingOverlay,
-  AutocompleteProps,
-} from "@mantine/core"
-import getOrgUsers from "src/users/queries/getOrgUsers"
-import { Prisma } from "database"
-import * as S from "fp-ts/string"
-import * as Eq from "fp-ts/Eq"
-import * as O from "fp-ts/Option"
-import * as NA from "fp-ts/NonEmptyArray"
-import * as A from "fp-ts/Array"
-import { pipe } from "fp-ts/function"
-import { forwardRef, ForwardRefExoticComponent, RefAttributes, Suspense, useMemo } from "react"
+  Paper,
+  SegmentedControl,
+} from "@mantine/core";
+import { Prisma } from "database";
+import * as A from "fp-ts/Array";
+import * as Eq from "fp-ts/Eq";
+import { pipe } from "fp-ts/function";
+import * as NA from "fp-ts/NonEmptyArray";
+import * as O from "fp-ts/Option";
+import * as S from "fp-ts/string";
+import { useRouter } from "next/router";
+import { forwardRef, ForwardRefExoticComponent, RefAttributes, Suspense, useMemo } from "react";
+import { useController } from "react-hook-form";
+import impersonateUser from "src/auth/mutations/impersonateUser";
+import { useZodForm } from "src/core/hooks/useZodForm";
+import getOrgUsers from "src/users/queries/getOrgUsers";
+import { z } from "zod";
 
 /*
  * This file is just for a pleasant getting started page for your new app.
@@ -34,15 +34,16 @@ import { forwardRef, ForwardRefExoticComponent, RefAttributes, Suspense, useMemo
 const eqThing = Eq.struct({
   group: S.Eq,
   value: S.Eq,
-})
+});
 
 const UserAutocomplete: ForwardRefExoticComponent<
-  Omit<AutocompleteProps, "data"> &
-    RefAttributes<HTMLInputElement> & { filter?: string; groupBy: "venue" | "organization" }
+  & Omit<AutocompleteProps, "data">
+  & RefAttributes<HTMLInputElement>
+  & { filter?: string; groupBy: "venue" | "organization" }
 > = forwardRef(({ filter = "", groupBy, ...rest }, ref) => {
   const [{ users }] = useQuery(getOrgUsers, {
     orderBy: { id: Prisma.SortOrder.asc },
-  })
+  });
 
   const data = useMemo(() => {
     return pipe(
@@ -55,22 +56,22 @@ const UserAutocomplete: ForwardRefExoticComponent<
               u.membership,
               groupBy === "venue"
                 ? A.chain((m) =>
-                    pipe(
-                      m.affiliations,
-                      A.map((a) => a.Venue.identifier)
-                    )
+                  pipe(
+                    m.affiliations,
+                    A.map((a) => a.Venue.identifier),
                   )
+                )
                 : A.map((m) => m.organization.identifier),
-              A.map((group) => ({ group, user: u }))
+              A.map((group) => ({ group, user: u })),
             )
           ),
           A.map((datum) => ({ ...datum, value: datum.user.email })),
-          A.uniq(eqThing)
+          A.uniq(eqThing),
         )
       ),
-      O.getOrElseW(() => [])
-    )
-  }, [groupBy, users])
+      O.getOrElseW(() => []),
+    );
+  }, [groupBy, users]);
 
   return (
     <Autocomplete
@@ -80,38 +81,38 @@ const UserAutocomplete: ForwardRefExoticComponent<
       data={data}
       filter={(value, item) => item.value.includes(value) || item.group.includes(value)}
     />
-  )
-})
-UserAutocomplete.displayName = "UserAutocomplete"
+  );
+});
+UserAutocomplete.displayName = "UserAutocomplete";
 
 function ImpersonateUserForm() {
-  const router = useRouter()
+  const router = useRouter();
   const form = useZodForm({
     schema: z.object({ email: z.string(), groupBy: z.enum(["venue", "organization"]) }),
     defaultValues: {
       email: "",
       groupBy: "venue",
     },
-  })
-  const { handleSubmit, setFormError, control } = form
+  });
+  const { handleSubmit, setFormError, control } = form;
 
-  const { field: groupBy } = useController({ control, name: "groupBy" })
-  const { field: email } = useController({ control, name: "email" })
+  const { field: groupBy } = useController({ control, name: "groupBy" });
+  const { field: email } = useController({ control, name: "email" });
 
-  const [impersonateUserMutation] = useMutation(impersonateUser)
+  const [impersonateUserMutation] = useMutation(impersonateUser);
 
   const onSubmit = handleSubmit(
     async (data) => {
       try {
-        await impersonateUserMutation(data)
-        getQueryClient().clear()
-        router.push(Routes.AdminHome())
+        await impersonateUserMutation(data);
+        getQueryClient().clear();
+        router.push(Routes.AdminHome());
       } catch (error: any) {
-        setFormError("Sorry, we had an unexpected error. Please try again. - " + error.toString())
+        setFormError("Sorry, we had an unexpected error. Please try again. - " + error.toString());
       }
     },
-    (err) => console.log(err)
-  )
+    (err) => console.log(err),
+  );
 
   return (
     <Container size="xs">
@@ -153,7 +154,7 @@ function ImpersonateUserForm() {
         </Button>
       </Paper>
     </Container>
-  )
+  );
 }
 
 export default function Impersonate() {
@@ -161,5 +162,5 @@ export default function Impersonate() {
     <Suspense fallback={<LoadingOverlay visible />}>
       <ImpersonateUserForm />
     </Suspense>
-  )
+  );
 }

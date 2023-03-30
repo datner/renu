@@ -1,19 +1,17 @@
-import { PayPlusCallback } from "src/payments/payplus";
-import { pipe } from "@effect/data/Function";
 import * as E from "@effect/data/Either";
-import * as Effect from "@effect/io/Effect";
+import { pipe } from "@effect/data/Function";
 import * as Str from "@effect/data/String";
+import * as Effect from "@effect/io/Effect";
 import * as P from "@effect/schema/Parser";
-import { NextApiRequest, NextApiResponse } from "next";
-import db, { OrderState } from "db";
-import {
-  prismaError,
-} from "src/core/helpers/prisma";
-import { notify } from "integrations/telegram/sendMessage";
-import { Format } from "telegraf";
-import * as Management from "@integrations/management";
 import { fullOrderInclude } from "@integrations/core/management";
+import * as Management from "@integrations/management";
+import db, { OrderState } from "db";
+import { notify } from "integrations/telegram/sendMessage";
+import { NextApiRequest, NextApiResponse } from "next";
 import { Renu } from "src/core/effect";
+import { prismaError } from "src/core/helpers/prisma";
+import { PayPlusCallback } from "src/payments/payplus";
+import { Format } from "telegraf";
 
 const handler = async (request: NextApiRequest, res: NextApiResponse) =>
   pipe(
@@ -30,7 +28,7 @@ const handler = async (request: NextApiRequest, res: NextApiResponse) =>
     ),
     Effect.flatMap((ppc) =>
       pipe(
-        Effect.gen(function* ($) {
+        Effect.gen(function*($) {
           let order = yield* $(
             Effect.attemptCatchPromise(
               () =>
@@ -51,9 +49,7 @@ const handler = async (request: NextApiRequest, res: NextApiResponse) =>
             const venueId = ppc.transaction.more_info_1;
             const pre = Format.pre("none");
             const message = "error" in e && e.error instanceof Error
-              ? `Provider Payplus reported the following error:\n ${
-                pre(e.error.message)
-              }`
+              ? `Provider Payplus reported the following error:\n ${pre(e.error.message)}`
               : `Please reach out to Payplus support for further details.`;
 
             yield* $(

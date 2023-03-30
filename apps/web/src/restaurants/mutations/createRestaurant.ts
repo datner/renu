@@ -1,8 +1,8 @@
-import { resolver } from "@blitzjs/rpc"
-import affiliateRestaurant from "src/auth/mutations/affiliateRestaurant"
-import { CreateRestaurant } from "src/auth/validations"
-import db, { Locale } from "db"
-import { z } from "zod"
+import { resolver } from "@blitzjs/rpc";
+import db, { Locale } from "db";
+import affiliateRestaurant from "src/auth/mutations/affiliateRestaurant";
+import { CreateRestaurant } from "src/auth/validations";
+import { z } from "zod";
 
 export default resolver.pipe(
   resolver.zod(CreateRestaurant.extend({ affiliate: z.boolean().optional() })),
@@ -27,10 +27,10 @@ export default resolver.pipe(
           },
         },
       },
-    })
+    });
 
-    if (affiliate) await affiliateRestaurant({ restaurantId: restaurant.id }, ctx)
+    if (affiliate) await affiliateRestaurant({ restaurantId: restaurant.id }, ctx);
 
-    return restaurant
-  }
-)
+    return restaurant;
+  },
+);

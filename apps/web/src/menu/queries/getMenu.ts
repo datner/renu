@@ -1,11 +1,11 @@
 import { resolver } from "@blitzjs/rpc";
 import * as Schema from "@effect/schema/Schema";
-import { Common } from "shared/schema";
 import db from "db";
+import { Common } from "shared/schema";
 import { selectTheEntireMenu } from "../prisma";
 
 const GetMenu = Schema.struct({
-  identifier: Common.Slug
+  identifier: Common.Slug,
 });
 
 export default resolver.pipe(

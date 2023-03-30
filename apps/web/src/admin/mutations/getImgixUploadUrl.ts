@@ -1,11 +1,11 @@
-import { resolver } from "@blitzjs/rpc"
-import { z } from "zod"
-import { Slug } from "src/auth/validations"
+import { resolver } from "@blitzjs/rpc";
+import { Slug } from "src/auth/validations";
+import { z } from "zod";
 
 export const UploadImgixImage = z.object({
   name: z.string().min(1),
   venue: Slug,
-})
+});
 
 export default resolver.pipe(
   resolver.zod(UploadImgixImage),
@@ -16,6 +16,6 @@ export default resolver.pipe(
       headers: {
         Authorization: `Bearer ${process.env.IMGIX_API_KEY}`,
       },
-    }
-  }
-)
+    };
+  },
+);

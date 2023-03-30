@@ -1,18 +1,18 @@
 import { resolver } from "@blitzjs/rpc";
+import { pipe } from "@effect/data/Function";
+import * as O from "@effect/data/Option";
 import * as Effect from "@effect/io/Effect";
+import * as Parser from "@effect/schema/Parser";
 import * as Schema from "@effect/schema/Schema";
 import * as Optic from "@fp-ts/optic";
-import { getBlurHash } from "src/core/helpers/plaiceholder";
 import { Prisma } from "database";
 import db from "db";
-import { CreateItem, CreateItemSchema, toCreateItem } from "../validations";
-import { pipe } from "@effect/data/Function";
-import { z } from "zod";
-import * as Parser from "@effect/schema/Parser";
-import { PrismaError } from "src/core/helpers/prisma";
-import * as Renu from "src/core/effect/runtime";
-import * as O from "@effect/data/Option";
 import { Session } from "src/auth";
+import * as Renu from "src/core/effect/runtime";
+import { getBlurHash } from "src/core/helpers/plaiceholder";
+import { PrismaError } from "src/core/helpers/prisma";
+import { z } from "zod";
+import { CreateItem, CreateItemSchema, toCreateItem } from "../validations";
 
 export type CreateItemOutput = z.infer<typeof CreateItem>;
 const createDbItem = (data: Prisma.ItemCreateInput) =>
@@ -22,8 +22,7 @@ const createDbItem = (data: Prisma.ItemCreateInput) =>
         include: { content: true, modifiers: true },
         data,
       }),
-    (cause) =>
-      new PrismaError("failed to create new item", { cause, resource: "Item" }),
+    (cause) => new PrismaError("failed to create new item", { cause, resource: "Item" }),
   );
 
 const input_ = Optic.id<Prisma.ItemCreateInput>();
@@ -41,9 +40,7 @@ const categoryItemPosition = input_
   .nonNullable()
   .at("create")
   .nonNullable()
-  .filter((s): s is Prisma.CategoryItemCreateWithoutItemInput =>
-    !Array.isArray(s)
-  )
+  .filter((s): s is Prisma.CategoryItemCreateWithoutItemInput => !Array.isArray(s))
   .at("position");
 
 const setPositionInCategory = <T extends ReturnType<typeof toCreateItem>>(
@@ -78,6 +75,6 @@ const createItem = resolver.pipe(
   Effect.flatMap(createDbItem),
   Session.authorizeResolver,
   Renu.runPromise$,
-)
+);
 
 export default createItem;

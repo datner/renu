@@ -1,53 +1,43 @@
-import Link from "next/link"
-import login from "src/auth/mutations/login"
-import { useMutation } from "@blitzjs/rpc"
-import { BlitzPage, Routes } from "@blitzjs/next"
-import Layout from "src/core/layouts/Layout"
-import {
-  Container,
-  Title,
-  Text,
-  Anchor,
-  Paper,
-  TextInput,
-  PasswordInput,
-  Group,
-  Button,
-} from "@mantine/core"
-import { useZodForm } from "src/core/hooks/useZodForm"
-import { Login } from "src/auth/validations"
-import { AuthenticationError } from "blitz"
-import { useRouter } from "next/router"
+import { BlitzPage, Routes } from "@blitzjs/next";
+import { useMutation } from "@blitzjs/rpc";
+import { Anchor, Button, Container, Group, Paper, PasswordInput, Text, TextInput, Title } from "@mantine/core";
+import { AuthenticationError } from "blitz";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import login from "src/auth/mutations/login";
+import { Login } from "src/auth/validations";
+import { useZodForm } from "src/core/hooks/useZodForm";
+import Layout from "src/core/layouts/Layout";
 
 function LoginForm() {
-  const router = useRouter()
-  const [loginMutation] = useMutation(login)
+  const router = useRouter();
+  const [loginMutation] = useMutation(login);
   const form = useZodForm({
     schema: Login,
     defaultValues: {
       email: "",
       password: "",
     },
-  })
+  });
 
   const handleSubmit = form.handleSubmit(async (data) => {
     try {
-      await loginMutation(data)
-      router.push(Routes.AdminHome())
+      await loginMutation(data);
+      router.push(Routes.AdminHome());
     } catch (error: unknown) {
       if (error instanceof AuthenticationError) {
-        return form.setFormError("Sorry, those credentials are invalid")
+        return form.setFormError("Sorry, those credentials are invalid");
       }
 
       if (error instanceof Error) {
         return form.setFormError(
-          "Sorry, we had an unexpected error. Please try again. - " + error.toString()
-        )
+          "Sorry, we had an unexpected error. Please try again. - " + error.toString(),
+        );
       }
 
-      return form.setFormError("Sorry, we had an unexpected error. Please try again.")
+      return form.setFormError("Sorry, we had an unexpected error. Please try again.");
     }
-  })
+  });
 
   return (
     <Paper
@@ -81,7 +71,7 @@ function LoginForm() {
         Sign In
       </Button>
     </Paper>
-  )
+  );
 }
 
 const Authentication: BlitzPage = () => {
@@ -99,11 +89,11 @@ const Authentication: BlitzPage = () => {
 
       <LoginForm />
     </Container>
-  )
-}
+  );
+};
 
-Authentication.redirectAuthenticatedTo = Routes.AdminHome()
-Authentication.suppressFirstRenderFlicker = true
-Authentication.getLayout = (page) => <Layout title="Home">{page}</Layout>
+Authentication.redirectAuthenticatedTo = Routes.AdminHome();
+Authentication.suppressFirstRenderFlicker = true;
+Authentication.getLayout = (page) => <Layout title="Home">{page}</Layout>;
 
-export default Authentication
+export default Authentication;

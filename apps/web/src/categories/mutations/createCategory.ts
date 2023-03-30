@@ -1,30 +1,29 @@
-import db from "db"
-import { Locale, Prisma } from "database"
-import { CreateCategory } from "../validations"
-import * as Effect from "@effect/io/Effect"
-import * as P from "@effect/schema/Parser"
-import { pipe } from "@effect/data/Function"
-import { Ctx } from "@blitzjs/next"
-import { Session } from "src/auth"
-import { prismaError } from "src/core/helpers/prisma"
-import { Renu } from "src/core/effect"
+import { Ctx } from "@blitzjs/next";
+import { pipe } from "@effect/data/Function";
+import * as Effect from "@effect/io/Effect";
+import * as P from "@effect/schema/Parser";
+import { Locale, Prisma } from "database";
+import db from "db";
+import { Session } from "src/auth";
+import { Renu } from "src/core/effect";
+import { prismaError } from "src/core/helpers/prisma";
+import { CreateCategory } from "../validations";
 
 export const handler = (input: CreateCategory, ctx: Ctx) =>
   pipe(
     P.decodeEffect(CreateCategory)(input),
     Effect.map(
-      ({ identifier, en, he }) =>
-        ({
-          identifier,
-          content: {
-            createMany: {
-              data: [
-                { ...he, locale: Locale.he },
-                { ...en, locale: Locale.en },
-              ],
-            },
+      ({ identifier, en, he }) => ({
+        identifier,
+        content: {
+          createMany: {
+            data: [
+              { ...he, locale: Locale.he },
+              { ...en, locale: Locale.en },
+            ],
           },
-        } satisfies Prisma.CategoryCreateInput)
+        },
+      } satisfies Prisma.CategoryCreateInput),
     ),
     Effect.zip(Session.Session),
     Effect.flatMap(([input, session]) =>
@@ -40,11 +39,11 @@ export const handler = (input: CreateCategory, ctx: Ctx) =>
               content: true,
             },
           }),
-        prismaError("Category")
+        prismaError("Category"),
       )
     ),
     Session.authorize(ctx),
-    Renu.runPromise$
-  )
+    Renu.runPromise$,
+  );
 
-export default handler
+export default handler;

@@ -1,10 +1,10 @@
-import { useMutation } from "@blitzjs/rpc"
-import { Menu } from "@headlessui/react"
-import logout from "src/auth/mutations/logout"
-import clsx from "clsx"
+import { useMutation } from "@blitzjs/rpc";
+import { Menu } from "@headlessui/react";
+import clsx from "clsx";
+import logout from "src/auth/mutations/logout";
 
 export const LogoutButton = () => {
-  const [signout] = useMutation(logout)
+  const [signout] = useMutation(logout);
 
   return (
     <Menu.Item key="logout">
@@ -17,5 +17,5 @@ export const LogoutButton = () => {
         </button>
       )}
     </Menu.Item>
-  )
-}
+  );
+};

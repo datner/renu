@@ -1,8 +1,8 @@
-import { resolver } from "@blitzjs/rpc"
-import { enforceSuperAdminIfNotCurrentOrganization } from "src/auth/helpers/enforceSuperAdminIfNoCurrentOrganization"
-import { setDefaultOrganizationIdNoFilter } from "src/auth/helpers/setDefaultOrganizationId"
-import { IdOrSlug } from "src/core/helpers/zod"
-import db, { GlobalRole, MembershipRole, Prisma } from "db"
+import { resolver } from "@blitzjs/rpc";
+import db, { GlobalRole, MembershipRole, Prisma } from "db";
+import { enforceSuperAdminIfNotCurrentOrganization } from "src/auth/helpers/enforceSuperAdminIfNoCurrentOrganization";
+import { setDefaultOrganizationIdNoFilter } from "src/auth/helpers/setDefaultOrganizationId";
+import { IdOrSlug } from "src/core/helpers/zod";
 
 export default resolver.pipe(
   resolver.authorize([
@@ -15,20 +15,19 @@ export default resolver.pipe(
   setDefaultOrganizationIdNoFilter,
   enforceSuperAdminIfNotCurrentOrganization,
   (input) => {
-    const data = { deleted: new Date() }
-    const where: Prisma.ItemWhereUniqueInput =
-      "id" in input
-        ? { id: input.id }
-        : {
-            organizationId_identifier: {
-              organizationId: input.organizationId,
-              identifier: input.identifier,
-            },
-          }
+    const data = { deleted: new Date() };
+    const where: Prisma.ItemWhereUniqueInput = "id" in input
+      ? { id: input.id }
+      : {
+        organizationId_identifier: {
+          organizationId: input.organizationId,
+          identifier: input.identifier,
+        },
+      };
 
     return db.item.update({
       where,
       data,
-    })
-  }
-)
+    });
+  },
+);

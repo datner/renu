@@ -1,23 +1,18 @@
-import {
-  ChevronDownIcon,
-  GlobeAltIcon,
-  MagnifyingGlassIcon,
-  PlusSmallIcon,
-} from "@heroicons/react/24/solid"
-import { Menu } from "@headlessui/react"
-import { useLocale } from "src/core/hooks/useLocale"
-import { useRouter } from "next/router"
-import { Fragment, Suspense } from "react"
-import { ChangeVenueMenu } from "src/admin/components/ChangeVenueMenu"
-import { Transition } from "@headlessui/react"
-import { LogoutButton } from "src/admin/components/LogoutButton"
-import Link from "next/link"
-import { Routes } from "@blitzjs/next"
-import Image from "next/image"
+import { Routes } from "@blitzjs/next";
+import { Menu } from "@headlessui/react";
+import { Transition } from "@headlessui/react";
+import { ChevronDownIcon, GlobeAltIcon, MagnifyingGlassIcon, PlusSmallIcon } from "@heroicons/react/24/solid";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/router";
+import { Fragment, Suspense } from "react";
+import { ChangeVenueMenu } from "src/admin/components/ChangeVenueMenu";
+import { LogoutButton } from "src/admin/components/LogoutButton";
+import { useLocale } from "src/core/hooks/useLocale";
 
 export function Header() {
-  const router = useRouter()
-  const locale = useLocale()
+  const router = useRouter();
+  const locale = useLocale();
   return (
     <header className="w-full">
       <div className="relative z-20 flex-shrink-0 h-16 bg-white border-b border-gray-200 shadow-sm flex">
@@ -112,5 +107,5 @@ export function Header() {
         </div>
       </div>
     </header>
-  )
+  );
 }

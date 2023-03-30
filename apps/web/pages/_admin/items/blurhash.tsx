@@ -1,14 +1,14 @@
-import { useMutation } from "@blitzjs/rpc"
-import { LoadingOverlay } from "@mantine/core"
-import { Suspense, useState } from "react"
-import Confetti from "react-confetti"
-import blurhashify from "src/items/mutations/_admin/blurhashify"
+import { useMutation } from "@blitzjs/rpc";
+import { LoadingOverlay } from "@mantine/core";
+import { Suspense, useState } from "react";
+import Confetti from "react-confetti";
+import blurhashify from "src/items/mutations/_admin/blurhashify";
 
 function Button() {
-  const [confetti, setConfetti] = useState(false)
+  const [confetti, setConfetti] = useState(false);
   const [doTheThing] = useMutation(blurhashify, {
     onSuccess: () => setConfetti(true),
-  })
+  });
   return (
     <>
       {confetti && (
@@ -23,7 +23,7 @@ function Button() {
         blurhashify
       </button>
     </>
-  )
+  );
 }
 
 export default function _AdminItemsBlurhash() {
@@ -33,5 +33,5 @@ export default function _AdminItemsBlurhash() {
         <Button />
       </div>
     </Suspense>
-  )
+  );
 }

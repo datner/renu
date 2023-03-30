@@ -1,9 +1,9 @@
-import { Id, Slug } from "src/core/helpers/zod"
-import { z } from "zod"
+import { Id, Slug } from "src/core/helpers/zod";
+import { z } from "zod";
 
 const Content = z.object({
   name: z.string(),
-})
+});
 
 export const CreateVenueSchema = z.object({
   identifier: Slug,
@@ -12,4 +12,4 @@ export const CreateVenueSchema = z.object({
   memberId: Id,
   he: Content,
   en: Content,
-})
+});

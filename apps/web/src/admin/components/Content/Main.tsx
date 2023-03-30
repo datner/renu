@@ -1,9 +1,9 @@
-import { ReactNode } from "react"
+import { ReactNode } from "react";
 
-type Props = { children?: ReactNode }
+type Props = { children?: ReactNode };
 
 export function Main(props: Props) {
-  const { children } = props
+  const { children } = props;
   return (
     <main className="relative min-h-0 grow flex flex-col overflow-y-auto">
       <section
@@ -16,5 +16,5 @@ export function Main(props: Props) {
         {children}
       </section>
     </main>
-  )
+  );
 }

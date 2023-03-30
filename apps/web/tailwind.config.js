@@ -1,5 +1,5 @@
-const plugin = require("tailwindcss/plugin")
-const defaultTheme = require("tailwindcss/defaultTheme")
+const plugin = require("tailwindcss/plugin");
+const defaultTheme = require("tailwindcss/defaultTheme");
 
 /** @type {import('tailwindcss').Config} */
 module.exports = {
@@ -103,13 +103,13 @@ module.exports = {
     require("@headlessui/tailwindcss"),
     require("daisyui"),
     require("@tailwindcss/line-clamp"),
-    plugin(function ({ addVariant, matchVariant }) {
-      addVariant("error", ["&[aria-invalid=true]", "&:invalid"])
-      addVariant("error", ["&[aria-invalid=true]", "&:invalid"])
+    plugin(function({ addVariant, matchVariant }) {
+      addVariant("error", ["&[aria-invalid=true]", "&:invalid"]);
+      addVariant("error", ["&[aria-invalid=true]", "&:invalid"]);
       matchVariant(
         "5nth",
         (value) => {
-          return `&:nth-child(5n+${value})`
+          return `&:nth-child(5n+${value})`;
         },
         {
           values: {
@@ -119,12 +119,12 @@ module.exports = {
             4: "4",
             5: "5",
           },
-        }
-      )
+        },
+      );
       matchVariant(
         "nth",
         (value) => {
-          return `&:nth-child(${value})`
+          return `&:nth-child(${value})`;
         },
         {
           values: {
@@ -134,12 +134,12 @@ module.exports = {
             4: "4",
             5: "5",
           },
-        }
-      )
+        },
+      );
       matchVariant(
         "group-5nth",
         (value) => {
-          return `:merge(.group):nth-child(5n+${value}) &`
+          return `:merge(.group):nth-child(5n+${value}) &`;
         },
         {
           values: {
@@ -149,8 +149,8 @@ module.exports = {
             4: "4",
             5: "5",
           },
-        }
-      )
+        },
+      );
     }),
   ],
-}
+};

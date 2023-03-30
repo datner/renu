@@ -1,16 +1,16 @@
-import { titleFor } from "src/core/helpers/content"
-import { useLocale } from "src/core/hooks/useLocale"
-import * as _Menu from "src/menu/schema"
-import { forwardRef, memo } from "react"
-import { clsx } from "@mantine/core"
+import { clsx } from "@mantine/core";
+import { forwardRef, memo } from "react";
+import { titleFor } from "src/core/helpers/content";
+import { useLocale } from "src/core/hooks/useLocale";
+import * as _Menu from "src/menu/schema";
 
 type Props = {
-  category: _Menu.Category
-}
+  category: _Menu.Category;
+};
 
 export const CategoryHeader = memo(
   forwardRef<HTMLDivElement, Props>(({ category }, ref) => {
-    const title = titleFor(useLocale())
+    const title = titleFor(useLocale());
 
     return (
       <div ref={ref} className="mb-2 px-4 mx-0.5 py-1 font-medium text-gray-800">
@@ -23,14 +23,14 @@ export const CategoryHeader = memo(
               "group-5nth-3:text-ginger-800 group-5nth-3:decoration-ginger-400",
               "group-5nth-4:text-coral-800 group-5nth-4:decoration-coral-400",
               "group-5nth-5:text-blush-800 group-5nth-5:decoration-blush-400",
-            ]
+            ],
           )}
         >
           {title(category)}
         </h3>
       </div>
-    )
-  })
-)
+    );
+  }),
+);
 
-CategoryHeader.displayName = "CategoryHeader"
+CategoryHeader.displayName = "CategoryHeader";

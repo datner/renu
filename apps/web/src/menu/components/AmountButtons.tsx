@@ -1,12 +1,12 @@
 export interface AmountButtonsProps {
-  amount: number
-  onIncrement(): void
-  onDecrement(): void
-  minimum: number
+  amount: number;
+  onIncrement(): void;
+  onDecrement(): void;
+  minimum: number;
 }
 
 export function AmountButtons(props: AmountButtonsProps) {
-  const { amount, minimum, onDecrement, onIncrement } = props
+  const { amount, minimum, onDecrement, onIncrement } = props;
 
   return (
     <div className="btn-group w-full rtl:flex-row-reverse bg-white">
@@ -20,5 +20,5 @@ export function AmountButtons(props: AmountButtonsProps) {
         +
       </button>
     </div>
-  )
+  );
 }

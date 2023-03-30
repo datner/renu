@@ -24,4 +24,4 @@
 //   expect(linkElement).toBeInTheDocument()
 // })
 
-export {}
+export {};

@@ -1,6 +1,6 @@
-import { resolver } from "@blitzjs/rpc"
-import db, { GlobalRole, MembershipRole } from "db"
-import { CreateOrganizationSchema } from "../validations"
+import { resolver } from "@blitzjs/rpc";
+import db, { GlobalRole, MembershipRole } from "db";
+import { CreateOrganizationSchema } from "../validations";
 
 export default resolver.pipe(
   resolver.zod(CreateOrganizationSchema),
@@ -19,5 +19,5 @@ export default resolver.pipe(
       include: {
         memberships: true,
       },
-    })
-)
+    }),
+);

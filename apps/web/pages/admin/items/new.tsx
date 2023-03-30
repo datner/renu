@@ -1,11 +1,11 @@
-import { BlitzPage } from "@blitzjs/next"
-import AdminItemsItem from "./[identifier]"
-import { Aside } from "src/admin/components/Aside"
-import { Content } from "src/admin/components/Content"
-import { CreateItemForm } from "src/admin/components/CreateItemForm"
-import { Suspense } from "react"
-import { LoadingOverlay } from "@mantine/core"
-import { gSSP } from "src/blitz-server"
+import { BlitzPage } from "@blitzjs/next";
+import { LoadingOverlay } from "@mantine/core";
+import { Suspense } from "react";
+import { Aside } from "src/admin/components/Aside";
+import { Content } from "src/admin/components/Content";
+import { CreateItemForm } from "src/admin/components/CreateItemForm";
+import { gSSP } from "src/blitz-server";
+import AdminItemsItem from "./[identifier]";
 
 const AdminItemsNew: BlitzPage = () => {
   return (
@@ -23,19 +23,19 @@ const AdminItemsNew: BlitzPage = () => {
         </Suspense>
       }
     />
-  )
-}
+  );
+};
 
-AdminItemsNew.authenticate = AdminItemsItem.authenticate
+AdminItemsNew.authenticate = AdminItemsItem.authenticate;
 
-AdminItemsNew.getLayout = AdminItemsItem.getLayout
+AdminItemsNew.getLayout = AdminItemsItem.getLayout;
 
 export const getServerSideProps = gSSP(async (ctx) => {
-  const { locale } = ctx
+  const { locale } = ctx;
 
   return {
     props: { messages: (await import(`src/core/messages/${locale}.json`)).default },
-  }
-})
+  };
+});
 
-export default AdminItemsNew
+export default AdminItemsNew;

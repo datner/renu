@@ -1,27 +1,27 @@
-import { hash256 } from "@blitzjs/auth"
-import { Ctx } from "blitz"
-import forgotPassword from "./forgotPassword"
-import db from "db"
-import previewEmail from "preview-email"
-import { beforeEach, describe, vi, it, expect } from "vitest"
+import { hash256 } from "@blitzjs/auth";
+import { Ctx } from "blitz";
+import db from "db";
+import previewEmail from "preview-email";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import forgotPassword from "./forgotPassword";
 
 beforeEach(async () => {
-  await db.$reset()
-})
+  await db.$reset();
+});
 
 vi.mock("@blitzjs/auth", async () => {
-  const blitzjsAuth = await vi.importActual<Record<string, any>>("@blitzjs/auth")
+  const blitzjsAuth = await vi.importActual<Record<string, any>>("@blitzjs/auth");
   return {
     ...blitzjsAuth,
     generateToken: vi.fn().mockReturnValue("test-token"),
-  }
-})
-vi.mock("preview-email")
+  };
+});
+vi.mock("preview-email");
 
 describe.skip("forgotPassword mutation", () => {
   it("does not throw error if user doesn't exist", async () => {
-    await expect(forgotPassword({ email: "no-user@email.com" }, {} as Ctx)).resolves.not.toThrow()
-  })
+    await expect(forgotPassword({ email: "no-user@email.com" }, {} as Ctx)).resolves.not.toThrow();
+  });
 
   it("works correctly", async () => {
     // Create test user
@@ -45,24 +45,24 @@ describe.skip("forgotPassword mutation", () => {
         },
       },
       include: { tokens: true },
-    })
+    });
 
     // Invoke the mutation
-    await forgotPassword({ email: user.email }, {} as Ctx)
+    await forgotPassword({ email: user.email }, {} as Ctx);
 
-    const tokens = await db.token.findMany({ where: { userId: user.id } })
-    const token = tokens[0]
-    if (!user.tokens[0]) throw new Error("Missing user token")
-    if (!token) throw new Error("Missing token")
+    const tokens = await db.token.findMany({ where: { userId: user.id } });
+    const token = tokens[0];
+    if (!user.tokens[0]) throw new Error("Missing user token");
+    if (!token) throw new Error("Missing token");
 
     // delete's existing tokens
-    expect(tokens.length).toBe(1)
+    expect(tokens.length).toBe(1);
 
-    expect(token.id).not.toBe(user.tokens[0].id)
-    expect(token.type).toBe("RESET_PASSWORD")
-    expect(token.sentTo).toBe(user.email)
-    expect(token.hashedToken).toBe(hash256("test-token"))
-    expect(token.expiresAt > new Date()).toBe(true)
-    expect(previewEmail).toBeCalled()
-  })
-})
+    expect(token.id).not.toBe(user.tokens[0].id);
+    expect(token.type).toBe("RESET_PASSWORD");
+    expect(token.sentTo).toBe(user.email);
+    expect(token.hashedToken).toBe(hash256("test-token"));
+    expect(token.expiresAt > new Date()).toBe(true);
+    expect(previewEmail).toBeCalled();
+  });
+});

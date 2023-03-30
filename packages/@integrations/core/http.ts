@@ -1,10 +1,10 @@
-import * as Layer from "@effect/io/Layer";
-import * as Effect from "@effect/io/Effect";
 import * as Context from "@effect/data/Context";
 import * as Data from "@effect/data/Data";
+import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as P from "@effect/data/Predicate";
-import { pipe } from "@effect/data/Function";
+import * as Effect from "@effect/io/Effect";
+import * as Layer from "@effect/io/Layer";
 import { inspect } from "util";
 
 export interface HttpConfig {
@@ -57,26 +57,19 @@ export class HttpResponseError extends Data.TaggedClass("HttpResponseError")<{
   response?: Response;
 }> {}
 
-export class HttpNotFoundError
-  extends Data.TaggedClass("HttpNotFoundError")<GenericError> {}
+export class HttpNotFoundError extends Data.TaggedClass("HttpNotFoundError")<GenericError> {}
 
-export class HttpBadRequestError
-  extends Data.TaggedClass("HttpBadRequestError")<GenericError> {}
+export class HttpBadRequestError extends Data.TaggedClass("HttpBadRequestError")<GenericError> {}
 
-export class HttpUnauthorizedError
-  extends Data.TaggedClass("HttpUnauthorizedError")<GenericError> {}
+export class HttpUnauthorizedError extends Data.TaggedClass("HttpUnauthorizedError")<GenericError> {}
 
-export class HttpForbiddenError
-  extends Data.TaggedClass("HttpForbiddenError")<GenericError> {}
+export class HttpForbiddenError extends Data.TaggedClass("HttpForbiddenError")<GenericError> {}
 
-export class HttpInternalServerError
-  extends Data.TaggedClass("HttpInternalServerError")<GenericError> {}
+export class HttpInternalServerError extends Data.TaggedClass("HttpInternalServerError")<GenericError> {}
 
-export class HttpUnprocessableEntityError
-  extends Data.TaggedClass("HttpUnprocessableEntityError")<GenericError> {}
+export class HttpUnprocessableEntityError extends Data.TaggedClass("HttpUnprocessableEntityError")<GenericError> {}
 
-export class HttpRedirectAttempt
-  extends Data.TaggedClass("HttpRedirectAttempt")<GenericError> {}
+export class HttpRedirectAttempt extends Data.TaggedClass("HttpRedirectAttempt")<GenericError> {}
 
 interface HttpParseErrorOptions extends ErrorOptions {
   readonly target: "json" | "text"; // add more as needed
@@ -95,8 +88,7 @@ export type HttpRequest = (
   init?: RequestInit | undefined,
 ) => Effect.Effect<HttpConfigService, HttpError, Response>;
 
-export const request = (...args: Parameters<HttpRequest>) =>
-  Effect.flatMap(HttpService, (s) => s.request(...args));
+export const request = (...args: Parameters<HttpRequest>) => Effect.flatMap(HttpService, (s) => s.request(...args));
 
 export const toJson = (res: Response) =>
   Effect.attemptCatchPromise(
@@ -120,10 +112,8 @@ export const toText = (res: Response) =>
       }),
   );
 
-const isRequestError = (e: unknown): e is HttpRequestError =>
-  e instanceof HttpRequestError;
-const isResponseError = (e: unknown): e is HttpResponseError =>
-  e instanceof HttpResponseError;
+const isRequestError = (e: unknown): e is HttpRequestError => e instanceof HttpRequestError;
+const isResponseError = (e: unknown): e is HttpResponseError => e instanceof HttpResponseError;
 
 export const isRetriable = P.or(isRequestError, isResponseError);
 
@@ -193,9 +183,7 @@ export const layer = Layer.succeed(HttpService, {
               req.headers.append(key, value);
             }
 
-            req.clone().json().then((b) =>
-              console.log(inspect(b, false, null, true))
-            );
+            req.clone().json().then((b) => console.log(inspect(b, false, null, true)));
 
             return fetch(req);
           },

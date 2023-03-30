@@ -1,19 +1,19 @@
-import { Dialog, Transition } from "@headlessui/react"
-import { useTranslations } from "next-intl"
-import Confetti from "react-confetti"
-import { Fragment, useState } from "react"
-import { invoke } from "@blitzjs/rpc"
-import sendComment from "../mutations/sendComment"
+import { invoke } from "@blitzjs/rpc";
+import { Dialog, Transition } from "@headlessui/react";
+import { useTranslations } from "next-intl";
+import { Fragment, useState } from "react";
+import Confetti from "react-confetti";
+import sendComment from "../mutations/sendComment";
 
 interface Props {
-  readonly show: boolean
-  readonly onClose: () => void
+  readonly show: boolean;
+  readonly onClose: () => void;
 }
 
 export function FeedbackModal(props: Props) {
-  const { show, onClose } = props
-  const t = useTranslations("menu.Components.FeedbackModal")
-  const [comment, setComment] = useState("")
+  const { show, onClose } = props;
+  const t = useTranslations("menu.Components.FeedbackModal");
+  const [comment, setComment] = useState("");
   return (
     <>
       <Transition appear show={show} as={Fragment}>
@@ -60,8 +60,8 @@ export function FeedbackModal(props: Props) {
                       type="button"
                       className="btn btn-primary w-full"
                       onClick={() => {
-                        invoke(sendComment, { comment })
-                        onClose()
+                        invoke(sendComment, { comment });
+                        onClose();
                       }}
                     >
                       {t("send")}
@@ -74,5 +74,5 @@ export function FeedbackModal(props: Props) {
         </Dialog>
       </Transition>
     </>
-  )
+  );
 }

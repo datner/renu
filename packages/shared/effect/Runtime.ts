@@ -1,51 +1,51 @@
-import * as ConfigProvider from "@effect/io/Config/Provider"
-import * as Scope from "@effect/io/Scope"
-import * as Exit from "@effect/io/Exit"
-import * as Runtime from "@effect/io/Runtime"
-import * as Layer from "@effect/io/Layer"
-import * as Effect from "@effect/io/Effect"
-import { pipe } from "@fp-ts/core/Function"
+import * as ConfigProvider from "@effect/io/Config/Provider";
+import * as Effect from "@effect/io/Effect";
+import * as Exit from "@effect/io/Exit";
+import * as Layer from "@effect/io/Layer";
+import * as Runtime from "@effect/io/Runtime";
+import * as Scope from "@effect/io/Scope";
+import { pipe } from "@fp-ts/core/Function";
 
 export const makeRuntime = <R, E, A>(layer: Layer.Layer<R, E, A>) =>
-  Effect.gen(function* ($) {
-    const scope = yield* $(Scope.make())
-    const env = yield* $(Layer.buildWithScope(layer, scope))
-    const runtime = yield* $(pipe(Effect.runtime<A>(), Effect.scoped, Effect.provideContext(env)))
+  Effect.gen(function*($) {
+    const scope = yield* $(Scope.make());
+    const env = yield* $(Layer.buildWithScope(layer, scope));
+    const runtime = yield* $(pipe(Effect.runtime<A>(), Effect.scoped, Effect.provideContext(env)));
 
     return {
       runtime,
       clean: Scope.close(scope, Exit.unit()),
-    }
-  })
+    };
+  });
 
 export const getAmbientRuntime =
   (cleanupSymbol: symbol) =>
   <E, A extends { runtime: Runtime.Runtime<any>; clean: Effect.Effect<never, never, void> }>(
-    runtimeEffect: Effect.Effect<never, E, A>
+    runtimeEffect: Effect.Effect<never, E, A>,
   ) => {
-    const existing = process.listeners("beforeExit").find((listener) => cleanupSymbol in listener)
+    const existing = process.listeners("beforeExit").find((listener) => cleanupSymbol in listener);
 
     if (existing) {
-      process.removeListener("beforeExit", existing)
+      process.removeListener("beforeExit", existing);
     }
 
     const runtime = new Promise<void>((resolve) => {
-      existing?.(0)
-      resolve()
-    }).then(() => Effect.runPromise(runtimeEffect))
+      existing?.(0);
+      resolve();
+    }).then(() => Effect.runPromise(runtimeEffect));
 
     const cleanup = Object.assign(
       () =>
         Effect.runPromise(
           pipe(
             Effect.promise(() => runtime),
-            Effect.flatMap((_) => _.clean)
-          )
+            Effect.flatMap((_) => _.clean),
+          ),
         ),
-      { [cleanupSymbol]: true }
-    )
+      { [cleanupSymbol]: true },
+    );
 
-    process.on("beforeExit", cleanup)
+    process.on("beforeExit", cleanup);
 
-    return runtime
-  }
+    return runtime;
+  };

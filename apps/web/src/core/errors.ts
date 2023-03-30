@@ -1,7 +1,7 @@
-import Superjson from "superjson"
+import Superjson from "superjson";
 
 export class ManagementUnreachableError extends Error {
-  name = "ManagementUnreachableError"
+  name = "ManagementUnreachableError";
 }
 
-Superjson.registerClass(ManagementUnreachableError, { identifier: "ManagementUnreachableError" })
+Superjson.registerClass(ManagementUnreachableError, { identifier: "ManagementUnreachableError" });

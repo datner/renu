@@ -1,15 +1,15 @@
-import * as E from "fp-ts/Either"
-import * as TE from "fp-ts/TaskEither"
-import { pipe } from "fp-ts/function"
-import { NextApiRequest, NextApiResponse } from "next"
-import { ensureType } from "src/core/helpers/zod"
-import { updateOrder } from "src/orders/helpers/prisma"
-import { z } from "zod"
-import { OrderState } from "database"
-import { Format } from "telegraf"
-import { sendMessage } from "integrations/telegram/sendMessage"
-import { match, P } from "ts-pattern"
-import { ORDER_STATUS } from "@integrations/dorix/types"
+import { ORDER_STATUS } from "@integrations/dorix/types";
+import { OrderState } from "database";
+import * as E from "fp-ts/Either";
+import { pipe } from "fp-ts/function";
+import * as TE from "fp-ts/TaskEither";
+import { sendMessage } from "integrations/telegram/sendMessage";
+import { NextApiRequest, NextApiResponse } from "next";
+import { ensureType } from "src/core/helpers/zod";
+import { updateOrder } from "src/orders/helpers/prisma";
+import { Format } from "telegraf";
+import { match, P } from "ts-pattern";
+import { z } from "zod";
 
 const DorixSuccess = z.object({
   endpoint: z.string().url(),
@@ -26,7 +26,7 @@ const DorixSuccess = z.object({
     id: z.string(),
     name: z.string(),
   }),
-})
+});
 
 const DorixFailure = z.object({
   endpoint: z.string().url(),
@@ -46,9 +46,9 @@ const DorixFailure = z.object({
       stack: z.string(),
     })
     .optional(),
-})
+});
 
-const DorixResponse = z.union([DorixSuccess, DorixFailure])
+const DorixResponse = z.union([DorixSuccess, DorixFailure]);
 
 const ensureSuccess = (response: z.infer<typeof DorixResponse>) =>
   pipe(
@@ -58,15 +58,18 @@ const ensureSuccess = (response: z.infer<typeof DorixResponse>) =>
       (r) => ({
         tag: "DorixError",
         error: new Error((r as z.infer<typeof DorixFailure>).error?.message),
-      })
-    )
-  )
+      }),
+    ),
+  );
 
 const handler = async (req: NextApiRequest, res: NextApiResponse) =>
   pipe(
     req,
-    E.fromPredicate(req => req.method?.toUpperCase() === "POST", () => new Error('this endpoint only supports POST requests')),
-    E.map((req) => req.body),
+    E.fromPredicate(req => req.method?.toUpperCase() === "POST", () =>
+      new Error("this endpoint only supports POST requests")),
+    E.map((req) =>
+      req.body
+    ),
     E.chainW(ensureType(DorixResponse)),
     E.chainW(ensureSuccess),
     TE.fromEither,
@@ -88,15 +91,15 @@ const handler = async (req: NextApiRequest, res: NextApiResponse) =>
           Format.pre("none")(
             "error" in e && e.error instanceof Error
               ? e.error.message
-              : "too complicated for me to unfurl"
-          )
-        )
+              : "too complicated for me to unfurl",
+          ),
+        ),
       )
     ),
     TE.bimap(
       (e) => res.status(500).json(e),
-      () => res.status(200).json({ success: true })
-    )
-  )()
+      () => res.status(200).json({ success: true }),
+    ),
+  )();
 
-export default handler
+export default handler;

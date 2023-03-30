@@ -1,25 +1,25 @@
-import { Button, Container, Paper, TextInput } from "@mantine/core"
-import { useTranslations } from "next-intl"
-import { useMutation } from "@blitzjs/rpc"
-import { useZodForm } from "src/core/hooks/useZodForm"
-import { Settings } from "src/admin/validations/settings"
-import updateAddress from "src/admin/mutations/updateAddress"
+import { useMutation } from "@blitzjs/rpc";
+import { Button, Container, Paper, TextInput } from "@mantine/core";
+import { useTranslations } from "next-intl";
+import updateAddress from "src/admin/mutations/updateAddress";
+import { Settings } from "src/admin/validations/settings";
+import { useZodForm } from "src/core/hooks/useZodForm";
 
 export function VenueSettings() {
-  const t = useTranslations("admin.Components.VenueSettings")
+  const t = useTranslations("admin.Components.VenueSettings");
   const form = useZodForm({
     schema: Settings,
-  })
+  });
 
   const [updateSettings] = useMutation(updateAddress, {
     onSuccess() {
-      fetch("/api/revalidate-current")
+      fetch("/api/revalidate-current");
     },
-  })
+  });
 
   const handleSubmit = form.handleSubmit(async (data) => {
-    await updateSettings(data)
-  })
+    await updateSettings(data);
+  });
 
   return (
     <Container p="lg">
@@ -42,5 +42,5 @@ export function VenueSettings() {
         </Button>
       </Paper>
     </Container>
-  )
+  );
 }

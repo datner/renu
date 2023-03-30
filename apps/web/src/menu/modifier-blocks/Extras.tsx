@@ -1,26 +1,26 @@
-import { Transition } from "@headlessui/react"
-import { useState } from "react"
-import { getLabel } from "./helpers"
-import { useLocale } from "src/core/hooks/useLocale"
-import { Locale } from "db"
-import { useController, useFormContext, useWatch } from "react-hook-form"
-import { ItemForm } from "../validations/item"
-import { constFalse, constNull, pipe } from "@effect/data/Function"
-import * as N from "@effect/data/Number"
-import * as O from "@effect/data/Option"
-import * as A from "@effect/data/ReadonlyArray"
-import * as RR from "@effect/data/ReadonlyRecord"
-import { useTranslations } from "next-intl"
-import { toShekel } from "src/core/helpers/content"
-import { useTimeout } from "@mantine/hooks"
-import { AmountCounter } from "../components/AmountCounter"
-import * as _Menu from "src/menu/schema"
-import { Modifiers } from "database-helpers"
-import { constTrue } from "fp-ts/lib/function"
+import { constFalse, constNull, pipe } from "@effect/data/Function";
+import * as N from "@effect/data/Number";
+import * as O from "@effect/data/Option";
+import * as A from "@effect/data/ReadonlyArray";
+import * as RR from "@effect/data/ReadonlyRecord";
+import { Transition } from "@headlessui/react";
+import { useTimeout } from "@mantine/hooks";
+import { Modifiers } from "database-helpers";
+import { Locale } from "db";
+import { constTrue } from "fp-ts/lib/function";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { useController, useFormContext, useWatch } from "react-hook-form";
+import { toShekel } from "src/core/helpers/content";
+import { useLocale } from "src/core/hooks/useLocale";
+import * as _Menu from "src/menu/schema";
+import { AmountCounter } from "../components/AmountCounter";
+import { ItemForm } from "../validations/item";
+import { getLabel } from "./helpers";
 
 type Props = {
-  modifier: _Menu.ItemModifier<Modifiers.Extras>
-}
+  modifier: _Menu.ItemModifier<Modifiers.Extras>;
+};
 
 const ExtrasCheck = ({
   option,
@@ -28,35 +28,35 @@ const ExtrasCheck = ({
   name,
   maxReached,
 }: {
-  option: Modifiers.ExtrasOption
-  locale: Locale
-  name: string
-  maxReached: boolean
+  option: Modifiers.ExtrasOption;
+  locale: Locale;
+  name: string;
+  maxReached: boolean;
 }) => {
-  const { field } = useController({ name, defaultValue: 0 })
+  const { field } = useController({ name, defaultValue: 0 });
   const handleChange = () => {
-    changeValue(field.value > 0 ? 0 : 1)
-  }
+    changeValue(field.value > 0 ? 0 : 1);
+  };
   const handleClick = () => {
-    const surplus = maxReached ? 0 : 1
-    const value = option.multi ? field.value + surplus : field.value > 0 ? 0 : surplus
+    const surplus = maxReached ? 0 : 1;
+    const value = option.multi ? field.value + surplus : field.value > 0 ? 0 : surplus;
 
-    changeValue(value)
-  }
-  const [show, setShow] = useState(field.value > 0 && option.multi)
-  const { start, clear } = useTimeout(() => setShow(false), 1600, { autoInvoke: true })
+    changeValue(value);
+  };
+  const [show, setShow] = useState(field.value > 0 && option.multi);
+  const { start, clear } = useTimeout(() => setShow(false), 1600, { autoInvoke: true });
   const changeValue = (value: number) => {
     if (value !== field.value) {
       // prevents needless rerender
-      field.onChange(value)
+      field.onChange(value);
     }
-    clear()
+    clear();
     if (value > 0 && option.multi) {
-      setShow(true)
-      return start()
+      setShow(true);
+      return start();
     }
-    setShow(false)
-  }
+    setShow(false);
+  };
 
   return (
     <div key={option.identifier} className="label relative gap-1 justify-start">
@@ -73,9 +73,7 @@ const ExtrasCheck = ({
       <label htmlFor={"input-" + field.name} className="label-text grow">
         <AmountCounter label={getLabel(option)(locale)} amount={field.value} />
       </label>
-      {option.price > 0 && (
-        <span className="label-text">{toShekel(option.price * Math.max(1, field.value))}</span>
-      )}
+      {option.price > 0 && <span className="label-text">{toShekel(option.price * Math.max(1, field.value))}</span>}
       <Transition
         show={show}
         className="absolute ltr:right-0 rtl:left-0 z-20"
@@ -102,23 +100,23 @@ const ExtrasCheck = ({
         </div>
       </Transition>
     </div>
-  )
-}
+  );
+};
 
 const getAmount = (choices?: Record<string, number>) =>
   pipe(
     O.fromNullable(choices),
     O.map(RR.collect((_, a) => a)),
     O.map(N.sumAll),
-    O.getOrElse(() => 0)
-  )
+    O.getOrElse(() => 0),
+  );
 
 export const ExtrasComponent = (props: Props) => {
-  const { modifier } = props
-  const { id, config } = modifier
-  const locale = useLocale()
-  const t = useTranslations("menu.Components.Extras")
-  const { control } = useFormContext<ItemForm>()
+  const { modifier } = props;
+  const { id, config } = modifier;
+  const locale = useLocale();
+  const t = useTranslations("menu.Components.Extras");
+  const { control } = useFormContext<ItemForm>();
 
   const { field, fieldState } = useController({
     control,
@@ -129,26 +127,24 @@ export const ExtrasComponent = (props: Props) => {
         belowMin: (o) =>
           N.lessThanOrEqualTo(
             O.getOrElse(config.min, () => 0),
-            getAmount(o)
+            getAmount(o),
           ),
       },
     },
-  })
+  });
 
-  const value = useWatch({ control, name: `modifiers.extras.${id}.choices` })
+  const value = useWatch({ control, name: `modifiers.extras.${id}.choices` });
 
-  const maxReached = O.match(config.max, constFalse, (max) =>
-    N.lessThanOrEqualTo(max, getAmount(value))
-  )
+  const maxReached = O.match(config.max, constFalse, (max) => N.lessThanOrEqualTo(max, getAmount(value)));
 
-  const minText = O.map(config.min, (min) => t("min", { min }))
+  const minText = O.map(config.min, (min) => t("min", { min }));
 
-  const maxText = O.map(config.max, (max) => t("max", { max }))
+  const maxText = O.map(config.max, (max) => t("max", { max }));
 
   const minMaxText = pipe(
     A.sequence(O.Applicative)([minText, maxText]),
-    O.match(constNull, (txts) => txts.join(" "))
-  )
+    O.match(constNull, (txts) => txts.join(" ")),
+  );
 
   return (
     <fieldset ref={field.ref} tabIndex={0} className="form-control">
@@ -171,6 +167,6 @@ export const ExtrasComponent = (props: Props) => {
         />
       ))}
     </fieldset>
-  )
-}
-ExtrasComponent.displayName = "Extras"
+  );
+};
+ExtrasComponent.displayName = "Extras";

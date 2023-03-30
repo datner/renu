@@ -12,7 +12,7 @@
     "test": "turbo run test",
     "test:watch": "turbo run test:watch",
     "typecheck": "turbo run typecheck",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "format": "dprint fmt",
     "check:everything": "pnpm run typecheck lint test"
   },
   "devDependencies": {

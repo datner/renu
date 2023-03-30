@@ -1,20 +1,20 @@
-import Link from "next/link"
-import { Routes } from "@blitzjs/next"
-import { useMutation } from "@blitzjs/rpc"
-import { AuthenticationError, PromiseReturnType } from "blitz"
-import { LabeledTextField } from "src/core/components/LabeledTextField"
-import login from "src/auth/mutations/login"
-import { Login } from "src/auth/validations"
-import { FormProvider } from "react-hook-form"
-import { useZodForm } from "src/core/hooks/useZodForm"
+import { Routes } from "@blitzjs/next";
+import { useMutation } from "@blitzjs/rpc";
+import { AuthenticationError, PromiseReturnType } from "blitz";
+import Link from "next/link";
+import { FormProvider } from "react-hook-form";
+import login from "src/auth/mutations/login";
+import { Login } from "src/auth/validations";
+import { LabeledTextField } from "src/core/components/LabeledTextField";
+import { useZodForm } from "src/core/hooks/useZodForm";
 
 type LoginFormProps = {
-  onSuccess(user: PromiseReturnType<typeof login>): void
-}
+  onSuccess(user: PromiseReturnType<typeof login>): void;
+};
 
 export const LoginForm = (props: LoginFormProps) => {
-  const { onSuccess } = props
-  const [loginMutation] = useMutation(login)
+  const { onSuccess } = props;
+  const [loginMutation] = useMutation(login);
 
   const form = useZodForm({
     schema: Login,
@@ -22,28 +22,28 @@ export const LoginForm = (props: LoginFormProps) => {
       email: "",
       password: "",
     },
-  })
+  });
 
-  const { formState, handleSubmit, setFormError } = form
-  const { isSubmitting } = formState
+  const { formState, handleSubmit, setFormError } = form;
+  const { isSubmitting } = formState;
 
   const onSubmit = handleSubmit(async (data) => {
     try {
-      onSuccess(await loginMutation(data))
+      onSuccess(await loginMutation(data));
     } catch (error: unknown) {
       if (error instanceof AuthenticationError) {
-        return setFormError("Sorry, those credentials are invalid")
+        return setFormError("Sorry, those credentials are invalid");
       }
 
       if (error instanceof Error) {
         return setFormError(
-          "Sorry, we had an unexpected error. Please try again. - " + error.toString()
-        )
+          "Sorry, we had an unexpected error. Please try again. - " + error.toString(),
+        );
       }
 
-      return setFormError("Sorry, we had an unexpected error. Please try again.")
+      return setFormError("Sorry, we had an unexpected error. Please try again.");
     }
-  })
+  });
 
   return (
     <FormProvider {...form}>
@@ -71,5 +71,5 @@ export const LoginForm = (props: LoginFormProps) => {
         </form>
       </div>
     </FormProvider>
-  )
-}
+  );
+};

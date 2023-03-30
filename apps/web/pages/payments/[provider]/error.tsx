@@ -1,6 +1,6 @@
-import { Locale } from "database"
-import { useRouter } from "next/router"
-import { z } from "zod"
+import { Locale } from "database";
+import { useRouter } from "next/router";
+import { z } from "zod";
 
 const ErrorQuery = z
   .object({
@@ -29,15 +29,15 @@ const ErrorQuery = z
     ...rest,
     orgId: userData1,
     venueId: userData2,
-  }))
+  }));
 
 export default function PaymentError() {
-  const { query } = useRouter()
+  const { query } = useRouter();
 
   return (
     <div>
       bad job my dude and man
       <pre>{JSON.stringify(query, null, 2)}</pre>
     </div>
-  )
+  );
 }

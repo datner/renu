@@ -1,27 +1,27 @@
-import { XMarkIcon } from "@heroicons/react/24/solid"
-import { useTransition, config, a } from "@react-spring/web"
-import { PropsWithChildren } from "react"
+import { XMarkIcon } from "@heroicons/react/24/solid";
+import { a, config, useTransition } from "@react-spring/web";
+import { PropsWithChildren } from "react";
 
 type Props = PropsWithChildren<{
-  readonly open?: boolean
-  onClose(): void
-  onDestroyed?(): void
-}>
+  readonly open?: boolean;
+  onClose(): void;
+  onDestroyed?(): void;
+}>;
 
 export function Modal(props: Props) {
-  const { open, onClose, onDestroyed, children } = props
+  const { open, onClose, onDestroyed, children } = props;
 
   const transition = useTransition(open, {
     from: { y: 200, opacity: 0 },
     enter: { y: 0, opacity: 1 },
     leave: { y: 200, opacity: 0 },
     onRest: () => {
-      document.body.style.overflowY = open ? "hidden" : "unset"
-      if (!open) onDestroyed?.()
+      document.body.style.overflowY = open ? "hidden" : "unset";
+      if (!open) onDestroyed?.();
     },
     config: config.stiff,
     reverse: open,
-  })
+  });
 
   return transition(
     (styles, show) =>
@@ -56,6 +56,6 @@ export function Modal(props: Props) {
             </div>
           </a.div>
         </div>
-      )
-  )
+      ),
+  );
 }

@@ -1,12 +1,12 @@
 import * as S from "@effect/schema/Schema";
+import * as Category from "../category";
+import * as Organization from "../organization";
 import * as Common from "../schema/common";
 import * as Number from "../schema/number";
-import * as Organization from '../organization'
-import * as Category from '../category'
-import * as Venue from '../venue'
+import * as Venue from "../venue";
 
-export const Id = Common.Id('ItemId')
-export type Id = S.To<typeof Id>
+export const Id = Common.Id("ItemId");
+export type Id = S.To<typeof Id>;
 
 export const Schema = S.struct({
   id: Id,
@@ -22,6 +22,5 @@ export const Schema = S.struct({
   categoryId: Category.Id,
   restaurantId: S.unknown,
   venueId: Venue.Id,
-  managementRepresentation: S.json
-})
-
+  managementRepresentation: S.json,
+});

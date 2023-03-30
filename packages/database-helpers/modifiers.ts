@@ -1,11 +1,11 @@
-import * as S from "@effect/schema/Schema";
+import { pipe } from "@effect/data/Function";
+import * as N from "@effect/data/Number";
 import * as O from "@effect/data/Option";
 import * as P from "@effect/data/Predicate";
-import * as N from "@effect/data/Number";
-import { pipe } from "@effect/data/Function";
-import { Content } from "./common";
+import * as S from "@effect/schema/Schema";
 import { Refinement } from "shared/effect";
 import { Common, Number } from "shared/schema";
+import { Content } from "./common";
 
 export const ModifierEnum = {
   oneOf: "oneOf",

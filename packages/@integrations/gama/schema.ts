@@ -1,9 +1,9 @@
-import * as S from "@effect/schema/Schema";
-import * as O from "@effect/data/Option";
 import { pipe } from "@effect/data/Function";
-import * as Settings from "./settings";
-import { Price } from "../../shared/schema/number";
+import * as O from "@effect/data/Option";
+import * as S from "@effect/schema/Schema";
 import { Order } from "shared";
+import { Price } from "../../shared/schema/number";
+import * as Settings from "./settings";
 
 export const PhoneNumber = pipe(
   S.string,
@@ -99,8 +99,7 @@ export const CreateSessionPayload = S.struct({
     callbackUrl: pipe(S.string, S.optional),
   }),
 });
-export interface CreateSessionPayload
-  extends S.To<typeof CreateSessionPayload> {}
+export interface CreateSessionPayload extends S.To<typeof CreateSessionPayload> {}
 
 export const PaymentResponse = S.struct({
   transactionStatus: S.literal("approved"),
@@ -117,9 +116,7 @@ export const PaymentResponseOption = pipe(
   ),
   S.transform(
     S.to(S.option(PaymentResponse)),
-    O.liftPredicate((n): n is PaymentResponse =>
-      Boolean(n && "transactionStatus" in n)
-    ),
+    O.liftPredicate((n): n is PaymentResponse => Boolean(n && "transactionStatus" in n)),
     O.getOrUndefined as any,
   ),
 );
@@ -138,7 +135,6 @@ export const CreateSessionSuccessBody = S.struct({
   errors: pipe(S.array(S.never), S.itemsCount(0)),
   apiVersion: S.optional(S.string),
 });
-
 
 export const CreateSessionErrorBody = S.struct({
   apiVersion: S.optional(S.string),
@@ -164,5 +160,4 @@ export const CreateSessionSuccess = pipe(
     }),
   ),
 );
-export interface CreateSessionSuccess
-  extends S.To<typeof CreateSessionSuccess> {}
+export interface CreateSessionSuccess extends S.To<typeof CreateSessionSuccess> {}

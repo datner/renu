@@ -1,52 +1,52 @@
-import { gSP, gSSP } from "src/blitz-server"
-import { GetStaticPaths, InferGetStaticPropsType } from "next"
-import clsx from "clsx"
-import db, { Locale } from "db"
-import { Fragment, Suspense, useMemo, useState } from "react"
-import { useLocale } from "src/core/hooks/useLocale"
-import { contentOption, titleFor } from "src/core/helpers/content"
-import { CategoryHeader } from "src/menu/components/CategoryHeader"
-import { useNavBar } from "src/menu/hooks/useNavBar"
-import { NotFoundError } from "blitz"
-import dynamic from "next/dynamic"
-import { Query } from "src/menu/validations/page"
-import Head from "next/head"
-import { BlitzPage } from "@blitzjs/auth"
-import MenuLayout from "src/core/layouts/MenuLayout"
-import { Closed } from "src/menu/components/Closed"
-import { ListItem } from "src/menu/components/ListItem"
-import * as Order from "src/menu/hooks/useOrder"
-import * as A from "@effect/data/ReadonlyArray"
-import * as HashMap from "@effect/data/HashMap"
-import * as Data from "@effect/data/Data"
-import { pipe } from "@effect/data/Function"
-import * as Parser from "@effect/schema/Parser"
-import * as _Menu from "src/menu/schema"
-import Script from "next/script"
-import getVenueClearingProvider from "src/venues/queries/getVenueClearingType"
-import getMenu from "src/menu/queries/getMenu"
+import { BlitzPage } from "@blitzjs/auth";
+import * as Data from "@effect/data/Data";
+import { pipe } from "@effect/data/Function";
+import * as HashMap from "@effect/data/HashMap";
+import * as A from "@effect/data/ReadonlyArray";
+import * as Parser from "@effect/schema/Parser";
+import { NotFoundError } from "blitz";
+import clsx from "clsx";
+import db, { Locale } from "db";
+import { GetStaticPaths, InferGetStaticPropsType } from "next";
+import dynamic from "next/dynamic";
+import Head from "next/head";
+import Script from "next/script";
+import { Fragment, Suspense, useMemo, useState } from "react";
+import { gSP, gSSP } from "src/blitz-server";
+import { contentOption, titleFor } from "src/core/helpers/content";
+import { useLocale } from "src/core/hooks/useLocale";
+import MenuLayout from "src/core/layouts/MenuLayout";
+import { CategoryHeader } from "src/menu/components/CategoryHeader";
+import { Closed } from "src/menu/components/Closed";
+import { ListItem } from "src/menu/components/ListItem";
+import { useNavBar } from "src/menu/hooks/useNavBar";
+import * as Order from "src/menu/hooks/useOrder";
+import getMenu from "src/menu/queries/getMenu";
+import * as _Menu from "src/menu/schema";
+import { Query } from "src/menu/validations/page";
+import getVenueClearingProvider from "src/venues/queries/getVenueClearingType";
 
 const LazyViewOrderButton = dynamic(() => import("src/menu/components/ViewOrderButton"), {
   loading: () => <Fragment />,
-})
+});
 const LazyItemModal = dynamic(() => import("src/menu/components/ItemModal"), {
   loading: () => <Fragment />,
-})
+});
 const LazyOrderModal = dynamic(() => import("src/menu/components/OrderModal"), {
   loading: () => <Fragment />,
-})
+});
 
 export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) => {
-  const {menu} = props
-  const restaurant = useMemo(() => Parser.parse(_Menu.FullMenu)(menu), [menu])
-  const { categories } = restaurant
-  const { attachNav, setRoot, observe, active, setActive } = useNavBar()
+  const { menu } = props;
+  const restaurant = useMemo(() => Parser.parse(_Menu.FullMenu)(menu), [menu]);
+  const { categories } = restaurant;
+  const { attachNav, setRoot, observe, active, setActive } = useNavBar();
   // add the item modal state to the dispatch as well, just for laughs
-  const [orderState, dispatch] = Order.useOrder()
-  const locale = useLocale()
-  const [reviewOrder, setReviewOrder] = useState(false)
+  const [orderState, dispatch] = Order.useOrder();
+  const locale = useLocale();
+  const [reviewOrder, setReviewOrder] = useState(false);
 
-  const getTitle = titleFor(locale)
+  const getTitle = titleFor(locale);
 
   if (!restaurant.open) {
     return (
@@ -57,10 +57,10 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
         </Head>
         <Closed venue={contentOption("name", locale)(restaurant)} />
       </>
-    )
+    );
   }
 
-  const orderItems = Order.getOrderItems(orderState.order)
+  const orderItems = Order.getOrderItems(orderState.order);
 
   return (
     <>
@@ -92,15 +92,15 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
               className={clsx(
                 active?.id === it.identifier
                   ? [
-                      "ring-1",
-                      "5nth-1:bg-emerald-100 5nth-1:text-emerald-700 5nth-1:ring-emerald-400",
-                      "5nth-2:bg-ocre-100 5nth-2:text-ocre-700 5nth-2:ring-ocre-400",
-                      "5nth-3:bg-ginger-100 5nth-3:text-ginger-700 5nth-3:ring-ginger-400",
-                      "5nth-4:bg-coral-100 5nth-4:text-coral-700 5nth-4:ring-coral-400",
-                      "5nth-5:bg-blush-100 5nth-5:text-blush-700 5nth-5:ring-blush-400",
-                    ]
+                    "ring-1",
+                    "5nth-1:bg-emerald-100 5nth-1:text-emerald-700 5nth-1:ring-emerald-400",
+                    "5nth-2:bg-ocre-100 5nth-2:text-ocre-700 5nth-2:ring-ocre-400",
+                    "5nth-3:bg-ginger-100 5nth-3:text-ginger-700 5nth-3:ring-ginger-400",
+                    "5nth-4:bg-coral-100 5nth-4:text-coral-700 5nth-4:ring-coral-400",
+                    "5nth-5:bg-blush-100 5nth-5:text-blush-700 5nth-5:ring-blush-400",
+                  ]
                   : "border-transparent text-gray-500 hover:text-gray-700",
-                "block flex-shrink-0 rounded-md snap-start px-3 py-2 text-sm font-semibold scroll-m-2"
+                "block flex-shrink-0 rounded-md snap-start px-3 py-2 text-sm font-semibold scroll-m-2",
               )}
             >
               {getTitle(it)}
@@ -129,8 +129,8 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
                     HashMap.filter(orderItems, (it) => it.item.id === item.id),
                     HashMap.mapWithIndex((oi, key) => [key, oi] as const),
                     HashMap.values,
-                    A.fromIterable
-                  )
+                    A.fromIterable,
+                  );
 
                   return A.match(
                     orderItem,
@@ -147,8 +147,8 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
                         item={Order.ExistingActiveItem({ item: it, key })}
                         dispatch={dispatch}
                       />
-                    ))
-                  )
+                    )),
+                  );
                 })}
               </ul>
               <div
@@ -167,62 +167,57 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
         <LazyViewOrderButton
           order={orderState.order}
           onClick={() => {
-            setReviewOrder(true)
+            setReviewOrder(true);
           }}
         />
         <Suspense fallback={<></>}>
-        <LazyOrderModal
-          order={orderState.order}
-          dispatch={dispatch}
-          open={reviewOrder}
-          onClose={() => setReviewOrder(false)}
-        />
+          <LazyOrderModal
+            order={orderState.order}
+            dispatch={dispatch}
+            open={reviewOrder}
+            onClose={() => setReviewOrder(false)}
+          />
         </Suspense>
         <LazyItemModal dispatch={dispatch} activeItem={orderState.activeItem} />
 
-        {restaurant.simpleContactInfo && (
-          <div className="mt-4 text-center">{restaurant.simpleContactInfo}</div>
-        )}
+        {restaurant.simpleContactInfo && <div className="mt-4 text-center">{restaurant.simpleContactInfo}</div>}
         <div className="mt-4 text-center">
           ביטול עסקה בהתאם לתקנות הגנת הצרכן (ביטול עסקה), התשע״א-2010 וחוק הגנת הצרכן, התשמ״א-1981
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
-Menu.getLayout = (comp) => <MenuLayout>{comp}</MenuLayout>
+Menu.getLayout = (comp) => <MenuLayout>{comp}</MenuLayout>;
 
-export default Menu
+export default Menu;
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  const venues = await db.venue.findMany()
+  const venues = await db.venue.findMany();
 
-  const locales = Object.values(Locale)
+  const locales = Object.values(Locale);
   return {
     fallback: "blocking",
-    paths: locales.flatMap((locale) =>
-      venues.map((it) => ({ params: { restaurant: it.identifier }, locale }))
-    ),
-  }
-}
+    paths: locales.flatMap((locale) => venues.map((it) => ({ params: { restaurant: it.identifier }, locale }))),
+  };
+};
 
 export const getStaticProps = gSP(async (context) => {
-  const { restaurant: identifier } = Query.parse(context.params)
-  
+  const { restaurant: identifier } = Query.parse(context.params);
+
   try {
-  const menu = await getMenu({identifier}, context.ctx)
-  context.ctx.prefetchQuery(getVenueClearingProvider, {identifier})
+    const menu = await getMenu({ identifier }, context.ctx);
+    context.ctx.prefetchQuery(getVenueClearingProvider, { identifier });
 
-
-  return {
-    props: {
+    return {
+      props: {
         menu,
-      messages: (await import(`src/core/messages/${context.locale}.json`)).default,
-    },
-    revalidate: 60,
-  }
+        messages: (await import(`src/core/messages/${context.locale}.json`)).default,
+      },
+      revalidate: 60,
+    };
   } catch (e) {
-    throw new NotFoundError()
+    throw new NotFoundError();
   }
-})
+});

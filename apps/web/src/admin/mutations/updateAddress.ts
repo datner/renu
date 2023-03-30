@@ -1,20 +1,18 @@
-import { resolver } from "@blitzjs/rpc"
-import { GlobalRole } from "database"
-import { Settings } from "src/admin/validations/settings"
-import { setDefaultVenue } from "src/auth/helpers/setDefaultVenue"
-import db from "db"
-import { pipe } from "fp-ts/function"
-import * as S from "fp-ts/string"
-import * as TE from "fp-ts/TaskEither"
-import { prismaNotValid } from "src/core/helpers/prisma"
+import { resolver } from "@blitzjs/rpc";
+import { GlobalRole } from "database";
+import db from "db";
+import { pipe } from "fp-ts/function";
+import * as S from "fp-ts/string";
+import * as TE from "fp-ts/TaskEither";
+import { Settings } from "src/admin/validations/settings";
+import { setDefaultVenue } from "src/auth/helpers/setDefaultVenue";
+import { prismaNotValid } from "src/core/helpers/prisma";
 
-const removeDashes = S.replace("-", "")
-const isCell = S.startsWith("05")
+const removeDashes = S.replace("-", "");
+const isCell = S.startsWith("05");
 
 const toPhoneNumber = (phone: string) =>
-  pipe(phone, removeDashes, (p) =>
-    [p.slice(0, isCell(p) ? 3 : 2), "-", p.slice(isCell(p) ? 3 : 2)].join("")
-  )
+  pipe(phone, removeDashes, (p) => [p.slice(0, isCell(p) ? 3 : 2), "-", p.slice(isCell(p) ? 3 : 2)].join(""));
 
 export default resolver.pipe(
   resolver.zod(Settings),
@@ -28,10 +26,10 @@ export default resolver.pipe(
             where: { id: venue.id },
             data: { simpleContactInfo: `${address} - ${toPhoneNumber(phone)}` },
           }),
-        prismaNotValid
+        prismaNotValid,
       ),
       TE.getOrElse((e) => {
-        throw e
-      })
-    )()
-)
+        throw e;
+      }),
+    )(),
+);

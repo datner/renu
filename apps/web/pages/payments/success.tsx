@@ -1,26 +1,21 @@
-import { useSearchParams } from "next/navigation"
-import { useQuery, invoke } from "@blitzjs/rpc"
-import { ErrorBoundary } from "@blitzjs/next"
-import {
-  CheckIcon,
-  EllipsisHorizontalIcon,
-  ExclamationTriangleIcon,
-  XMarkIcon,
-} from "@heroicons/react/24/solid"
-import { pipe } from "fp-ts/function"
-import * as E from "fp-ts/Either"
-import { Button, Textarea } from "@mantine/core"
-import { useZodForm } from "src/core/hooks/useZodForm"
-import { z } from "zod"
-import sendComment from "src/menu/mutations/sendComment"
-import validateStatus from "src/orders/queries/validateStatus"
-import { Suspense } from "react"
-import { NotFoundError } from "blitz"
-import { ManagementUnreachableError } from "src/core/errors"
-import { GetServerSideProps } from "next"
+import { ErrorBoundary } from "@blitzjs/next";
+import { invoke, useQuery } from "@blitzjs/rpc";
+import { CheckIcon, EllipsisHorizontalIcon, ExclamationTriangleIcon, XMarkIcon } from "@heroicons/react/24/solid";
+import { Button, Textarea } from "@mantine/core";
+import { NotFoundError } from "blitz";
+import * as E from "fp-ts/Either";
+import { pipe } from "fp-ts/function";
+import { GetServerSideProps } from "next";
+import { useSearchParams } from "next/navigation";
+import { Suspense } from "react";
+import { ManagementUnreachableError } from "src/core/errors";
+import { useZodForm } from "src/core/hooks/useZodForm";
+import sendComment from "src/menu/mutations/sendComment";
+import validateStatus from "src/orders/queries/validateStatus";
+import { z } from "zod";
 
 export function SuccessPage() {
-  const searchParams = useSearchParams()
+  const searchParams = useSearchParams();
   const [response] = useQuery(
     validateStatus,
     {
@@ -32,17 +27,17 @@ export function SuccessPage() {
 
       retry: (amount, e) => {
         if (e instanceof NotFoundError || e instanceof ManagementUnreachableError) {
-          return false
+          return false;
         }
 
-        return amount < 35
+        return amount < 35;
       },
-    }
-  )
+    },
+  );
 
   const form = useZodForm({
     schema: z.object({ comment: z.string() }),
-  })
+  });
 
   return pipe(
     response,
@@ -77,14 +72,11 @@ export function SuccessPage() {
               <h3 className="text-lg leading-6 font-medium text-gray-900">Order successful!</h3>
               <div className="py-2">
                 <p className="text-sm text-gray-500">
-                  Thank you for using Renu, we are still in very early rollout. We know you have
-                  something to say about the service, please tell us here (we actually read it, we
-                  get it straight to our phones!)
+                  Thank you for using Renu, we are still in very early rollout. We know you have something to say about
+                  the service, please tell us here (we actually read it, we get it straight to our phones!)
                 </p>
               </div>
-              {form.formState.isSubmitSuccessful ? (
-                <div className="font-medium">Thank you so much!</div>
-              ) : (
+              {form.formState.isSubmitSuccessful ? <div className="font-medium">Thank you so much!</div> : (
                 <form
                   className="space-y-2"
                   onSubmit={form.handleSubmit((data) => invoke(sendComment, data))}
@@ -98,9 +90,9 @@ export function SuccessPage() {
             </div>
           </div>
         </div>
-      )
-    )
-  )
+      ),
+    ),
+  );
 }
 
 export default function Success() {
@@ -124,7 +116,7 @@ export default function Success() {
                 </div>
               </div>
             </div>
-          )
+          );
         }
 
         if (fb.error instanceof ManagementUnreachableError) {
@@ -149,7 +141,7 @@ Please be patient with us while we're still in early beta
                 </div>
               </div>
             </div>
-          )
+          );
         }
 
         return (
@@ -171,7 +163,7 @@ Please be patient with us while we're still in early beta
               </div>
             </div>
           </div>
-        )
+        );
       }}
     >
       <Suspense
@@ -196,7 +188,7 @@ Please be patient with us while we're still in early beta
         <SuccessPage />
       </Suspense>
     </ErrorBoundary>
-  )
+  );
 }
 
-export const getServerSideProps: GetServerSideProps = async () => ({ props: {} })
+export const getServerSideProps: GetServerSideProps = async () => ({ props: {} });

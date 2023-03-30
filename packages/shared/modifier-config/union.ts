@@ -1,9 +1,9 @@
-import * as S from "@effect/schema/Schema";
 import * as P from "@effect/data/Predicate";
+import * as S from "@effect/schema/Schema";
 import { Refinement } from "../effect";
-import * as OneOf from './one-of'
-import * as Extras from './extras'
-import * as Slider from './slider'
+import * as Extras from "./extras";
+import * as OneOf from "./one-of";
+import * as Slider from "./slider";
 // import { pipe } from "@effect/data/Function";
 // import { Common } from "../schema";
 
@@ -12,7 +12,6 @@ export const ModifierEnum = {
   extras: "extras",
   Slider: "Slider",
 } as const;
-
 
 export const Schema = S.union(OneOf.Modifier, Extras.Modifier, Slider.Modifier);
 export type Schema = OneOf.Modifier | Extras.Modifier | Slider.Modifier;

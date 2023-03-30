@@ -1,55 +1,55 @@
-import { useTranslations } from "next-intl"
-import { OrderModalItem } from "./OrderModalItem"
-import { Modal } from "./Modal"
-import { toShekel } from "src/core/helpers/content"
-import { useMutation, useQuery } from "@blitzjs/rpc"
-import sendOrder from "../mutations/sendOrder"
-import { useLocale } from "src/core/hooks/useLocale"
-import { useZodParams } from "src/core/hooks/useParams"
-import { Query } from "src/menu/validations/page"
-import useMeasure from "react-use-measure"
-import { usePrevious } from "src/core/hooks/usePrevious"
-import { useSpring, a } from "@react-spring/web"
-import * as Order from "src/menu/hooks/useOrder"
-import * as HashMap from "@effect/data/HashMap"
-import * as A from "@effect/data/ReadonlyArray"
-import { pipe, absurd } from "@effect/data/Function"
-import { useState } from "react"
-import { FeedbackModal } from "./FeedbackModal"
-import { Number } from "shared/schema"
-import getVenueClearingProvider from "src/venues/queries/getVenueClearingType"
-import { useParam } from "@blitzjs/next"
+import { useParam } from "@blitzjs/next";
+import { useMutation, useQuery } from "@blitzjs/rpc";
+import { absurd, pipe } from "@effect/data/Function";
+import * as HashMap from "@effect/data/HashMap";
+import * as A from "@effect/data/ReadonlyArray";
+import { a, useSpring } from "@react-spring/web";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import useMeasure from "react-use-measure";
+import { Number } from "shared/schema";
+import { toShekel } from "src/core/helpers/content";
+import { useLocale } from "src/core/hooks/useLocale";
+import { useZodParams } from "src/core/hooks/useParams";
+import { usePrevious } from "src/core/hooks/usePrevious";
+import * as Order from "src/menu/hooks/useOrder";
+import { Query } from "src/menu/validations/page";
+import getVenueClearingProvider from "src/venues/queries/getVenueClearingType";
+import sendOrder from "../mutations/sendOrder";
+import { FeedbackModal } from "./FeedbackModal";
+import { Modal } from "./Modal";
+import { OrderModalItem } from "./OrderModalItem";
 
 type Props = {
-  open?: boolean
-  onClose(): void
-  order: Order.Order
-  dispatch: Order.OrderDispatch
-}
+  open?: boolean;
+  onClose(): void;
+  order: Order.Order;
+  dispatch: Order.OrderDispatch;
+};
 
 export function OrderModal(props: Props) {
-  const { onClose, open, order, dispatch } = props
-  const identifier = useParam('restaurant', 'string')!
-  const [/* TODO: Implement provider */] = useQuery(getVenueClearingProvider, {identifier})
-  const t = useTranslations("menu.Components.OrderModal")
-  const [feedbackOpen, setFeedbackOpen] = useState(false)
-  const locale = useLocale()
-  const { restaurant } = useZodParams(Query)
-  const [ref, { height }] = useMeasure()
-  const isNoHeight = usePrevious(height) === 0
-  const { h } = useSpring({ h: height, immediate: isNoHeight })
+  const { onClose, open, order, dispatch } = props;
+  const identifier = useParam("restaurant", "string")!;
+  const [/* TODO: Implement provider */] = useQuery(getVenueClearingProvider, { identifier });
+  const t = useTranslations("menu.Components.OrderModal");
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const locale = useLocale();
+  const { restaurant } = useZodParams(Query);
+  const [ref, { height }] = useMeasure();
+  const isNoHeight = usePrevious(height) === 0;
+  const { h } = useSpring({ h: height, immediate: isNoHeight });
   const [sendOrderMutation, { isLoading, isSuccess }] = useMutation(sendOrder, {
     onSuccess: (url) => {
       if (url instanceof URL) {
-        return window.location.assign(url.href)
+        return window.location.assign(url.href);
       }
 
-      setFeedbackOpen(true)
+      setFeedbackOpen(true);
     },
-  })
+  });
 
   const handleOrder = () => {
-    if (Order.isEmptyOrder(order)) return
+    if (Order.isEmptyOrder(order)) return;
 
     sendOrderMutation({
       locale,
@@ -71,33 +71,34 @@ export function OrderModal(props: Props) {
                   id,
                   choice: mod.choice,
                   amount: mod.amount,
-                } as const
+                } as const;
               }
               if (Order.isExtras(mod)) {
                 return {
                   _tag: "Extras",
                   id,
                   choices: A.fromIterable(mod.choices),
-                } as const
+                } as const;
               }
 
-              throw absurd(mod)
-            })
+              throw absurd(mod);
+            }),
           ),
         })),
         HashMap.values,
-        A.fromIterable
+        A.fromIterable,
       ),
-    })
-  }
+    });
+  };
 
-  const amount = Order.getOrderAmount(order)
-  const cost = Order.getOrderCost(order)
-  const items = Order.getOrderItems(order)
+  const amount = Order.getOrderAmount(order);
+  const cost = Order.getOrderCost(order);
+  const items = Order.getOrderItems(order);
 
-  const listItems = HashMap.mapWithIndex(items, (item, key) => (
-    <OrderModalItem key={key} hash={key} dispatch={dispatch} orderItem={item} />
-  ))
+  const listItems = HashMap.mapWithIndex(
+    items,
+    (item, key) => <OrderModalItem key={key} hash={key} dispatch={dispatch} orderItem={item} />,
+  );
 
   return (
     <Modal open={open} onClose={onClose}>
@@ -127,12 +128,12 @@ export function OrderModal(props: Props) {
       <FeedbackModal
         show={feedbackOpen}
         onClose={() => {
-          setFeedbackOpen(false)
-          window.location.reload()
+          setFeedbackOpen(false);
+          window.location.reload();
         }}
       />
     </Modal>
-  )
+  );
 }
 
-export default OrderModal
+export default OrderModal;

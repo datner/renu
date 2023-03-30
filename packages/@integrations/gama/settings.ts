@@ -1,9 +1,9 @@
-import * as Effect from "@effect/io/Effect";
-import * as Config from "@effect/io/Config";
 import * as Context from "@effect/data/Context";
-import * as S from "@effect/schema/Schema";
-import * as P from "@effect/schema/Parser";
 import { pipe } from "@effect/data/Function";
+import * as Config from "@effect/io/Config";
+import * as Effect from "@effect/io/Effect";
+import * as P from "@effect/schema/Parser";
+import * as S from "@effect/schema/Schema";
 import { Clearing } from "@integrations/core";
 import { ClearingProvider } from "database";
 
@@ -36,7 +36,7 @@ export const VendorData = S.struct({
 });
 export interface VendorData extends S.To<typeof VendorData> {}
 
-const is = <A, B extends A>(b: B) => (a:A): a is B => a === b   
+const is = <A, B extends A>(b: B) => (a: A): a is B => a === b;
 export const GamaIntegrations = S.struct({
   provider: pipe(
     S.enums(ClearingProvider),

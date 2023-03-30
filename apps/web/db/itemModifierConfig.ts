@@ -1,11 +1,11 @@
-import { Locale } from "database"
-import * as O from "fp-ts/Option"
-import { isNonEmpty, filter } from "fp-ts/Array"
-import * as A from "fp-ts/Array"
-import { identity, pipe } from "fp-ts/function"
-import { z } from "zod"
-import { Json, zodIso } from "src/core/helpers/zod"
-import { match } from "ts-pattern"
+import { Locale } from "database";
+import { filter, isNonEmpty } from "fp-ts/Array";
+import * as A from "fp-ts/Array";
+import { identity, pipe } from "fp-ts/function";
+import * as O from "fp-ts/Option";
+import { Json, zodIso } from "src/core/helpers/zod";
+import { match } from "ts-pattern";
+import { z } from "zod";
 
 // export interface OptionContent {
 //   readonly locale: Locale
@@ -46,15 +46,15 @@ import { match } from "ts-pattern"
 //   readonly max: O.Option<number>
 // }
 
-export const ModifierEnum = z.enum(["oneOf", "extras"])
-export type ModifierEnum = z.infer<typeof ModifierEnum>
+export const ModifierEnum = z.enum(["oneOf", "extras"]);
+export type ModifierEnum = z.infer<typeof ModifierEnum>;
 
 export const OptionContent = z.object({
   locale: z.nativeEnum(Locale),
   name: z.string(),
   description: z.string(),
-})
-export type OptionContent = z.infer<typeof OptionContent>
+});
+export type OptionContent = z.infer<typeof OptionContent>;
 
 export const BaseOption = z.object({
   managementRepresentation: Json.optional(),
@@ -62,34 +62,34 @@ export const BaseOption = z.object({
   position: z.number().int(),
   price: z.number(),
   content: OptionContent.array().refine(isNonEmpty),
-})
-export type BaseOption = z.infer<typeof BaseOption>
+});
+export type BaseOption = z.infer<typeof BaseOption>;
 
-export const OneOfOption = BaseOption.extend({ default: z.boolean() })
-export const ExtrasOption = BaseOption.extend({ multi: z.boolean() })
-export type OneOfOption = z.infer<typeof OneOfOption>
-export type ExtrasOption = z.infer<typeof ExtrasOption>
+export const OneOfOption = BaseOption.extend({ default: z.boolean() });
+export const ExtrasOption = BaseOption.extend({ multi: z.boolean() });
+export type OneOfOption = z.infer<typeof OneOfOption>;
+export type ExtrasOption = z.infer<typeof ExtrasOption>;
 
 export const BaseModifier = z.object({
   identifier: z.string(),
   content: OptionContent.array().refine(isNonEmpty),
   options: BaseOption.array().refine(isNonEmpty),
-})
-export type BaseModifier = z.infer<typeof BaseModifier>
+});
+export type BaseModifier = z.infer<typeof BaseModifier>;
 
 const ensureOnlyOneDefault = (op: OneOfOption[]) =>
   pipe(
     op,
     filter((o) => o.default),
     A.size,
-    (d) => d === 1
-  )
+    (d) => d === 1,
+  );
 
 export const OneOf = BaseModifier.extend({
   _tag: z.literal(ModifierEnum.enum.oneOf),
   options: OneOfOption.array().refine(isNonEmpty),
-})
-export type OneOf = z.infer<typeof OneOf>
+});
+export type OneOf = z.infer<typeof OneOf>;
 
 export const Extras = BaseModifier.extend({
   _tag: z.literal(ModifierEnum.enum.extras),
@@ -104,8 +104,8 @@ export const Extras = BaseModifier.extend({
     .nullable()
     .transform(O.fromNullable)
     .transform(O.chain((n) => (n > 0 ? O.some(n) : O.none))),
-})
-export type Extras = z.infer<typeof Extras>
+});
+export type Extras = z.infer<typeof Extras>;
 
 export const ModifierConfig = zodIso(z.discriminatedUnion("_tag", [OneOf, Extras]), (mod) =>
   match(mod)
@@ -115,13 +115,12 @@ export const ModifierConfig = zodIso(z.discriminatedUnion("_tag", [OneOf, Extras
       max: O.toNullable(max),
     }))
     .with({ _tag: "oneOf" }, identity)
-    .exhaustive()
-)
+    .exhaustive());
 
-export type ModifierConfig = z.infer<typeof ModifierConfig>
+export type ModifierConfig = z.infer<typeof ModifierConfig>;
 
 export interface Modifier {
-  readonly config: OneOf | Extras
-  readonly position: number
-  readonly id: number
+  readonly config: OneOf | Extras;
+  readonly position: number;
+  readonly id: number;
 }

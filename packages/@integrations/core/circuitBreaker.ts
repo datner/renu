@@ -1,10 +1,10 @@
-import * as Schedule from "@effect/io/Schedule";
-import * as Ref from "@effect/io/Ref";
-import * as Effect from "@effect/io/Effect";
-import * as Duration from "@effect/data/Duration";
 import * as Context from "@effect/data/Context";
-import * as Predicate from "@effect/data/Predicate";
+import * as Duration from "@effect/data/Duration";
 import { constFalse, pipe } from "@effect/data/Function";
+import * as Predicate from "@effect/data/Predicate";
+import * as Effect from "@effect/io/Effect";
+import * as Ref from "@effect/io/Ref";
+import * as Schedule from "@effect/io/Schedule";
 
 export class CircuitBreakerError extends Error {
   readonly _tag = "CircuitBreakerError";
@@ -20,9 +20,8 @@ export interface BreakerConfig {
 
 const now = () => Duration.millis(Date.now());
 
-const matchImpl =
-  (onClosed: (s: BreakerClosed) => any, onOpen: (s: BreakerOpen) => any) =>
-  (s: BreakerState) => s._tag === "BreakerClosed" ? onClosed(s) : onOpen(s);
+const matchImpl = (onClosed: (s: BreakerClosed) => any, onOpen: (s: BreakerOpen) => any) => (s: BreakerState) =>
+  s._tag === "BreakerClosed" ? onClosed(s) : onOpen(s);
 
 export const matchBreaker: <A>(
   onClosed: (s: BreakerClosed) => A,
@@ -37,8 +36,7 @@ export const matchBreakerW: <A, B, C>(
 export const foldBreaker: <R1, E1, A, R2, E2, B>(
   onClosed: (s: BreakerClosed) => Effect.Effect<R1, E1, A>,
   onOpen: (s: BreakerOpen) => Effect.Effect<R2, E2, B>,
-) => (breakerState: BreakerState) => Effect.Effect<R1 | R2, E1 | E2, A | B> =
-  matchImpl;
+) => (breakerState: BreakerState) => Effect.Effect<R1 | R2, E1 | E2, A | B> = matchImpl;
 
 export class BreakerOpen {
   readonly _tag = "BreakerOpen";
@@ -53,14 +51,11 @@ export class BreakerClosed {
 
 export type BreakerState = BreakerOpen | BreakerClosed;
 
-export const open = (fromNow: Duration.Duration): BreakerState =>
-  new BreakerOpen(fromNow);
-export const closed = (failCount: number): BreakerState =>
-  new BreakerClosed(failCount);
+export const open = (fromNow: Duration.Duration): BreakerState => new BreakerOpen(fromNow);
+export const closed = (failCount: number): BreakerState => new BreakerClosed(failCount);
 
-export const onClosed =
-  <A>(onClosed: (s: BreakerClosed) => A) => (s: BreakerState) =>
-    s._tag === "BreakerClosed" ? onClosed(s) : s;
+export const onClosed = <A>(onClosed: (s: BreakerClosed) => A) => (s: BreakerState) =>
+  s._tag === "BreakerClosed" ? onClosed(s) : s;
 
 export const onOpen = <A>(onOpen: (s: BreakerOpen) => A) => (s: BreakerState) =>
   s._tag === "BreakerOpen" ? onOpen(s) : s;
@@ -76,9 +71,7 @@ export const makeBreakerStateProvider = () =>
   pipe(
     initState,
     Effect.tap(() => Effect.logWarning("Create new breaker state")),
-    Effect.map((state) =>
-      Effect.provideService(BreakerStateService, { state })
-    ),
+    Effect.map((state) => Effect.provideService(BreakerStateService, { state })),
   );
 
 export const defaultSchedule = pipe(
@@ -96,7 +89,7 @@ export type CircuitBreaker = <E>(
 const isClosed = (s: BreakerState) => s._tag === "BreakerClosed";
 
 export const makeBreaker = (config?: BreakerConfig | undefined) =>
-  Effect.gen(function* ($) {
+  Effect.gen(function*($) {
     const {
       name = "Anonymous",
       maxFailure = 3,
@@ -126,8 +119,7 @@ export const makeBreaker = (config?: BreakerConfig | undefined) =>
                       : open(cooldown)
                   ),
                 )),
-            () =>
-              Effect.fail(new CircuitBreakerError(`Breaker ${name} is open`)),
+            () => Effect.fail(new CircuitBreakerError(`Breaker ${name} is open`)),
           ),
         ),
         Effect.retry(

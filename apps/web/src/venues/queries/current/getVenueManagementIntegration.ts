@@ -1,11 +1,11 @@
-import { prismaError } from "src/core/helpers/prisma"
-import db, { ManagementIntegration } from "db"
-import { pipe } from "@effect/data/Function"
-import * as Effect from "@effect/io/Effect"
-import { Ctx } from "@blitzjs/next"
-import * as Renu from "src/core/effect/runtime"
-import { inspect } from "util"
-import { Session } from "src/auth"
+import { Ctx } from "@blitzjs/next";
+import { pipe } from "@effect/data/Function";
+import * as Effect from "@effect/io/Effect";
+import db, { ManagementIntegration } from "db";
+import { Session } from "src/auth";
+import * as Renu from "src/core/effect/runtime";
+import { prismaError } from "src/core/helpers/prisma";
+import { inspect } from "util";
 
 const handler = (_: null, ctx: Ctx) =>
   pipe(
@@ -14,7 +14,7 @@ const handler = (_: null, ctx: Ctx) =>
     Effect.flatMap((venue) =>
       Effect.attemptCatchPromise(
         () => db.managementIntegration.findFirstOrThrow({ where: { Venue: { id: venue.id } } }),
-        prismaError("ManagementIntegration")
+        prismaError("ManagementIntegration"),
       )
     ),
     Effect.catchTag("PrismaError", (_) =>
@@ -27,11 +27,10 @@ const handler = (_: null, ctx: Ctx) =>
             venueId: session.venue.id,
             provider: "RENU",
           }),
-          () => _
+          () => _,
         )
-      )
-    ),
+      )),
     Session.authorize(ctx),
-    Renu.runPromise$
-  )
-export default handler
+    Renu.runPromise$,
+  );
+export default handler;

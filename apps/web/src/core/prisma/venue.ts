@@ -1,5 +1,5 @@
-import { Prisma } from "database"
-import * as _Menu from "src/menu/schema"
+import { Prisma } from "database";
+import * as _Menu from "src/menu/schema";
 
 export const Where = {
   belongsToOrg: (orgId: number) => ({
@@ -11,4 +11,4 @@ export const Where = {
   idIn: (ids: Iterable<number>) => ({
     id: { in: Array.from(ids) },
   }),
-} satisfies Record<string, (...args: any) => Prisma.VenueWhereInput>
+} satisfies Record<string, (...args: any) => Prisma.VenueWhereInput>;

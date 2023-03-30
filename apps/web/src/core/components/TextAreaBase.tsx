@@ -1,7 +1,7 @@
-import { ComponentPropsWithRef, forwardRef, memo } from "react"
-import clsx from "clsx"
+import clsx from "clsx";
+import { ComponentPropsWithRef, forwardRef, memo } from "react";
 
-export type TextAreaProps = Omit<ComponentPropsWithRef<"textarea">, "className">
+export type TextAreaProps = Omit<ComponentPropsWithRef<"textarea">, "className">;
 
 export const TextAreaBase = memo(
   forwardRef<HTMLTextAreaElement, TextAreaProps>((props, ref) => (
@@ -17,6 +17,6 @@ export const TextAreaBase = memo(
         "focus:ring-emerald-500 focus:border-emerald-500 focus:outline-none",
       ])}
     />
-  ))
-)
-TextAreaBase.displayName = "TextAreaBase"
+  )),
+);
+TextAreaBase.displayName = "TextAreaBase";

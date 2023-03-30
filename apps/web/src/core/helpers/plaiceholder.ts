@@ -1,20 +1,20 @@
-import * as Effect from "@effect/io/Effect"
-import * as Data from "@effect/data/Data"
-import { Http } from "@integrations/core"
-import { pipe } from "fp-ts/function"
-import { getPlaiceholder } from "plaiceholder"
+import * as Data from "@effect/data/Data";
+import * as Effect from "@effect/io/Effect";
+import { Http } from "@integrations/core";
+import { pipe } from "fp-ts/function";
+import { getPlaiceholder } from "plaiceholder";
 
 interface GetBlurHashError extends Data.Case {
-  readonly _tag: "GetBlurHashError"
-  readonly mesasge: string
-  readonly error: unknown
+  readonly _tag: "GetBlurHashError";
+  readonly mesasge: string;
+  readonly error: unknown;
 }
-const GetBlurHashError = Data.tagged<GetBlurHashError>("GetBlurHashError")
+const GetBlurHashError = Data.tagged<GetBlurHashError>("GetBlurHashError");
 
 interface EmptyImageError extends Data.Case {
-  readonly _tag: "EmptyImageError"
+  readonly _tag: "EmptyImageError";
 }
-const EmptyImageError = Data.tagged<EmptyImageError>("EmptyImageError")
+const EmptyImageError = Data.tagged<EmptyImageError>("EmptyImageError");
 
 export const getBlurHash = (image: string) =>
   pipe(
@@ -22,7 +22,7 @@ export const getBlurHash = (image: string) =>
     Effect.filterOrFail(
       // TODO: Find where the null leak is coming from
       (img) => typeof img === "string" && img !== "",
-      () => EmptyImageError({} as unknown as void)
+      () => EmptyImageError({} as unknown as void),
     ),
     Effect.flatMap((img) => Http.request(`${img}?fm=blurhash&w=30`)),
     Effect.flatMap(Http.toText),
@@ -30,16 +30,16 @@ export const getBlurHash = (image: string) =>
     Effect.mapError((error) => GetBlurHashError({ mesasge: "Could not get blurhash", error })),
     Effect.provideService(Http.HttpConfigService, {
       baseUrl: "https://renu.imgix.net",
-    })
-  )
+    }),
+  );
 
 export async function getBlurDataUrl(image?: string) {
-  if (!image) return undefined
+  if (!image) return undefined;
 
-  console.log("Creating new plaiceholder")
-  const url = new URL(`https://renu.imgix.net/${image}`)
-  url.searchParams.append("fm", "blurhash") // quality = 5
-  url.searchParams.append("auto", "compress")
-  const { base64: blurDataUrl } = await getPlaiceholder(url.toString(), { size: 10 })
-  return blurDataUrl
+  console.log("Creating new plaiceholder");
+  const url = new URL(`https://renu.imgix.net/${image}`);
+  url.searchParams.append("fm", "blurhash"); // quality = 5
+  url.searchParams.append("auto", "compress");
+  const { base64: blurDataUrl } = await getPlaiceholder(url.toString(), { size: 10 });
+  return blurDataUrl;
 }

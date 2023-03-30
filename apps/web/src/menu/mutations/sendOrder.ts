@@ -1,41 +1,29 @@
 import { resolver } from "@blitzjs/rpc";
-import db from "db";
-import {
-  Item as PItem,
-  ItemI18L,
-  ItemModifier,
-  Locale,
-  OrderState,
-  Prisma,
-} from "database";
-import {
-  EncodedSendOrder,
-  SendOrder,
-  SendOrderItem,
-  SendOrderModifiers,
-} from "src/menu/validations/order";
-import { absurd, pipe, tupled } from "@effect/data/Function";
-import { prismaError } from "src/core/helpers/prisma";
-import * as Renu from "src/core/effect/runtime";
-import * as Telegram from "integrations/telegram/sendMessage";
-import { fullOrderInclude } from "@integrations/core/clearing";
-import * as Effect from "@effect/io/Effect";
-import * as O from "@effect/data/Option";
-import * as Equal from "@effect/data/Equal";
-import * as A from "@effect/data/ReadonlyArray";
 import * as Chunk from "@effect/data/Chunk";
+import * as Equal from "@effect/data/Equal";
+import { absurd, pipe, tupled } from "@effect/data/Function";
 import * as N from "@effect/data/Number";
+import * as O from "@effect/data/Option";
+import * as A from "@effect/data/ReadonlyArray";
 import * as Ord from "@effect/data/typeclass/Order";
-import * as S from "@effect/schema/Schema";
+import * as Effect from "@effect/io/Effect";
 import * as P from "@effect/schema/Parser";
+import * as S from "@effect/schema/Schema";
 import * as Clearing from "@integrations/clearing";
+import { fullOrderInclude } from "@integrations/core/clearing";
 import * as Gama from "@integrations/gama";
-import * as _Menu from "../schema";
-import * as _Item from "src/core/prisma/item";
-import { Common, Number } from "shared/schema";
-import { Item, Order } from "shared";
+import { Item as PItem, ItemI18L, ItemModifier, Locale, OrderState, Prisma } from "database";
 import { Modifiers } from "database-helpers";
+import db from "db";
+import * as Telegram from "integrations/telegram/sendMessage";
+import { Item, Order } from "shared";
+import { Common, Number } from "shared/schema";
+import * as Renu from "src/core/effect/runtime";
+import { prismaError } from "src/core/helpers/prisma";
+import * as _Item from "src/core/prisma/item";
+import { EncodedSendOrder, SendOrder, SendOrderItem, SendOrderModifiers } from "src/menu/validations/order";
 import { inspect } from "util";
+import * as _Menu from "../schema";
 
 const ByItemModifierId = Ord.contramap(
   Ord.number,
@@ -49,9 +37,9 @@ const parseOneOf = P.parse(Modifiers.OneOf);
 const parseExtras = P.parse(Modifiers.Extras);
 
 const createNewOrderModifier = (om: SendOrderModifiers, m: ItemModifier) =>
-  Effect.gen(function* ($) {
+  Effect.gen(function*($) {
     if (om._tag === "OneOf") {
-      const oneOf = parseOneOf(m.config)
+      const oneOf = parseOneOf(m.config);
 
       return yield* $(
         pipe(
@@ -76,7 +64,7 @@ const createNewOrderModifier = (om: SendOrderModifiers, m: ItemModifier) =>
     }
 
     if (om._tag === "Extras") {
-      const extras = parseExtras(m.config)
+      const extras = parseExtras(m.config);
 
       const totalAmount = Chunk.reduce(om.choices, 0, (acc, [_, a]) => acc + a);
       if (
@@ -93,12 +81,10 @@ const createNewOrderModifier = (om: SendOrderModifiers, m: ItemModifier) =>
         Effect.collectAllPar(
           Chunk.map(om.choices, ([choice, amount]) =>
             pipe(
-              Effect.find(extras.options, (o) =>
-                Effect.succeed(o.identifier === choice)),
+              Effect.find(extras.options, (o) => Effect.succeed(o.identifier === choice)),
               Effect.someOrFailException,
               Effect.filterOrDieMessage(
-                (o) =>
-                  o.multi || amount === 1,
+                (o) => o.multi || amount === 1,
                 "tried to order multiple of a singular option",
               ),
               Effect.map((o) => (
@@ -198,9 +184,7 @@ const createNewOrder = (
         } satisfies Prisma.OrderCreateInput
       ),
     ),
-    Effect.tap((order) =>
-      Effect.sync(() => console.log(inspect(order, false, null, true)))
-    ),
+    Effect.tap((order) => Effect.sync(() => console.log(inspect(order, false, null, true)))),
     Effect.flatMap((data) =>
       Effect.attemptCatchPromise(
         () =>
@@ -345,8 +329,8 @@ ${
                   o.items,
                   0,
                   (acc, it) =>
-                    acc +
-                    (N.sumAll(
+                    acc
+                    + (N.sumAll(
                       A.append(it.price)(
                         A.map(it.modifiers, (m) => m.price * m.amount),
                       ),

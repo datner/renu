@@ -1,7 +1,7 @@
-import * as S from "@effect/schema/Schema";
-import * as O from "@effect/data/Option";
-import { Common, Number } from "shared/schema";
 import { pipe } from "@effect/data/Function";
+import * as O from "@effect/data/Option";
+import * as S from "@effect/schema/Schema";
+import { Common, Number } from "shared/schema";
 
 export const Name = pipe(
   S.string,

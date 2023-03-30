@@ -1,4 +1,4 @@
-import { z } from "zod"
+import { z } from "zod";
 
 export const Settings = z.object({
   address: z.string().trim().min(3),
@@ -8,4 +8,4 @@ export const Settings = z.object({
     .regex(/\d{2,3}-?\d{3,}-?\d+/)
     .min(9)
     .max(12),
-})
+});

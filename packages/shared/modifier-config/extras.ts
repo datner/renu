@@ -1,8 +1,8 @@
-import * as O from "@effect/data/Option";
-import * as N from "@effect/data/Number";
-import * as S from "@effect/schema/Schema";
 import { pipe } from "@effect/data/Function";
-import * as Base from './base'
+import * as N from "@effect/data/Number";
+import * as O from "@effect/data/Option";
+import * as S from "@effect/schema/Schema";
+import * as Base from "./base";
 
 export const ModifierEnum = {
   oneOf: "oneOf",
@@ -32,7 +32,7 @@ export const Modifier = pipe(
   S.omit("options"),
   S.extend(
     S.struct({
-      _tag: S.literal('extras'),
+      _tag: S.literal("extras"),
       options: S.nonEmptyArray(Option),
       min: Quantity,
       max: Quantity,
@@ -40,9 +40,3 @@ export const Modifier = pipe(
   ),
 );
 export interface Modifier extends S.To<typeof Modifier> {}
-
-
-
-
-
-

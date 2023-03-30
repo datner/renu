@@ -1,7 +1,7 @@
-import { ComponentPropsWithRef, forwardRef, memo } from "react"
-import clsx from "clsx"
+import clsx from "clsx";
+import { ComponentPropsWithRef, forwardRef, memo } from "react";
 
-type InputProps = Omit<ComponentPropsWithRef<"input">, "className">
+type InputProps = Omit<ComponentPropsWithRef<"input">, "className">;
 
 export const InputBase = memo(
   forwardRef<HTMLInputElement, InputProps>((props, ref) => (
@@ -19,6 +19,6 @@ export const InputBase = memo(
         "disabled:bg-gray-200",
       ])}
     />
-  ))
-)
-InputBase.displayName = "InputBase"
+  )),
+);
+InputBase.displayName = "InputBase";

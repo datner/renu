@@ -1,17 +1,17 @@
-import { gSSP } from "src/blitz-server"
-import { GetServerSidePropsContext } from "next"
-import { BlitzPage, ErrorBoundary, Routes, useParam } from "@blitzjs/next"
-import { Content } from "src/admin/components/Content"
-import { AdminLayout } from "src/core/layouts/AdminLayout"
-import { Suspense } from "react"
-import { Aside } from "src/admin/components/Aside"
-import { LoadingOverlay } from "@mantine/core"
-import { useRouter } from "next/router"
-import { CategoryAdminPanel } from "src/admin/components/CategoryAdminPanel"
+import { BlitzPage, ErrorBoundary, Routes, useParam } from "@blitzjs/next";
+import { LoadingOverlay } from "@mantine/core";
+import { GetServerSidePropsContext } from "next";
+import { useRouter } from "next/router";
+import { Suspense } from "react";
+import { Aside } from "src/admin/components/Aside";
+import { CategoryAdminPanel } from "src/admin/components/CategoryAdminPanel";
+import { Content } from "src/admin/components/Content";
+import { gSSP } from "src/blitz-server";
+import { AdminLayout } from "src/core/layouts/AdminLayout";
 
 const AdminMenusMenu: BlitzPage = () => {
-  const identifier = useParam("identifier", "string")
-  const router = useRouter()
+  const identifier = useParam("identifier", "string");
+  const router = useRouter();
   return (
     <Content
       main={
@@ -32,12 +32,12 @@ const AdminMenusMenu: BlitzPage = () => {
         </Suspense>
       }
     />
-  )
-}
+  );
+};
 
 export const getServerSideProps = gSSP(async (ctx: GetServerSidePropsContext) => {
-  const { locale, query } = ctx
-  const { identifier } = query
+  const { locale, query } = ctx;
+  const { identifier } = query;
   if (!identifier || Array.isArray(identifier)) {
     return {
       redirect: {
@@ -45,18 +45,18 @@ export const getServerSideProps = gSSP(async (ctx: GetServerSidePropsContext) =>
         permanent: false,
       },
       props: {},
-    }
+    };
   }
 
   return {
     props: { messages: (await import(`src/core/messages/${locale}.json`)).default },
-  }
-})
+  };
+});
 
 AdminMenusMenu.authenticate = {
   redirectTo: Routes.Authentication(),
-}
+};
 
-AdminMenusMenu.getLayout = (page) => <AdminLayout>{page}</AdminLayout>
+AdminMenusMenu.getLayout = (page) => <AdminLayout>{page}</AdminLayout>;
 
-export default AdminMenusMenu
+export default AdminMenusMenu;

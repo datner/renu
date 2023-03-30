@@ -1,15 +1,15 @@
-import { NumberInput, Group, ActionIcon, NumberInputHandlers } from "@mantine/core"
-import { useRef } from "react"
+import { ActionIcon, Group, NumberInput, NumberInputHandlers } from "@mantine/core";
+import { useRef } from "react";
 
 type Props = {
-  value: number
-  onChange(next: number): void
-  disabled: boolean
-}
+  value: number;
+  onChange(next: number): void;
+  disabled: boolean;
+};
 
 export function SmallAmountButtons(props: Props) {
-  const { value, onChange, disabled } = props
-  const handlers = useRef<NumberInputHandlers>()
+  const { value, onChange, disabled } = props;
+  const handlers = useRef<NumberInputHandlers>();
 
   return (
     <Group spacing={5}>
@@ -37,5 +37,5 @@ export function SmallAmountButtons(props: Props) {
         +
       </ActionIcon>
     </Group>
-  )
+  );
 }

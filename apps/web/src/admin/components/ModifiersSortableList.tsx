@@ -1,45 +1,34 @@
-import { Badge, Card } from "@mantine/core"
-import { ItemSchema } from "src/items/validations"
-import * as O from "fp-ts/Option"
-import * as A from "fp-ts/Array"
-import { constNull, pipe } from "fp-ts/function"
 import {
   closestCenter,
   DndContext,
   DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
-  DragOverlay,
-  DragStartEvent,
-} from "@dnd-kit/core"
-import {
-  SortableContext,
-  sortableKeyboardCoordinates,
-  rectSortingStrategy,
-  useSortable,
-} from "@dnd-kit/sortable"
-import { CSS } from "@dnd-kit/utilities"
-import { FieldArrayWithId } from "react-hook-form"
-import {
-  ComponentPropsWithoutRef,
-  ComponentPropsWithRef,
-  forwardRef,
-  PropsWithChildren,
-  Ref,
-} from "react"
-import { EllipsisVerticalIcon, PlusIcon } from "@heroicons/react/24/outline"
-import { useStableO } from "fp-ts-react-stable-hooks"
+} from "@dnd-kit/core";
+import { rectSortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { EllipsisVerticalIcon, PlusIcon } from "@heroicons/react/24/outline";
+import { Badge, Card } from "@mantine/core";
+import { useStableO } from "fp-ts-react-stable-hooks";
+import * as A from "fp-ts/Array";
+import { constNull, pipe } from "fp-ts/function";
+import * as O from "fp-ts/Option";
+import { ComponentPropsWithoutRef, ComponentPropsWithRef, forwardRef, PropsWithChildren, Ref } from "react";
+import { FieldArrayWithId } from "react-hook-form";
+import { ItemSchema } from "src/items/validations";
 
-type ModifierField = FieldArrayWithId<ItemSchema, "modifiers", "id">
+type ModifierField = FieldArrayWithId<ItemSchema, "modifiers", "id">;
 
 type ModifierCardProps = {
-  field: ModifierField
-  onClick?(): void
-  gripRef?: Ref<HTMLButtonElement>
-  gripProps?: ComponentPropsWithoutRef<"button">
-} & ComponentPropsWithRef<"div">
+  field: ModifierField;
+  onClick?(): void;
+  gripRef?: Ref<HTMLButtonElement>;
+  gripProps?: ComponentPropsWithoutRef<"button">;
+} & ComponentPropsWithRef<"div">;
 
 const ModifierCard = forwardRef<HTMLDivElement, ModifierCardProps>(
   ({ field, onClick, gripRef, gripProps = {}, ...rest }, ref) => {
@@ -71,16 +60,16 @@ const ModifierCard = forwardRef<HTMLDivElement, ModifierCardProps>(
           </button>
         </div>
       </Card>
-    )
-  }
-)
+    );
+  },
+);
 
 type AddModifierCardProps = {
-  onClick?(): void
-}
+  onClick?(): void;
+};
 
 const AddModifierCard = (props: AddModifierCardProps) => {
-  const { onClick } = props
+  const { onClick } = props;
   return (
     <Card
       component="button"
@@ -104,8 +93,8 @@ const AddModifierCard = (props: AddModifierCardProps) => {
         </div>
       </div>
     </Card>
-  )
-}
+  );
+};
 
 const ListItem = ({ position, children }: PropsWithChildren<{ position?: number }>) => (
   <li className="flex items-center">
@@ -114,10 +103,10 @@ const ListItem = ({ position, children }: PropsWithChildren<{ position?: number 
     </div>
     {children}
   </li>
-)
+);
 
 const SortableModifierCard = (props: ModifierCardProps) => {
-  const { field } = props
+  const { field } = props;
   const {
     attributes,
     listeners,
@@ -128,13 +117,13 @@ const SortableModifierCard = (props: ModifierCardProps) => {
     isDragging,
   } = useSortable({
     id: field.id,
-  })
+  });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.2 : 1,
-  }
+  };
 
   return (
     <ModifierCard
@@ -144,52 +133,52 @@ const SortableModifierCard = (props: ModifierCardProps) => {
       {...props}
       style={style}
     />
-  )
-}
+  );
+};
 
-ModifierCard.displayName = "ModifierCard"
+ModifierCard.displayName = "ModifierCard";
 
 type Props = {
-  fields: ModifierField[]
-  move(from: number, to: number): void
-  onClick(index: number): void
-  onAddModifier(): void
-}
+  fields: ModifierField[];
+  move(from: number, to: number): void;
+  onClick(index: number): void;
+  onAddModifier(): void;
+};
 
 export function ModifiersSortableList(props: Props) {
-  const { fields, move, onClick, onAddModifier } = props
-  const [draggedField, setDraggedField] = useStableO<ModifierField>(O.none)
+  const { fields, move, onClick, onAddModifier } = props;
+  const [draggedField, setDraggedField] = useStableO<ModifierField>(O.none);
   const sensors = useSensors(
     useSensor(PointerSensor),
-    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-  )
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
+  );
 
   const handleDragStart = (event: DragStartEvent) =>
     pipe(
       fields,
       A.findFirst((f) => f.id === event.active.id),
-      setDraggedField
-    )
+      setDraggedField,
+    );
 
   const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event
+    const { active, over } = event;
 
-    setDraggedField(O.none)
+    setDraggedField(O.none);
     if (over && active.id !== over.id) {
       const from = pipe(
         fields,
         A.findIndex((f) => f.id === active.id),
-        O.getOrElse(() => -1)
-      )
+        O.getOrElse(() => -1),
+      );
       const to = pipe(
         fields,
         A.findIndex((f) => f.id === over.id),
-        O.getOrElse(() => -1)
-      )
-      move(from, to)
-      onClick(to)
+        O.getOrElse(() => -1),
+      );
+      move(from, to);
+      onClick(to);
     }
-  }
+  };
 
   return (
     <DndContext
@@ -206,7 +195,7 @@ export function ModifiersSortableList(props: Props) {
               <ListItem key={f.id} position={i}>
                 <SortableModifierCard field={f} onClick={() => onClick(i)} />
               </ListItem>
-            ))
+            )),
           )}
           <ListItem>
             <AddModifierCard onClick={onAddModifier} />
@@ -216,9 +205,9 @@ export function ModifiersSortableList(props: Props) {
       <DragOverlay>
         {pipe(
           draggedField,
-          O.match(constNull, (field) => <ModifierCard field={field} />)
+          O.match(constNull, (field) => <ModifierCard field={field} />),
         )}
       </DragOverlay>
     </DndContext>
-  )
+  );
 }

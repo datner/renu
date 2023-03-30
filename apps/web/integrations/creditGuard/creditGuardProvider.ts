@@ -169,5 +169,5 @@
 //       )
 //     ),
 // }
-export {}
+export {};
 // TODO: migrate this to @integrations

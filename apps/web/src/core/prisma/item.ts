@@ -1,6 +1,6 @@
-import { Prisma } from "database"
-import { Common } from "shared/schema"
-import * as _Menu from "src/menu/schema"
+import { Prisma } from "database";
+import { Common } from "shared/schema";
+import * as _Menu from "src/menu/schema";
 
 export const { belongsToVenue, id, idIn } = {
   belongsToVenue: (venue: Common.Slug) => ({
@@ -12,5 +12,5 @@ export const { belongsToVenue, id, idIn } = {
   idIn: (ids: Iterable<_Menu.ItemId>) => ({
     id: { in: Array.from(ids) },
   }),
-} satisfies Record<string, (...args: any) => Prisma.ItemWhereInput>
-export const Where = { belongsToVenue, id, idIn }
+} satisfies Record<string, (...args: any) => Prisma.ItemWhereInput>;
+export const Where = { belongsToVenue, id, idIn };

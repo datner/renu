@@ -1,28 +1,28 @@
-import { BlitzLayout, Routes } from "@blitzjs/next"
-import clsx from "clsx"
-import { ReactNode, Suspense } from "react"
-import Layout from "./Layout"
+import { BlitzLayout, Routes } from "@blitzjs/next";
+import NiceModal from "@ebay/nice-modal-react";
 import {
-  Square2StackIcon,
+  BuildingOffice2Icon,
+  BuildingStorefrontIcon,
+  ClipboardIcon,
   // CogIcon,
   // CircleStackIcon as CollectionIcon,
   HomeIcon,
-  BuildingStorefrontIcon,
-  ClipboardIcon,
-  BuildingOffice2Icon,
+  Square2StackIcon,
   // PhotoIcon as PhotographIcon,
   // UserGroupIcon,
-} from "@heroicons/react/24/solid"
-import { ImpersonationNotice } from "src/auth/components/ImpersonationNotice"
-import { ToastContainer } from "react-toastify"
-import NiceModal from "@ebay/nice-modal-react"
-import { useIsRtl } from "../hooks/useIsRtl"
-import { Navbar } from "@mantine/core"
+} from "@heroicons/react/24/solid";
+import { Navbar } from "@mantine/core";
+import clsx from "clsx";
+import { ReactNode, Suspense } from "react";
+import { ToastContainer } from "react-toastify";
+import { ImpersonationNotice } from "src/auth/components/ImpersonationNotice";
+import { useIsRtl } from "../hooks/useIsRtl";
+import Layout from "./Layout";
 
-import "react-toastify/dist/ReactToastify.css"
-import { ActiveLink } from "../components/ActiveLink"
+import "react-toastify/dist/ReactToastify.css";
+import { ActiveLink } from "../components/ActiveLink";
 
-type Props = { children?: ReactNode }
+type Props = { children?: ReactNode };
 
 const sidebarNavigation = [
   { name: "Home", href: Routes.AdminHome(), icon: HomeIcon },
@@ -36,14 +36,14 @@ const sidebarNavigation = [
     disabled: true,
   },
   // { name: "Settings", href: "/admin/settings", icon: CogIcon, current: false },
-]
+];
 
 const navLinks = sidebarNavigation.map((item) => (
   <ActiveLink key={item.name} href={item.href}>
     {({ active }) => (
       <a
         onClick={(e) => {
-          if (item.disabled) e.preventDefault()
+          if (item.disabled) e.preventDefault();
         }}
         className={clsx(
           active
@@ -51,8 +51,7 @@ const navLinks = sidebarNavigation.map((item) => (
             : item.disabled
             ? "text-emerald-600 cursor-not-allowed"
             : "text-emerald-100 hover:bg-emerald-800 hover:text-white",
-
-          "group w-full p-3 rounded-md flex flex-col items-center text-xs font-medium"
+          "group w-full p-3 rounded-md flex flex-col items-center text-xs font-medium",
         )}
         aria-current={active ? "page" : undefined}
       >
@@ -63,7 +62,7 @@ const navLinks = sidebarNavigation.map((item) => (
               : item.disabled
               ? "text-emerald-600"
               : "text-emerald-300 group-hover:text-white",
-            "h-6 w-6"
+            "h-6 w-6",
           )}
           aria-hidden="true"
         />
@@ -71,7 +70,7 @@ const navLinks = sidebarNavigation.map((item) => (
       </a>
     )}
   </ActiveLink>
-))
+));
 
 const navigation = (
   <Navbar
@@ -85,7 +84,7 @@ const navigation = (
       {navLinks}
     </Navbar.Section>
   </Navbar>
-)
+);
 
 export const AdminLayout: BlitzLayout<Props> = ({ children }) => (
   <Layout title="Renu | Admin">
@@ -102,4 +101,4 @@ export const AdminLayout: BlitzLayout<Props> = ({ children }) => (
       </div>
     </div>
   </Layout>
-)
+);

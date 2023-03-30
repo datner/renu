@@ -1,9 +1,9 @@
-import { withBlitz } from "@blitzjs/next"
-import { Locale } from "database"
+import { withBlitz } from "@blitzjs/next";
+import { Locale } from "database";
 
 /**
  * @type {import('@blitzjs/next').BlitzConfig}
- **/
+ */
 const config = {
   reactStrictMode: true,
   transpilePackages: ["ui", "@integrations/*", "shared"],
@@ -32,7 +32,7 @@ const config = {
         destination: "/admin/home",
         permanent: true,
       },
-    ]
+    ];
   },
   async rewrites() {
     return {
@@ -44,8 +44,8 @@ const config = {
       ],
       afterFiles: [],
       fallback: [],
-    }
+    };
   },
-}
+};
 
-export default withBlitz(config)
+export default withBlitz(config);

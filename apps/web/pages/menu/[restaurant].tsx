@@ -1,8 +1,8 @@
-import { gSP } from "src/blitz-server"
-import { GetStaticPaths, GetStaticPropsContext, InferGetStaticPropsType } from "next"
+import { gSP, gSSP } from "src/blitz-server"
+import { GetStaticPaths, InferGetStaticPropsType } from "next"
 import clsx from "clsx"
 import db, { Locale } from "db"
-import { Fragment, useMemo, useState } from "react"
+import { Fragment, Suspense, useMemo, useState } from "react"
 import { useLocale } from "src/core/hooks/useLocale"
 import { contentOption, titleFor } from "src/core/helpers/content"
 import { CategoryHeader } from "src/menu/components/CategoryHeader"
@@ -16,7 +16,6 @@ import MenuLayout from "src/core/layouts/MenuLayout"
 import { Closed } from "src/menu/components/Closed"
 import { ListItem } from "src/menu/components/ListItem"
 import * as Order from "src/menu/hooks/useOrder"
-import { selectTheEntireMenu } from "src/menu/prisma"
 import * as A from "@effect/data/ReadonlyArray"
 import * as HashMap from "@effect/data/HashMap"
 import * as Data from "@effect/data/Data"
@@ -24,6 +23,8 @@ import { pipe } from "@effect/data/Function"
 import * as Parser from "@effect/schema/Parser"
 import * as _Menu from "src/menu/schema"
 import Script from "next/script"
+import getVenueClearingProvider from "src/venues/queries/getVenueClearingType"
+import getMenu from "src/menu/queries/getMenu"
 
 const LazyViewOrderButton = dynamic(() => import("src/menu/components/ViewOrderButton"), {
   loading: () => <Fragment />,
@@ -36,15 +37,8 @@ const LazyOrderModal = dynamic(() => import("src/menu/components/OrderModal"), {
 })
 
 export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) => {
-  const restaurant = useMemo(
-    () =>
-      Parser.parse(_Menu.FullMenu)(props.restaurant, {
-        allErrors: true,
-        isUnexpectedAllowed: true,
-      }),
-    [props.restaurant]
-  )
-
+  const {menu} = props
+  const restaurant = useMemo(() => Parser.parse(_Menu.FullMenu)(menu), [menu])
   const { categories } = restaurant
   const { attachNav, setRoot, observe, active, setActive } = useNavBar()
   // add the item modal state to the dispatch as well, just for laughs
@@ -176,12 +170,14 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
             setReviewOrder(true)
           }}
         />
+        <Suspense fallback={<></>}>
         <LazyOrderModal
           order={orderState.order}
           dispatch={dispatch}
           open={reviewOrder}
           onClose={() => setReviewOrder(false)}
         />
+        </Suspense>
         <LazyItemModal dispatch={dispatch} activeItem={orderState.activeItem} />
 
         {restaurant.simpleContactInfo && (
@@ -211,20 +207,22 @@ export const getStaticPaths: GetStaticPaths = async () => {
   }
 }
 
-export const getStaticProps = gSP(async (context: GetStaticPropsContext) => {
+export const getStaticProps = gSP(async (context) => {
   const { restaurant: identifier } = Query.parse(context.params)
-  const restaurant = await db.venue.findUnique({
-    where: { identifier },
-    select: selectTheEntireMenu,
-  })
+  
+  try {
+  const menu = await getMenu({identifier}, context.ctx)
+  context.ctx.prefetchQuery(getVenueClearingProvider, {identifier})
 
-  if (!restaurant) throw new NotFoundError()
 
   return {
     props: {
-      restaurant,
+        menu,
       messages: (await import(`src/core/messages/${context.locale}.json`)).default,
     },
     revalidate: 60,
+  }
+  } catch (e) {
+    throw new NotFoundError()
   }
 })

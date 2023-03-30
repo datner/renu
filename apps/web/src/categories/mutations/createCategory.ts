@@ -11,7 +11,7 @@ import { Renu } from "src/core/effect"
 
 export const handler = (input: CreateCategory, ctx: Ctx) =>
   pipe(
-    Effect.sync(() => P.decode(CreateCategory)(input)),
+    P.decodeEffect(CreateCategory)(input),
     Effect.map(
       ({ identifier, en, he }) =>
         ({
@@ -26,7 +26,7 @@ export const handler = (input: CreateCategory, ctx: Ctx) =>
           },
         } satisfies Prisma.CategoryCreateInput)
     ),
-    Effect.zip(Session.get),
+    Effect.zip(Session.Session),
     Effect.flatMap(([input, session]) =>
       Effect.attemptCatchPromise(
         () =>

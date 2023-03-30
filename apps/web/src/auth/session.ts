@@ -3,7 +3,7 @@ import * as Context from "@effect/data/Context"
 import * as Brand from "@effect/data/Brand"
 import * as Data from "@effect/data/Data"
 import * as O from "@effect/data/Option"
-import { pipe } from "@effect/data/Function"
+import { pipe, SK, flow } from "@effect/data/Function"
 import { Ctx } from "@blitzjs/next"
 import { AuthorizationError, AuthenticationError, CSRFTokenMismatchError } from "blitz"
 import { AuthenticatedSessionContext } from "@blitzjs/auth"
@@ -36,7 +36,7 @@ export interface VenueOrgMismatchError extends Data.Case {
 }
 export const VenueOrgMismatchError = Data.tagged<VenueOrgMismatchError>("VenueOrgMismatchError")
 
-export const Tag = Context.Tag<AuthenticatedSessionContext>()
+export const Session = Context.Tag<AuthenticatedSessionContext>()
 
 export type AuthError =
   | AuthenticationErrorCase
@@ -45,26 +45,28 @@ export type AuthError =
 
 export const ensureOrgVenuMatch = Effect.asUnit(
   Effect.filterOrFail(
-    Effect.service(Tag),
+    Session,
     (session) => session.venue.organizationId === session.organization.id,
     VenueOrgMismatchError
   )
 )
 
 const curryEffect =
-  <T extends Context.Tag<any>>(tag: T) =>
+  <T extends Context.Tag<any, any>>(tag: T) =>
   <R, E, A>(f: (s: Context.Tag.Service<T>) => Effect.Effect<R, E, A>) =>
-    Effect.serviceWithEffect(tag, f)
+    Effect.flatMap(tag, f)
 
 const curryWith =
-  <T extends Context.Tag<any>>(tag: T) =>
+  <T extends Context.Tag<any,any>>(tag: T) =>
   <A>(f: (s: Context.Tag.Service<T>) => A) =>
-    Effect.serviceWith(tag, f)
+    Effect.map(tag, f)
 
-export const get = Effect.service(Tag)
-export const withEffect = curryEffect(Tag)
-const _with = curryWith(Tag)
+export const withEffect = curryEffect(Session)
+const _with = curryWith(Session)
 export { _with as with }
+
+export const Organization = Effect.map(Session, s => s.organization)
+export const Venue = Effect.map(Session, s => s.venue)
 
 export const ensureSuperAdmin = withEffect((session) =>
   pipe(
@@ -85,9 +87,10 @@ export const ensureSuperAdmin = withEffect((session) =>
 
 export type AuthenticatedSession = AuthenticatedSessionContext & Brand.Brand<"AuthenticatedSession">
 
+
 export const authorize = (ctx: Ctx) =>
   Effect.provideServiceEffect(
-    Tag,
+    Session,
     Effect.attemptCatch(
       () => {
         ctx.session.$authorize()
@@ -107,3 +110,5 @@ export const authorize = (ctx: Ctx) =>
       }
     )
   )
+
+export const authorizeResolver:<R, E, A, C extends Ctx>(self:Effect.Effect<R, E, A>, ctx: C) => Effect.Effect<Exclude<R, AuthenticatedSessionContext>, AuthError | E, A>  = (self, ctx) => authorize(ctx)(self) 

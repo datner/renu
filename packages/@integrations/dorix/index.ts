@@ -29,13 +29,13 @@ const DorixConfig = Config.all({
 
 const provideDorixIntegration = Effect.provideServiceEffect(
   IntegrationService,
-  Effect.serviceWith(Management.IntegrationSettingsService, Parser.parse(Integration))
+  Effect.map(Management.IntegrationSettingsService, Parser.parse(Integration))
 )
 
 const provideHttpConfig = Effect.provideServiceEffect(
   Http.HttpConfigService,
   Effect.gen(function* ($) {
-    const { vendorData } = yield* $(Effect.service(IntegrationService))
+    const { vendorData } = yield* $(IntegrationService)
     const { isQA = false } = vendorData
     const config = yield* $(Effect.config(DorixConfig))
     const { url, apiKey } = isQA ? config.qa : config
@@ -50,20 +50,20 @@ const provideHttpConfig = Effect.provideServiceEffect(
 interface DorixService extends Management.ManagementService {
   _tag: typeof ManagementProvider.DORIX
 }
-export const Tag = Context.Tag<DorixService>()
+export const Dorix = Context.Tag<DorixService>()
 
 export const layer = Layer.effect(
-  Tag,
+  Dorix,
   Effect.gen(function* ($) {
     const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "Dorix" }))
-    const client = yield* $(Effect.service(HttpService))
+    const client = yield* $(HttpService)
 
     return {
       _tag: ManagementProvider.DORIX,
       reportOrder: (order) =>
         pipe(
-          toOrder(order),
-          Effect.tap(() => Effect.log("reporting order to dorix")),
+          Effect.log("reporting order to dorix"),
+          Effect.zipRight(toOrder(order)),
           Effect.map(JSON.stringify),
           Effect.flatMap((body) =>
             client.request("/v1/order", {
@@ -88,8 +88,8 @@ export const layer = Layer.effect(
 
       getOrderStatus: (order) =>
         pipe(
-          Effect.service(IntegrationService),
-          Effect.tap(() => Effect.log("getting order status to dorix")),
+          Effect.log("getting order status to dorix"),
+          Effect.zipRight(IntegrationService),
           Effect.map(
             // ?branchId={branchId}&source=RENU
             ({ vendorData: { branchId } }) => new URLSearchParams({ branchId, source: "RENU" })
@@ -117,10 +117,9 @@ export const layer = Layer.effect(
         ),
 
       getVenueMenu: pipe(
-        Effect.service(IntegrationService),
-        Effect.map((is) => is.vendorData.branchId),
+        Effect.map(IntegrationService,(is) => is.vendorData.branchId),
         Effect.flatMap((branchId) => client.request(`/v1/menu/branch/${branchId}`)),
-        breaker((e) => e instanceof Http.HttpRequestError),
+        breaker(),
         Effect.flatMap(Http.toJson),
         Effect.map(Parser.parse(DorixMenu)),
         Effect.map(toMenu),

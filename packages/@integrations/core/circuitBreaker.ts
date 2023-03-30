@@ -4,7 +4,7 @@ import * as Effect from "@effect/io/Effect";
 import * as Duration from "@effect/data/Duration";
 import * as Context from "@effect/data/Context";
 import * as Predicate from "@effect/data/Predicate";
-import { pipe } from "@effect/data/Function";
+import { constFalse, pipe } from "@effect/data/Function";
 
 export class CircuitBreakerError extends Error {
   readonly _tag = "CircuitBreakerError";
@@ -105,7 +105,7 @@ export const makeBreaker = (config?: BreakerConfig | undefined) =>
       state = yield* $(Ref.make(closed(0))),
     } = config ?? {};
 
-    return <E, EI extends E>(isRetryable: Predicate.Predicate<EI>) =>
+    return <E, EI extends E>(isRetryable: Predicate.Predicate<EI> = constFalse) =>
     <R, A>(self: Effect.Effect<R, E, A>) =>
       pipe(
         Ref.updateAndGet(
@@ -121,7 +121,7 @@ export const makeBreaker = (config?: BreakerConfig | undefined) =>
                 Ref.update(
                   state,
                   onClosed((s) =>
-                    isRetryable(e as EI) && s.failCount < maxFailure
+                    (!isRetryable || isRetryable(e as EI)) && s.failCount < maxFailure
                       ? closed(s.failCount + 1)
                       : open(cooldown)
                   ),

@@ -33,7 +33,7 @@ export interface Integration extends S.To<typeof Integration> {}
 export const IntegrationService = Context.Tag<Integration>()
 
 export const payplusIntegrationLayer = pipe(
-  Effect.serviceWith(Clearing.IntegrationSettingsService, P.parse(Integration)),
+  Effect.flatMap(Clearing.IntegrationSettingsService, P.parseEffect(Integration)),
   Effect.mapError(
     (cause) =>
       new Clearing.ClearingError("failed to parse integration setting", {

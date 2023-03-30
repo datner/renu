@@ -106,9 +106,7 @@ export const getDesiredTime = () =>
   )
 
 export const toOrder = (order: Management.FullOrderWithItems) =>
-  pipe(
-    Effect.service(IntegrationService),
-    Effect.map(
+    Effect.map(IntegrationService,
       ({ vendorData: { branchId } }): Dorix.Order => ({
         externalId: String(order.id),
         payment: pipe(order, toTransaction, toPayment),
@@ -126,7 +124,6 @@ export const toOrder = (order: Management.FullOrderWithItems) =>
         },
       })
     )
-  )
 
 export function toItems(items: (OrderItem & { modifiers: OrderItemModifier[] })[]) {
   return items.map(({ id, itemId, comment, price, orderId, ...rest }) => ({

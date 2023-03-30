@@ -21,7 +21,7 @@ export const Tag = Context.Tag<PayPlusService>()
 const provideHttpConfig = Effect.provideServiceEffect(
   Http.HttpConfigService,
   Effect.gen(function* ($) {
-    const { vendorData } = yield* $(Effect.service(IntegrationService))
+    const { vendorData } = yield* $(IntegrationService)
     const { isQA = false, ...creds } = vendorData
     const config = yield* $(Effect.config(PayPlusConfig))
     const { url } = isQA ? config.qa : config
@@ -35,7 +35,7 @@ const provideHttpConfig = Effect.provideServiceEffect(
 
 const toPayload = ({ items, id, venueId }: Clearing.FullOrderWithItems) =>
   Effect.gen(function* ($) {
-    const integration = yield* $(Effect.service(IntegrationService))
+    const integration = yield* $(IntegrationService)
     const { host } = yield* $(Effect.config(Common.config))
     const successUrl = new URL(`payments/success`, host)
     const errorUrl = new URL(`payments/error`, host)
@@ -86,7 +86,7 @@ const toPayload = ({ items, id, venueId }: Clearing.FullOrderWithItems) =>
   })
 
 const authorizeResponse = (res: Response) =>
-  Effect.serviceWithEffect(IntegrationService, (integration) =>
+  Effect.flatMap(IntegrationService, (integration) =>
     pipe(
       Effect.succeed(res),
       Effect.filterOrFail(
@@ -119,14 +119,14 @@ const authorizeResponse = (res: Response) =>
 
 const parseIntegration = Effect.provideServiceEffect(
   IntegrationService,
-  Effect.serviceWith(Clearing.Settings, P.parse(Integration))
+  Effect.map(Clearing.Settings, P.parse(Integration))
 )
 
 export const layer = Layer.effect(
   Tag,
   Effect.gen(function* ($) {
     const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "Gama" }))
-    const Client = yield* $(Effect.service(Http.Tag))
+    const Client = yield* $(Http.Http)
 
     return {
       _tag: ClearingProvider.PAY_PLUS,
@@ -194,9 +194,7 @@ export const layer = Layer.effect(
           ),
           Effect.flatMap(authorizeResponse),
           Effect.flatMap(Http.toJson),
-          Effect.map((res) =>
-            P.parse(GeneratePaymentLinkResponse)(res, { isUnexpectedAllowed: true })
-          ),
+          Effect.flatMap(P.parseEffect(GeneratePaymentLinkResponse)),
           Effect.map((r) => r.data.payment_page_link),
           Effect.map((link) => new URL(link)),
           breaker((e) => e instanceof Http.HttpRequestError || e instanceof Http.HttpResponseError),

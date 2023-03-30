@@ -11,19 +11,19 @@ export const ClearingServiceLayer = Layer.effect(
   C.ClearingService,
   Effect.gen(function* ($) {
     const services: Record<ClearingProvider, C.ClearingService> = {
-      PAY_PLUS: yield* $(Effect.service(PayPlus.Tag)),
-      CREDIT_GUARD: yield* $(Effect.service(PayPlus.Tag)),
-      GAMA: yield* $(Effect.service(Gama.Tag))
+      PAY_PLUS: yield* $(PayPlus.Tag),
+      CREDIT_GUARD: yield* $(PayPlus.Tag),
+      GAMA: yield* $(Gama.Tag)
     }
 
     return {
       _tag: ClearingProvider.PAY_PLUS, // TODO: dissapear this from the interface
       getClearingPageLink: (order) =>
-        Effect.serviceWithEffect(C.IntegrationSettingsService, (_) =>
+        Effect.flatMap(C.IntegrationSettingsService, (_) =>
           services[_.provider].getClearingPageLink(order)
         ),
       validateTransaction: (order) =>
-        Effect.serviceWithEffect(C.IntegrationSettingsService, (_) =>
+        Effect.flatMap(C.IntegrationSettingsService, (_) =>
           services[_.provider].validateTransaction(order)
         ),
     }
@@ -33,7 +33,7 @@ export const ClearingServiceLayer = Layer.effect(
 export const layer = Layer.provide(PayPlus.layer, ClearingServiceLayer)
 
 export const getClearingPageLink = (order: M.FullOrderWithItems) =>
-  Effect.serviceWithEffect(C.ClearingService, (_) => _.getClearingPageLink(order))
+  Effect.flatMap(C.ClearingService, (_) => _.getClearingPageLink(order))
 
 export const validateTransaction = (order: Order) =>
-  Effect.serviceWithEffect(C.ClearingService, (_) => _.validateTransaction(order))
+  Effect.flatMap(C.ClearingService, (_) => _.validateTransaction(order))

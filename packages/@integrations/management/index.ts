@@ -14,20 +14,20 @@ export const ManagementServiceLayer = Layer.effect(
   M.ManagementService,
   Effect.gen(function* ($) {
     const services: Record<"DORIX" | "RENU", M.ManagementService> = {
-      DORIX: yield* $(Effect.service(Dorix.Tag)),
-      RENU: yield* $(Effect.service(Dorix.Tag)),
+      DORIX: yield* $(Dorix.Dorix),
+      RENU: yield* $(Dorix.Dorix),
     }
 
     return {
       reportOrder: (order) =>
-        Effect.serviceWithEffect(M.IntegrationSettingsService, (_) =>
+        Effect.flatMap(M.IntegrationSettingsService, (_) =>
           services[_.provider].reportOrder(order)
         ),
       getOrderStatus: (order) =>
-        Effect.serviceWithEffect(M.IntegrationSettingsService, (_) =>
+        Effect.flatMap(M.IntegrationSettingsService, (_) =>
           services[_.provider].getOrderStatus(order)
         ),
-      getVenueMenu: Effect.serviceWithEffect(
+      getVenueMenu: Effect.flatMap(
         M.IntegrationSettingsService,
         (_) => services[_.provider].getVenueMenu
       ),
@@ -38,9 +38,9 @@ export const ManagementServiceLayer = Layer.effect(
 export const layer = Layer.provide(Dorix.layer, ManagementServiceLayer)
 
 export const reportOrder = (order: M.FullOrderWithItems) =>
-  Effect.serviceWithEffect(M.ManagementService, (_) => _.reportOrder(order))
+  Effect.flatMap(M.ManagementService, (_) => _.reportOrder(order))
 
 export const getOrderStatus = (order: Order) =>
-  Effect.serviceWithEffect(M.ManagementService, (_) => _.getOrderStatus(order))
+  Effect.flatMap(M.ManagementService, (_) => _.getOrderStatus(order))
 
-export const getVenueMenu = Effect.serviceWithEffect(M.ManagementService, (_) => _.getVenueMenu)
+export const getVenueMenu = Effect.flatMap(M.ManagementService, (_) => _.getVenueMenu)

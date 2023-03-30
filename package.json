@@ -19,6 +19,7 @@
     "@commitlint/cli": "17.5.1",
     "@commitlint/config-conventional": "17.4.4",
     "@types/node": "18.15.11",
+    "dprint": "0.35.3",
     "eslint": "8.37.0",
     "eslint-config-custom": "workspace:*",
     "husky": "8.0.3",

@@ -30,3 +30,5 @@ export const Content = S.struct({
   description: Description,
 })
 export interface Content extends S.To<typeof Content> {}
+
+export const fromJson = <I extends S.Json, A>(schema: S.Schema<I,A>) => schema

@@ -1,10 +1,9 @@
-import * as ConfigProvider from "@effect/io/Config/Provider";
 import * as Effect from "@effect/io/Effect";
 import * as Exit from "@effect/io/Exit";
 import * as Layer from "@effect/io/Layer";
 import * as Runtime from "@effect/io/Runtime";
 import * as Scope from "@effect/io/Scope";
-import { pipe } from "@fp-ts/core/Function";
+import { pipe } from "@effect/data/Function";
 
 export const makeRuntime = <R, E, A>(layer: Layer.Layer<R, E, A>) =>
   Effect.gen(function*($) {

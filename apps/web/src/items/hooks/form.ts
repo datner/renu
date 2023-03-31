@@ -2,7 +2,7 @@ import { Routes } from "@blitzjs/next";
 import { invalidateQuery, invoke, setQueryData, useQuery } from "@blitzjs/rpc";
 import { pipe } from "@effect/data/Function";
 import * as Effect from "@effect/io/Effect";
-import { none, some } from "fp-ts/Option";
+import * as O from "@effect/data/Option";
 import { useRouter } from "next/router";
 import { useCallback } from "react";
 import getCurrentVenueCategories from "src/categories/queries/getCurrentVenueCategories";
@@ -49,7 +49,7 @@ const useCreate = (redirect = false) => {
     [redirect, router],
   );
 
-  return { onSubmit, item: none };
+  return { onSubmit, item: O.none() };
 };
 
 const useUpdate = (identifier: string) => {
@@ -73,7 +73,7 @@ const useUpdate = (identifier: string) => {
       Renu.runPromise$,
     );
 
-  return { onSubmit, item: some(item) };
+  return { onSubmit, item: O.some(item) };
 };
 
 export const item = {

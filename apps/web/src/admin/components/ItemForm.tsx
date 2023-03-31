@@ -1,19 +1,17 @@
 import { useMutation, useQuery } from "@blitzjs/rpc";
+import * as O from "@effect/data/Option";
 import { AdjustmentsVerticalIcon, DocumentTextIcon } from "@heroicons/react/20/solid";
 import { PuzzlePieceIcon } from "@heroicons/react/24/solid";
 import { Button, NumberInput, Paper, Tabs, Textarea, TextInput } from "@mantine/core";
-import { useStableEffect } from "fp-ts-react-stable-hooks";
-import * as Eq from "fp-ts/Eq";
-import { constNull, constTrue, pipe } from "fp-ts/function";
-import * as O from "fp-ts/Option";
+import { constNull, constTrue, pipe } from "@effect/data/Function";
+import * as Equal from '@effect/data/Equal'
 import { nanoid } from "nanoid";
 import { useTranslations } from "next-intl";
-import { useReducer } from "react";
+import { useEffect, useMemo, useReducer, useRef } from "react";
 import { FormProvider, useController } from "react-hook-form";
 import { toast } from "react-toastify";
 import { shekelFormatter, shekelParser } from "src/core/helpers/form";
 import { useZodForm } from "src/core/hooks/useZodForm";
-import { eqItem } from "src/items/helpers/eqItem";
 import { GetItemResult, ItemSchema, toDefaults } from "src/items/validations";
 import getVenueManagementIntegration from "src/venues/queries/current/getVenueManagementIntegration";
 import { match } from "ts-pattern";
@@ -33,8 +31,10 @@ export function ItemForm(props: Props) {
   const { onSubmit: onSubmit_, item } = props;
   const [integration] = useQuery(getVenueManagementIntegration, null);
   const t = useTranslations("admin.Components.ItemForm");
+  const prevItem = useRef(item)
   const isEdit = O.isSome(item);
-  const defaultValues = toDefaults(integration)(item);
+  const getDefaultValues = useMemo(() => toDefaults(integration), [integration])
+  const defaultValues = useMemo(() => getDefaultValues(item), [item, getDefaultValues])
   const form = useZodForm({
     schema: ItemSchema,
     defaultValues,
@@ -45,13 +45,12 @@ export function ItemForm(props: Props) {
   const { handleSubmit, setFormError, formState, reset, control, formError } = form;
   const { isSubmitting, isDirty } = formState;
 
-  useStableEffect(
-    () => {
-      pipe(item, toDefaults(integration), reset);
-    },
-    [item, reset, integration],
-    Eq.tuple(O.getEq(eqItem), { equals: constTrue }, { equals: constTrue }),
-  );
+  useEffect(() => {
+    if (!Equal.equals(item, prevItem.current)) {
+      reset(getDefaultValues(item))
+    }
+    prevItem.current = item
+  }, [item, getDefaultValues])
 
   const onSubmit = handleSubmit(
     async (data) => {
@@ -116,9 +115,10 @@ export function ItemForm(props: Props) {
     ),
   );
 
-  const deleteButton = pipe(
+  const deleteButton = O.match(
     item,
-    O.matchW(constNull, (it) => <DeleteButton identifier={it.identifier!} onRemove={remove} />),
+    constNull,
+    (it) => <DeleteButton identifier={it.identifier!} onRemove={remove} />,
   );
 
   const { field: priceProps } = useController({ control, name: "price" });

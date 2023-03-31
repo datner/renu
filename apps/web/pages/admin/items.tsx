@@ -34,7 +34,7 @@ export const getServerSideProps = gSSP(async (bag) => {
   if (!venue) {
     return {
       redirect: {
-        destination: Routes.RestaurantSignupPage(),
+        destination: Routes.Impersonate(),
         permanent: false,
       },
     };

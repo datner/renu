@@ -1,12 +1,13 @@
 import { resolver } from "@blitzjs/rpc";
+import { pipe } from "@effect/data/Function";
+import * as S from "@effect/data/String";
+import * as Effect from "@effect/io/Effect";
 import { GlobalRole } from "database";
 import db from "db";
-import { pipe } from "fp-ts/function";
-import * as S from "fp-ts/string";
-import * as TE from "fp-ts/TaskEither";
 import { Settings } from "src/admin/validations/settings";
 import { setDefaultVenue } from "src/auth/helpers/setDefaultVenue";
-import { prismaNotValid } from "src/core/helpers/prisma";
+import { Renu } from "src/core/effect";
+import { prismaError } from "src/core/helpers/prisma";
 
 const removeDashes = S.replace("-", "");
 const isCell = S.startsWith("05");
@@ -19,17 +20,14 @@ export default resolver.pipe(
   resolver.authorize([GlobalRole.ADMIN, GlobalRole.SUPER]),
   setDefaultVenue,
   ({ phone, address, venue }) =>
-    pipe(
-      TE.tryCatch(
+    Renu.runPromise$(
+      Effect.attemptCatchPromise(
         () =>
           db.venue.update({
             where: { id: venue.id },
             data: { simpleContactInfo: `${address} - ${toPhoneNumber(phone)}` },
           }),
-        prismaNotValid,
+        prismaError("Venue"),
       ),
-      TE.getOrElse((e) => {
-        throw e;
-      }),
-    )(),
+    ),
 );

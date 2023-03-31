@@ -1,7 +1,7 @@
 import * as Data from "@effect/data/Data";
 import * as Equal from "@effect/data/Equal";
 import { symbol } from "@effect/data/Hash";
-import * as A from "@fp-ts/core/ReadonlyArray";
+import * as A from "@effect/data/ReadonlyArray";
 import { Locale } from "database";
 import { ModifierConfig, ModifierEnum } from "db/itemModifierConfig";
 import { pipe } from "fp-ts/function";

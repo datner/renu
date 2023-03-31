@@ -1,4 +1,5 @@
-import { generateToken, hash256, SecurePassword } from "@blitzjs/auth";
+import { SecurePassword } from "@blitzjs/auth/secure-password";
+import { generateToken, hash256 } from "@blitzjs/auth";
 import { resolver } from "@blitzjs/rpc";
 import { GlobalRole, MembershipRole } from "database";
 import { addHours } from "date-fns/fp";

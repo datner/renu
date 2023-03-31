@@ -43,7 +43,7 @@ const runOperations = (order: DeepOrder) =>
       Ref.get(orderRef),
       Effect.flatMap(Clearing.validateTransaction),
       Effect.flatMap((txId) =>
-        Effect.attemptCatchPromise(
+        Effect.tryCatchPromise(
           () =>
             db.order.update({
               where: { id: order.id },
@@ -67,7 +67,7 @@ const runOperations = (order: DeepOrder) =>
       Ref.get(orderRef),
       Effect.flatMap(Management.reportOrder),
       Effect.flatMap(() =>
-        Effect.attemptCatchPromise(
+        Effect.tryCatchPromise(
           () =>
             db.order.update({
               where: { id: order.id },
@@ -83,7 +83,7 @@ const runOperations = (order: DeepOrder) =>
       Ref.get(orderRef),
       Effect.flatMap(Management.getOrderStatus),
       Effect.flatMap((state) =>
-        Effect.attemptCatchPromise(
+        Effect.tryCatchPromise(
           () => db.order.update({ where: { id: order.id }, data: { state } }),
           prismaError("Order"),
         )
@@ -111,7 +111,7 @@ export default resolver.pipe(
   (input) =>
     Renu.runPromiseEither$(
       Effect.flatMap(
-        Effect.attemptCatchPromise(
+        Effect.tryCatchPromise(
           () =>
             db.order.findUniqueOrThrow({
               where: { id: input.orderId },
@@ -128,7 +128,7 @@ export default resolver.pipe(
             ),
             Effect.provideServiceEffect(
               Management.Integration,
-              Effect.attemptCatchPromise(
+              Effect.tryCatchPromise(
                 () =>
                   db.managementIntegration.findFirstOrThrow({
                     where: { Venue: { id: order.venueId } },
@@ -138,7 +138,7 @@ export default resolver.pipe(
             ),
             Effect.provideServiceEffect(
               Clearing.IntegrationSettingsService,
-              Effect.attemptCatchPromise(
+              Effect.tryCatchPromise(
                 () =>
                   db.clearingIntegration.findFirstOrThrow({
                     where: { Venue: { id: order.venueId } },

@@ -30,7 +30,7 @@ const handler = async (request: NextApiRequest, res: NextApiResponse) =>
       pipe(
         Effect.gen(function*($) {
           let order = yield* $(
-            Effect.attemptCatchPromise(
+            Effect.tryCatchPromise(
               () =>
                 db.order.update({
                   where: { id: ppc.transaction.more_info },
@@ -60,7 +60,7 @@ const handler = async (request: NextApiRequest, res: NextApiResponse) =>
           }
 
           order = yield* $(
-            Effect.attemptCatchPromise(
+            Effect.tryCatchPromise(
               () =>
                 db.order.update({
                   where: { id: order.id },
@@ -74,7 +74,7 @@ const handler = async (request: NextApiRequest, res: NextApiResponse) =>
           const state = yield* $(Management.getOrderStatus(order));
 
           return yield* $(
-            Effect.attemptCatchPromise(
+            Effect.tryCatchPromise(
               () =>
                 db.order.update({
                   where: { id: order.id },
@@ -87,7 +87,7 @@ const handler = async (request: NextApiRequest, res: NextApiResponse) =>
         }),
         Effect.provideServiceEffect(
           Management.Integration,
-          Effect.attemptCatchPromise(
+          Effect.tryCatchPromise(
             () =>
               db.managementIntegration.findUniqueOrThrow({
                 where: { venueId: ppc.transaction.more_info_1 },

@@ -12,7 +12,7 @@ const _removeCategory = (id: _Menu.CategoryId, ctx: Ctx) =>
   pipe(
     Session.ensureSuperAdmin,
     Effect.flatMap(() =>
-      Effect.attemptCatchPromise(
+      Effect.tryCatchPromise(
         () =>
           db.category.update({
             where: { id },

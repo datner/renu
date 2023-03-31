@@ -91,7 +91,7 @@ export type HttpRequest = (
 export const request = (...args: Parameters<HttpRequest>) => Effect.flatMap(HttpService, (s) => s.request(...args));
 
 export const toJson = (res: Response) =>
-  Effect.attemptCatchPromise(
+  Effect.tryCatchPromise(
     () => res.json() as Promise<unknown>,
     (cause) =>
       new HttpParseError({
@@ -102,7 +102,7 @@ export const toJson = (res: Response) =>
   );
 
 export const toText = (res: Response) =>
-  Effect.attemptCatchPromise(
+  Effect.tryCatchPromise(
     () => res.text(),
     (cause) =>
       new HttpParseError({
@@ -157,7 +157,7 @@ export const layer = Layer.succeed(HttpService, {
     pipe(
       Effect.map(Effect.context<never>(), Context.getOption(HttpConfigService)),
       Effect.flatMap((config) =>
-        Effect.attemptCatchPromiseInterrupt(
+        Effect.tryCatchPromiseInterrupt(
           (signal) => {
             const baseUrl = pipe(
               config,

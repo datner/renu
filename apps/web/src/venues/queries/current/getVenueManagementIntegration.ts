@@ -12,7 +12,7 @@ const handler = (_: null, ctx: Ctx) =>
     Session.with((session) => session.venue),
     Effect.tap((a) => Effect.log(inspect(a))),
     Effect.flatMap((venue) =>
-      Effect.attemptCatchPromise(
+      Effect.tryCatchPromise(
         () => db.managementIntegration.findFirstOrThrow({ where: { Venue: { id: venue.id } } }),
         prismaError("ManagementIntegration"),
       )

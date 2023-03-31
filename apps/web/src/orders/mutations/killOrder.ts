@@ -20,7 +20,7 @@ const killOrder = (orderId: number, ctx: Ctx) =>
       )
     ),
     Effect.flatMap((where) =>
-      Effect.attemptCatchPromise(
+      Effect.tryCatchPromise(
         () => db.order.updateMany({ where, data: { state: OrderState.Dead } }),
         prismaError("Order"),
       )

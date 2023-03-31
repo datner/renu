@@ -186,7 +186,7 @@ const createNewOrder = (
     ),
     Effect.tap((order) => Effect.sync(() => console.log(inspect(order, false, null, true)))),
     Effect.flatMap((data) =>
-      Effect.attemptCatchPromise(
+      Effect.tryCatchPromise(
         () =>
           db.order.create({
             data,
@@ -199,7 +199,7 @@ const createNewOrder = (
 
 const getIntegration = (identifier: string) =>
   pipe(
-    Effect.attemptCatchPromise(
+    Effect.tryCatchPromise(
       () =>
         db.clearingIntegration.findFirstOrThrow({
           where: { Venue: { identifier } },
@@ -217,7 +217,7 @@ const getIntegration = (identifier: string) =>
 
 const getItems = (venue: Common.Slug, ids: Chunk.Chunk<_Menu.ItemId>) =>
   pipe(
-    Effect.attemptCatchPromise(
+    Effect.tryCatchPromise(
       () =>
         db.item.findMany({
           where: { AND: [_Item.belongsToVenue(venue), _Item.idIn(ids)] },
@@ -265,7 +265,7 @@ export default resolver.pipe((input: EncodedSendOrder) => {
   return pipe(
     P.decodeEffect(SendOrder)(input),
     Effect.orDie,
-    Effect.bindValue(
+    Effect.let(
       "sortedItems",
       ({ orderItems }) => Chunk.sort(orderItems, ByItemId),
     ),
@@ -287,7 +287,7 @@ export default resolver.pipe((input: EncodedSendOrder) => {
         // Hack to work with papa
         Effect.succeed(input.venueIdentifier === "papa"),
         pipe(
-          Effect.attemptCatchPromise(
+          Effect.tryCatchPromise(
             () =>
               db.order.update({
                 where: { id: order.id },

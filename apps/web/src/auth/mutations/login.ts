@@ -1,4 +1,5 @@
-import { PublicData, SecurePassword } from "@blitzjs/auth";
+import { PublicData } from "@blitzjs/auth";
+import { SecurePassword } from "@blitzjs/auth/secure-password";
 import { resolver } from "@blitzjs/rpc";
 import { AuthenticationError } from "blitz";
 import { GlobalRole, Prisma } from "db";

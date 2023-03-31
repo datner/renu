@@ -1,4 +1,4 @@
-import { SecurePassword } from "@blitzjs/auth";
+import { SecurePassword } from "@blitzjs/auth/secure-password";
 import { resolver } from "@blitzjs/rpc";
 import { GlobalRole } from "database";
 import db from "db";

@@ -5,7 +5,7 @@ import { prismaError } from "src/core/helpers/prisma";
 
 export default resolver.pipe(resolver.authorize(), (_, ctx) =>
   Effect.runPromise(
-    Effect.attemptCatchPromise(
+    Effect.tryCatchPromise(
       () =>
         db.venue.findMany({
           where: { organizationId: ctx.session.organization.id },

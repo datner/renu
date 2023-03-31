@@ -15,7 +15,7 @@ const blurhashify = (_: null, ctx: Ctx) =>
     Effect.flatMap(() =>
       Session.withEffect((session) =>
         pipe(
-          Effect.attemptCatchPromise(
+          Effect.tryCatchPromise(
             () =>
               db.item.findMany({
                 where: {
@@ -33,7 +33,7 @@ const blurhashify = (_: null, ctx: Ctx) =>
             pipe(
               Effect.collectAllParDiscard(
                 Chunk.map(items, ([id, blurHash]) =>
-                  Effect.attemptCatchPromise(
+                  Effect.tryCatchPromise(
                     () => db.item.update({ where: { id }, data: { blurHash } }),
                     prismaError("Item"),
                   )),

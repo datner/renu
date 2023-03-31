@@ -16,7 +16,7 @@ import { CreateItem, CreateItemSchema, toCreateItem } from "../validations";
 
 export type CreateItemOutput = z.infer<typeof CreateItem>;
 const createDbItem = (data: Prisma.ItemCreateInput) =>
-  Effect.attemptCatchPromise(
+  Effect.tryCatchPromise(
     () =>
       db.item.create({
         include: { content: true, modifiers: true },
@@ -47,7 +47,7 @@ const setPositionInCategory = <T extends ReturnType<typeof toCreateItem>>(
   input: T,
 ) =>
   pipe(
-    Effect.attemptCatchPromise(
+    Effect.tryCatchPromise(
       () =>
         db.categoryItem.count({
           where: {

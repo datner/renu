@@ -17,7 +17,7 @@ export default api((_req, res, ctx) =>
   pipe(
     Session.with((session) => session.venue.identifier),
     Effect.map(buildPaths),
-    Effect.flatMap(Effect.forEachPar((p) => Effect.attemptPromise(() => res.revalidate(p)))),
+    Effect.flatMap(Effect.forEachPar((p) => Effect.tryPromise(() => res.revalidate(p)))),
     Effect.tapError(() => Session.withEffect((s) => Telegram.notify(`failed to revalidate ${s.venue.identifier}`))),
     Effect.match(
       () => res.status(500).send("Error Revalidating"),

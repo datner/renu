@@ -35,7 +35,7 @@ const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx
     Effect.flatMap((where) =>
       Server.paginate(Number.NonNegativeInt, Max250Int)(
         (skip, take) =>
-          Effect.attemptCatchPromise(
+          Effect.tryCatchPromise(
             () =>
               db.order.findMany({
                 skip,
@@ -56,7 +56,7 @@ const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx
             prismaError("Order"),
           ),
         Effect.map(
-          Effect.attemptCatchPromise(() => db.order.count({ where }), prismaError("Category")),
+          Effect.tryCatchPromise(() => db.order.count({ where }), prismaError("Category")),
           Number.NonNegativeInt,
         ),
       )(skip, take)

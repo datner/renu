@@ -23,7 +23,7 @@ const getVenueClearingProvider = (input: GetVenueClearingProviderFrom) =>
   pipe(
     Schema.parseEffect(GetVenueClearingProvider)(input),
     Effect.flatMap((whereVenue) =>
-      Effect.attemptCatchPromise(
+      Effect.tryCatchPromise(
         () => db.clearingIntegration.findFirstOrThrow({ where: { Venue: whereVenue } }),
         prismaError("ClearingIntegration"),
       )

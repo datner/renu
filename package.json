@@ -25,15 +25,15 @@
     "husky": "8.0.3",
     "lint-staged": "13.2.0",
     "turbo": "1.8.8",
-    "typescript": "5.0.2"
+    "typescript": "5.0.3"
   },
   "engines": {
     "node": "18.12.1"
   },
   "packageManager": "pnpm@7.19.0",
   "dependencies": {
-    "@effect/io": "0.15.1",
-    "@effect/match": "0.8.1",
+    "@effect/io": "0.16.1",
+    "@effect/match": "0.8.2",
     "@fp-ts/core": "0.2.1"
   },
   "pnpm": {
@@ -42,9 +42,6 @@
       "@effect/data": "latest",
       "@effect/io": "$@effect/io",
       "@tanstack/react-query": "4.28.0"
-    },
-    "patchedDependencies": {
-      "@blitzjs/next@2.0.0-beta.23": "patches/@blitzjs__next@2.0.0-beta.23.patch"
     }
   }
 }

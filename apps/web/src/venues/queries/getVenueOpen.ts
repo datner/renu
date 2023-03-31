@@ -7,7 +7,7 @@ import { belongsToOrg, isVenue } from "../helpers/queryFilters";
 
 export default resolver.pipe(resolver.authorize(), (_, ctx) =>
   pipe(
-    Effect.attemptCatchPromise(
+    Effect.tryCatchPromise(
       () =>
         db.venue.findFirstOrThrow({
           where: {

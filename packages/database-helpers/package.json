@@ -7,8 +7,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@effect/data": "0.7.4",
-    "@effect/schema": "0.8.2",
+    "@effect/data": "0.9.1",
+    "@effect/schema": "0.8.3",
     "database": "workspace:*",
     "shared": "workspace:*"
   },

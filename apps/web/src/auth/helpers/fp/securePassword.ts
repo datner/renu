@@ -1,4 +1,4 @@
-import { SecurePassword } from "@blitzjs/auth";
+import { SecurePassword } from "@blitzjs/auth/secure-password";
 import { taskify } from "src/core/helpers/task";
 
 export const verifyPassword = taskify(SecurePassword.verify);

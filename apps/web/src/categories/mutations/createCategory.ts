@@ -27,7 +27,7 @@ export const handler = (input: CreateCategory, ctx: Ctx) =>
     ),
     Effect.zip(Session.Session),
     Effect.flatMap(([input, session]) =>
-      Effect.attemptCatchPromise(
+      Effect.tryCatchPromise(
         () =>
           db.category.create({
             data: {

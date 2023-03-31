@@ -18,7 +18,7 @@ const getItem = (id: number) =>
     AuthSessionContext,
     Effect.map((s) => s.organization.id),
     Effect.flatMap((organizationId) =>
-      Effect.attemptCatchPromise(
+      Effect.tryCatchPromise(
         () =>
           db.item.findFirstOrThrow({
             where: { id, organizationId },
@@ -49,7 +49,7 @@ export default resolver.pipe(resolver.zod(UpdateItem), resolver.authorize(), (in
             ? Effect.succeed(preItem.blurHash)
             : getBlurHash(preItem.image)),
         Effect.flatMap(({ id, modifiers, managementId, categoryId, ...data }) =>
-          Effect.attemptCatchPromise(
+          Effect.tryCatchPromise(
             () =>
               db.item.update({
                 where: { id },

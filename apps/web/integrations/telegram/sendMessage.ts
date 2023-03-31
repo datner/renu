@@ -30,7 +30,7 @@ export const alertDatner = (msg: string | Format.FmtString) =>
   pipe(
     Effect.config(TelegramConfig),
     Effect.flatMap((config) =>
-      Effect.attemptPromise(() => new Telegram(config.botToken).sendMessage(config.datnerId, msg))
+      Effect.tryPromise(() => new Telegram(config.botToken).sendMessage(config.datnerId, msg))
     ),
     Effect.catchAll(() => Effect.logError("Failed to send message to Telegram")),
     Effect.withConfigProvider(ConstantCaseConfigProvider),
@@ -40,7 +40,7 @@ export const notify = (msg: string | Format.FmtString) =>
   pipe(
     Effect.config(TelegramConfig),
     Effect.flatMap((config) =>
-      Effect.attemptPromise(() => new Telegram(config.botToken).sendMessage(config.chatId, msg))
+      Effect.tryPromise(() => new Telegram(config.botToken).sendMessage(config.chatId, msg))
     ),
     Effect.catchAll(() => Effect.logError("Failed to send message to Telegram")),
     Effect.withConfigProvider(ConstantCaseConfigProvider),

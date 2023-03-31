@@ -13,10 +13,10 @@
     "eslint-config-custom": "workspace:*",
     "react": "^18.2.0",
     "tsconfig": "workspace:*",
-    "typescript": "^5.0.2"
+    "typescript": "^5.0.3"
   },
   "dependencies": {
-    "@effect/data": "0.7.4",
-    "@effect/schema": "0.8.2"
+    "@effect/data": "0.9.1",
+    "@effect/schema": "0.8.3"
   }
 }

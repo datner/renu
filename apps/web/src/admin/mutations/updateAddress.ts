@@ -21,7 +21,7 @@ export default resolver.pipe(
   setDefaultVenue,
   ({ phone, address, venue }) =>
     Renu.runPromise$(
-      Effect.attemptCatchPromise(
+      Effect.tryCatchPromise(
         () =>
           db.venue.update({
             where: { id: venue.id },

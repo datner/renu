@@ -66,12 +66,12 @@ export const Venue = Effect.map(Session, s => s.venue);
 
 export const ensureSuperAdmin = withEffect((session) =>
   pipe(
-    Effect.attempt(() => session.$authorize(GlobalRole.SUPER)),
+    Effect.try(() => session.$authorize(GlobalRole.SUPER)),
     Effect.orElse(() =>
       pipe(
         O.fromNullable(session.impersonatingFromUserId),
         Effect.getOrFailDiscard,
-        Effect.flatMap((id) => Effect.attemptPromise(() => db.user.findUniqueOrThrow({ where: { id } }))),
+        Effect.flatMap((id) => Effect.tryPromise(() => db.user.findUniqueOrThrow({ where: { id } }))),
         Effect.filterOrDieMessage((u) => u.role === GlobalRole.SUPER, "how did you impersonate?"),
       )
     ),
@@ -84,7 +84,7 @@ export type AuthenticatedSession = AuthenticatedSessionContext & Brand.Brand<"Au
 export const authorize = (ctx: Ctx) =>
   Effect.provideServiceEffect(
     Session,
-    Effect.attemptCatch(
+    Effect.tryCatch(
       () => {
         ctx.session.$authorize();
         return ctx.session as AuthenticatedSession;

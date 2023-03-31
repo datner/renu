@@ -24,7 +24,7 @@ class StateNotConfirmedError {
 
 export default resolver.pipe(resolver.zod(OrderSuccess), (input: OrderSuccess) =>
   pipe(
-    Effect.attemptCatchPromise(
+    Effect.tryCatchPromise(
       () => db.order.findUniqueOrThrow({ where: { id: input.orderId } }),
       prismaError("Order"),
     ),

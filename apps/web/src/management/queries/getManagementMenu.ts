@@ -9,7 +9,7 @@ import { ofVenue } from "../helpers/query-filters";
 
 export default resolver.pipe(resolver.authorize(), (_, ctx) =>
   pipe(
-    Effect.attemptCatchPromise(
+    Effect.tryCatchPromise(
       () =>
         db.managementIntegration.findUniqueOrThrow({
           where: ofVenue(ctx.session.venue.id),

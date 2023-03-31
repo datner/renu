@@ -40,8 +40,7 @@
     "overrides": {
       "@fp-ts/data": "npm:@effect/data",
       "@effect/data": "latest",
-      "@effect/io": "$@effect/io",
-      "@tanstack/react-query": "4.28.0"
+      "@effect/io": "$@effect/io"
     }
   }
 }

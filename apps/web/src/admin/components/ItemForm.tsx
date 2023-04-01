@@ -46,7 +46,12 @@ export function ItemForm(props: Props) {
   const { isSubmitting, isDirty } = formState;
 
   useEffect(() => {
-    if (!Equal.equals(item, prevItem.current)) {
+    const shouldReset = pipe(
+      O.tuple(item, prevItem.current),
+      O.filter(([i1, i2]) => i1.id === i2.id),
+      O.isNone
+    )
+    if (shouldReset) {
       reset(getDefaultValues(item))
     }
     prevItem.current = item

@@ -32,8 +32,8 @@
   },
   "packageManager": "pnpm@7.19.0",
   "dependencies": {
-    "@effect/io": "0.16.1",
-    "@effect/match": "0.8.2",
+    "@effect/io": "0.17.0",
+    "@effect/match": "0.10.1",
     "@fp-ts/core": "0.2.1"
   },
   "pnpm": {

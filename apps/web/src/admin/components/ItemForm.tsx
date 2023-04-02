@@ -1,10 +1,9 @@
-import { useMutation, useQuery } from "@blitzjs/rpc";
+import { invoke, useQuery } from "@blitzjs/rpc";
+import { constNull, pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import { AdjustmentsVerticalIcon, DocumentTextIcon } from "@heroicons/react/20/solid";
 import { PuzzlePieceIcon } from "@heroicons/react/24/solid";
 import { Button, NumberInput, Paper, Tabs, Textarea, TextInput } from "@mantine/core";
-import { constNull, constTrue, pipe } from "@effect/data/Function";
-import * as Equal from '@effect/data/Equal'
 import { nanoid } from "nanoid";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useReducer, useRef } from "react";
@@ -12,7 +11,7 @@ import { FormProvider, useController } from "react-hook-form";
 import { toast } from "react-toastify";
 import { shekelFormatter, shekelParser } from "src/core/helpers/form";
 import { useZodForm } from "src/core/hooks/useZodForm";
-import { GetItemResult, ItemSchema, toDefaults } from "src/items/validations";
+import { GetItemResult, ItemForm, ItemSchema, toDefaults } from "src/items/validations";
 import getVenueManagementIntegration from "src/venues/queries/current/getVenueManagementIntegration";
 import { match } from "ts-pattern";
 import getUploadUrl from "../mutations/getUploadUrl";
@@ -24,22 +23,21 @@ import { ModifierPanel } from "./ModifierPanel";
 
 type Props = {
   item: O.Option<GetItemResult>;
-  onSubmit(data: ItemSchema): void;
+  onSubmit(data: ItemForm): void;
 };
 
 export function ItemForm(props: Props) {
   const { onSubmit: onSubmit_, item } = props;
   const [integration] = useQuery(getVenueManagementIntegration, null);
   const t = useTranslations("admin.Components.ItemForm");
-  const prevItem = useRef(item)
+  const prevItem = useRef(item);
   const isEdit = O.isSome(item);
-  const getDefaultValues = useMemo(() => toDefaults(integration), [integration])
-  const defaultValues = useMemo(() => getDefaultValues(item), [item, getDefaultValues])
+  const getDefaultValues = useMemo(() => toDefaults(integration), [integration]);
+  const defaultValues = useMemo(() => getDefaultValues(item), [item, getDefaultValues]);
   const form = useZodForm({
     schema: ItemSchema,
     defaultValues,
   });
-  const [getAssetUrl, uploadUrl] = useMutation(getUploadUrl);
   const [isRemoving, remove] = useReducer(() => true, false);
 
   const { handleSubmit, setFormError, formState, reset, control, formError } = form;
@@ -49,22 +47,25 @@ export function ItemForm(props: Props) {
     const shouldReset = pipe(
       O.tuple(item, prevItem.current),
       O.filter(([i1, i2]) => i1.id === i2.id),
-      O.isNone
-    )
+      O.isNone,
+    );
     if (shouldReset) {
-      reset(getDefaultValues(item))
+      reset(getDefaultValues(item));
     }
-    prevItem.current = item
-  }, [item, getDefaultValues])
+    prevItem.current = item;
+  }, [item, getDefaultValues]);
 
   const onSubmit = handleSubmit(
     async (data) => {
       async function doAction() {
-        const { image } = data;
-        const file = image.file;
+        let image = pipe(
+          O.map(item, i => i.image),
+          O.getOrElse(() => ""),
+        );
         try {
-          if (file) {
-            const { url, headers: h } = await getAssetUrl({
+          if (data.image.file) {
+            const file = data.image.file;
+            const { url, headers: h } = await invoke(getUploadUrl, {
               name: `${data.identifier}-${nanoid()}.${file.name.split(".").pop()}`,
             });
             const headers = new Headers(h);
@@ -79,9 +80,9 @@ export function ItemForm(props: Props) {
               headers,
               body: await file.arrayBuffer(),
             }).then((res) => res.json());
-            image.src = origin_path;
+            image = origin_path;
           }
-          onSubmit_(data);
+          return onSubmit_({ ...data, image });
         } catch (error: any) {
           setFormError(error.toString());
         }
@@ -101,16 +102,12 @@ export function ItemForm(props: Props) {
     isSubmitting,
   };
 
-  const message = match(uploadUrl.isLoading)
-    .with(true, () => t("upload"))
-    .otherwise(() =>
-      match(result)
-        .with({ isEdit: false, isSubmitting: true }, () => t("create.item"))
-        .with({ isEdit: true, isSubmitting: true }, () => t("update.item"))
-        .with({ isEdit: false }, () => t("create.initial"))
-        .with({ isEdit: true }, () => t("update.initial"))
-        .exhaustive()
-    );
+  const message = match(result)
+    .with({ isEdit: false, isSubmitting: true }, () => t("create.item"))
+    .with({ isEdit: true, isSubmitting: true }, () => t("update.item"))
+    .with({ isEdit: false }, () => t("create.initial"))
+    .with({ isEdit: true }, () => t("update.initial"))
+    .exhaustive();
 
   const title = pipe(
     item,

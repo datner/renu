@@ -6,6 +6,7 @@ import * as N from "@effect/data/Number";
 import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as Ord from "@effect/data/typeclass/Order";
+import * as Cause from "@effect/io/Cause";
 import * as Effect from "@effect/io/Effect";
 import * as P from "@effect/schema/Parser";
 import * as S from "@effect/schema/Schema";
@@ -22,6 +23,7 @@ import * as Renu from "src/core/effect/runtime";
 import { prismaError } from "src/core/helpers/prisma";
 import * as _Item from "src/core/prisma/item";
 import { EncodedSendOrder, SendOrder, SendOrderItem, SendOrderModifiers } from "src/menu/validations/order";
+import { Format } from "telegraf";
 import { inspect } from "util";
 import * as _Menu from "../schema";
 
@@ -343,7 +345,15 @@ ${
         Clearing.getClearingPageLink(order),
       )
     ),
-    a => a,
+    Effect.tapErrorCause((cause) =>
+      Telegram.alertDatner(`
+Send Order Failed!
+
+pretty cause:
+${Format.pre("logs")(Cause.pretty(cause))}
+
+`)
+    ),
     Effect.provideServiceEffect(
       Clearing.IntegrationSettingsService,
       getIntegration(input.venueIdentifier),

@@ -1,5 +1,4 @@
-import { useParam } from "@blitzjs/next";
-import { useMutation, useQuery } from "@blitzjs/rpc";
+import { useMutation } from "@blitzjs/rpc";
 import { absurd, pipe } from "@effect/data/Function";
 import * as HashMap from "@effect/data/HashMap";
 import * as A from "@effect/data/ReadonlyArray";
@@ -14,11 +13,12 @@ import { useZodParams } from "src/core/hooks/useParams";
 import { usePrevious } from "src/core/hooks/usePrevious";
 import * as Order from "src/menu/hooks/useOrder";
 import { Query } from "src/menu/validations/page";
-import getVenueClearingProvider from "src/venues/queries/getVenueClearingType";
 import sendOrder from "../mutations/sendOrder";
 import { FeedbackModal } from "./FeedbackModal";
 import { Modal } from "./Modal";
 import { OrderModalItem } from "./OrderModalItem";
+import Script from "next/script";
+import { Branded } from "@effect/data/Brand";
 
 type Props = {
   open?: boolean;
@@ -27,10 +27,16 @@ type Props = {
   dispatch: Order.OrderDispatch;
 };
 
+declare global {
+  function gamapayInit(
+    sessionId: Branded<string, "GamaSession">,
+    containerId?: string,
+    callbackFunction?: () => void,
+  ): void;
+}
+
 export function OrderModal(props: Props) {
   const { onClose, open, order, dispatch } = props;
-  const identifier = useParam("restaurant", "string")!;
-  const [/* TODO: Implement provider */] = useQuery(getVenueClearingProvider, { identifier });
   const t = useTranslations("menu.Components.OrderModal");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const locale = useLocale();
@@ -44,7 +50,8 @@ export function OrderModal(props: Props) {
         return window.location.assign(url.href);
       }
 
-      setFeedbackOpen(true);
+      // @ts-ignore
+      gamapayInit(url, undefined, (a,b,c,d,e) => console.log({a,b,c,d,e}));
     },
   });
 
@@ -102,6 +109,7 @@ export function OrderModal(props: Props) {
 
   return (
     <Modal open={open} onClose={onClose}>
+      <Script src="https://gpapi.gamaf.co.il/dist/gamapay-bundle.js" />
       <div className="p-3 pb-16 bg-white rounded-t-xl overflow-auto">
         <h3 className="text-2xl rtl:mt-9">{t("yourOrder")}</h3>
         <hr className="w-1/2 mt-1 mb-2" />

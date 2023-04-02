@@ -1,8 +1,8 @@
 import { Routes } from "@blitzjs/next";
 import { invalidateQuery, invoke, setQueryData, useQuery } from "@blitzjs/rpc";
 import { pipe } from "@effect/data/Function";
-import * as Effect from "@effect/io/Effect";
 import * as O from "@effect/data/Option";
+import * as Effect from "@effect/io/Effect";
 import { useRouter } from "next/router";
 import { useCallback } from "react";
 import getCurrentVenueCategories from "src/categories/queries/getCurrentVenueCategories";
@@ -11,7 +11,7 @@ import createDbItem from "../mutations/createItem";
 import updateItem from "../mutations/updateItem";
 import getItem from "../queries/getItem";
 import getItems from "../queries/getItems";
-import { ItemSchema } from "../validations";
+import { ItemForm } from "../validations";
 
 const invalidateQueries = Effect.allPar([
   Effect.promise(() => invalidateQuery(getItems)),
@@ -24,15 +24,9 @@ const useCreate = (redirect = false) => {
   const router = useRouter();
 
   const onSubmit = useCallback(
-    (data: ItemSchema) => {
-      const dataNoFile = {
-        ...data,
-        image: {
-          src: data.image.src, // annoying
-        },
-      };
+    (data: ItemForm) => {
       return pipe(
-        Effect.promise(() => invoke(createDbItem, dataNoFile)),
+        Effect.promise(() => invoke(createDbItem, data)),
         Effect.tap(() => revalidate),
         Effect.tap((item) => Effect.sync(() => setQueryData(getItem, { identifier: item.identifier }, item))),
         Effect.tap(() => invalidateQueries),
@@ -56,7 +50,7 @@ const useUpdate = (identifier: string) => {
   const router = useRouter();
   const [item, { setQueryData }] = useQuery(getItem, { identifier });
 
-  const onSubmit = (data: ItemSchema) =>
+  const onSubmit = (data: ItemForm) =>
     pipe(
       Effect.sync(() => setQueryData(item)),
       Effect.flatMap(() => Effect.promise(() => invoke(updateItem, { id: item.id, ...data }))),

@@ -17,6 +17,7 @@ import getVenueManagementIntegration from "src/venues/queries/current/getVenueMa
 import { match } from "ts-pattern";
 import { z } from "zod";
 import getItem from "./queries/getItem";
+import { Item } from "shared/order";
 
 export const Content = z.object({
   name: z.string().min(1),
@@ -275,9 +276,7 @@ export const Modifier = S.struct({
 
 export const CreateItemSchema = S.struct({
   managementId: pipe(S.string, S.nullable, S.optional),
-  image: S.struct({
-    src: S.string,
-  }),
+  image: S.string,
   price: Price,
   identifier: Slug_,
   categoryId: Id_,
@@ -287,17 +286,21 @@ export const CreateItemSchema = S.struct({
 });
 export interface CreateItemSchema extends S.To<typeof CreateItemSchema> {}
 
+export const UpdateItemSchema = pipe(
+  CreateItemSchema,
+  S.extend(S.struct({id: Item.Id}))
+)
+export interface UpdateItemSchema extends S.To<typeof UpdateItemSchema> {}
+
 export const toCreateItem = ({
   en,
   he,
   categoryId,
   modifiers,
   managementId,
-  image,
   ...rest
 }: CreateItemSchema) => ({
   ...rest,
-  image: image.src,
   managementRepresentation: { id: managementId },
   category: { connect: { id: categoryId } },
   categoryItems: {
@@ -403,7 +406,9 @@ export const UpdateItem = ItemSchemaImgTransform.extend({ id: Id }).transform(
   },
 );
 export type UpdateItemOutput = z.infer<typeof UpdateItem>;
+const ItemForm = ItemSchema.extend({ image: z.string() });
 
 export type UpdateItem = z.input<typeof UpdateItem>;
 export type CreateItem = z.input<typeof CreateItem>;
 export type ItemSchema = z.input<typeof ItemSchema>;
+export type ItemForm = z.input<typeof ItemForm>;

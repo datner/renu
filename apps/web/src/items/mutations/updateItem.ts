@@ -1,166 +1,158 @@
-import { AuthenticatedSessionContext } from "@blitzjs/auth";
 import { resolver } from "@blitzjs/rpc";
-import * as Context from "@effect/data/Context";
 import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as Effect from "@effect/io/Effect";
+import * as Schema from "@effect/schema/Schema";
 import db, { Prisma } from "db";
+import { Session } from "src/auth";
 import * as Renu from "src/core/effect/runtime";
 import { getBlurHash } from "src/core/helpers/plaiceholder";
-import { PrismaError } from "src/core/helpers/prisma";
-import { OptionsSchemaArray, UpdateItem } from "../validations";
-
-const AuthSessionContext = Context.Tag<AuthenticatedSessionContext>();
+import { PrismaError, prismaError } from "src/core/helpers/prisma";
+import { Modifier } from "../validations";
+import { UpdateItemSchema } from "../validations";
+import { inspect } from "util";
 
 const getItem = (id: number) =>
-  pipe(
-    AuthSessionContext,
-    Effect.map((s) => s.organization.id),
-    Effect.flatMap((organizationId) =>
-      Effect.tryCatchPromise(
-        () =>
-          db.item.findFirstOrThrow({
-            where: { id, organizationId },
-            select: {
-              image: true,
-              blurHash: true,
-              categoryId: true,
-              categoryItems: { select: { id: true, categoryId: true } },
-            },
-          }),
-        (cause) =>
-          new PrismaError("Didn't find the specified item within the organization", {
-            cause,
-            resource: "Item",
-          }),
-      )
-    ),
-  );
+  Effect.flatMap(Session.Organization, (org) =>
+    Effect.tryCatchPromise(
+      () =>
+        db.item.findFirstOrThrow({
+          where: { id, organizationId: org.id },
+          select: {
+            image: true,
+            blurHash: true,
+            categoryId: true,
+            categoryItems: { select: { id: true, categoryId: true } },
+          },
+        }),
+      (cause) =>
+        new PrismaError("Didn't find the specified item within the organization", {
+          cause,
+          resource: "Item",
+        }),
+    ));
 
-export default resolver.pipe(resolver.zod(UpdateItem), resolver.authorize(), (input, ctx) =>
-  pipe(
-    getItem(input.id),
-    Effect.flatMap((preItem) =>
-      pipe(
-        Effect.succeed(input),
-        Effect.bind("blurHash", () =>
-          preItem.image === input.image
-            ? Effect.succeed(preItem.blurHash)
-            : getBlurHash(preItem.image)),
-        Effect.flatMap(({ id, modifiers, managementId, categoryId, ...data }) =>
-          Effect.tryCatchPromise(
-            () =>
-              db.item.update({
-                where: { id },
-                include: { content: true, modifiers: true },
-                data: {
-                  ...data,
-                  category: { connect: { id: categoryId } },
-                  categoryItems: pipe(
-                    A.findFirst(
-                      preItem.categoryItems,
-                      (ci) => ci.categoryId === preItem.categoryId,
-                    ),
-                    O.map(
-                      (catItem) => ({
-                        update: {
-                          where: {
-                            id: catItem.id,
-                          },
-                          data: {
-                            Category: { connect: { id: categoryId } },
-                            position: 100,
-                          },
-                        },
-                      } satisfies Prisma.CategoryItemUpdateManyWithoutItemNestedInput),
-                    ),
-                    O.getOrUndefined,
-                  ),
-                  managementRepresentation: { id: managementId },
-                  modifiers: {
-                    update: pipe(
-                      modifiers,
-                      A.filter((m) => m.modifierId != null),
-                      A.map(({ config, modifierId, managementId }, p) => ({
-                        where: { id: modifierId! },
-                        data: {
-                          managementRepresentation: { id: managementId },
-                          position: p,
-                          config: {
-                            ...config,
-                            content: [
-                              { locale: "en", ...config.content.en },
-                              { locale: "he", ...config.content.he },
-                            ],
-                            options: pipe(
-                              config.options as OptionsSchemaArray,
-                              A.map(({ managementId, ...o }, i) => ({
-                                ...o,
-                                managementRepresentation: { id: managementId },
-                                position: i,
-                                content: [
-                                  { locale: "en", ...o.content.en },
-                                  { locale: "he", ...o.content.he },
-                                ],
-                              })),
-                              A.map((o, i) =>
-                                config._tag === "oneOf"
-                                  ? {
-                                    ...o,
-                                    default: config.defaultOption === String(i),
-                                  }
-                                  : o
-                              ),
-                            ),
-                          },
-                        },
-                      })),
-                    ),
-                    create: pipe(
-                      modifiers,
-                      A.filter((m) => m.modifierId == null),
-                      A.map(
-                        (m, p) => ({
-                          position: p,
-                          managementRepresentation: { id: m.managementId },
-                          config: {
-                            ...m.config,
-                            content: [
-                              { locale: "en", ...m.config.content.en },
-                              { locale: "he", ...m.config.content.he },
-                            ],
-                            options: pipe(
-                              m.config.options as OptionsSchemaArray,
-                              A.map((o, i) => ({
-                                ...o,
-                                position: i,
-                                content: [
-                                  { locale: "en", ...o.content.en },
-                                  { locale: "he", ...o.content.he },
-                                ],
-                              })),
-                              A.map((o) =>
-                                m.config._tag === "oneOf"
-                                  ? {
-                                    ...o,
-                                    default: m.config.defaultOption === o.identifier,
-                                  }
-                                  : o
-                              ),
-                            ),
-                          },
-                        } satisfies Prisma.ItemModifierCreateWithoutItemInput),
-                      ),
-                    ),
-                  } satisfies Prisma.ItemModifierUncheckedUpdateManyWithoutItemNestedInput,
+export default resolver.pipe(
+  (i: Schema.From<typeof UpdateItemSchema>) => Schema.decodeEffect(UpdateItemSchema)(i),
+    Effect.tap((it) => Effect.log('getting item with id ' + it.id )),
+  Effect.flatMap(i => Effect.all(Effect.succeed(i), getItem(i.id))),
+  Effect.flatMap(([input, item]) =>
+    pipe(
+      Effect.sync(() => ({
+        id: input.id,
+        image: input.image,
+        identifier: input.identifier,
+        price: input.price,
+        category: { connect: { id: input.categoryId } },
+        categoryItems: pipe(
+          A.findFirst(
+            item.categoryItems,
+            (ci) => ci.categoryId === item.categoryId,
+          ),
+          O.map(
+            (catItem) => ({
+              update: {
+                where: {
+                  id: catItem.id,
                 },
-              }),
-            (cause) => new PrismaError("Updating item failed", { cause, resource: "Item" }),
-          )
+                data: {
+                  Category: { connect: { id: input.categoryId } },
+                  position: 100,
+                },
+              },
+            } satisfies Prisma.CategoryItemUpdateManyWithoutItemNestedInput),
+          ),
+          O.getOrUndefined,
         ),
-      )
-    ),
-    Effect.provideService(AuthSessionContext, ctx.session),
-    Renu.runPromise$,
-  ));
+        managementRepresentation: { id: input.managementId },
+        modifiers: {
+          update: pipe(
+            input.modifiers,
+            A.filter((m) => m.modifierId != null),
+            A.map(({ config, modifierId, managementId }, p) => ({
+              where: { id: modifierId! },
+              data: {
+                managementRepresentation: { id: managementId },
+                position: p,
+                config: {
+                  ...config,
+                  options: pipe(
+                    // @ts-expect-error what do they want
+                    config.options,
+                    A.map((o, i) => ({
+                      ...o,
+                      position: i,
+                    })),
+                    A.map((o, i) =>
+                      config._tag === "oneOf"
+                        ? {
+                          ...o,
+                          default: config.defaultOption === String(i),
+                        }
+                        : o
+                    ),
+                  ),
+                } as any,
+              },
+            })),
+          ),
+          create: pipe(
+            input.modifiers,
+            A.filter((m) => m.modifierId == null),
+            A.map(m => Schema.encode(Modifier)(m)),
+            A.map(
+              (m, p) => ({
+                position: p,
+                managementRepresentation: { id: m.managementId },
+                config: {
+                  ...m.config,
+                  options: pipe(
+                    // @ts-expect-error what does ts want
+                    m.config.options,
+                    A.map((o, i) => ({
+                      ...o,
+                      position: i,
+                    })),
+                    A.map((o) =>
+                      m.config._tag === "oneOf"
+                        ? {
+                          ...o,
+                          default: m.config.defaultOption === o.identifier,
+                        }
+                        : o
+                    ),
+                  ),
+                } as any,
+              } satisfies Prisma.ItemModifierCreateWithoutItemInput),
+            ),
+          ),
+        } satisfies Prisma.ItemModifierUncheckedUpdateManyWithoutItemNestedInput,
+      })),
+      Effect.zipWith(
+        Effect.ifEffect(
+          Effect.succeed(item.image === input.image),
+          Effect.succeed(item.blurHash),
+          getBlurHash(input.image),
+        ),
+        (data, blurHash) => ({ ...data, blurHash }),
+      ),
+      Effect.tap(() => Effect.log('updating item with following body')),
+      Effect.tap((body) => Effect.sync(() => console.log(inspect(body,false, null, true)))),
+      Effect.flatMap(({ id, ...data }) =>
+        Effect.tryCatchPromise(
+          () =>
+            db.item.update({
+              where: { id },
+              include: { content: true, modifiers: true },
+              data: data,
+            }),
+          prismaError("Item"),
+        )
+      ),
+      Effect.tap(() => Effect.log('successfully updated item')),
+    )
+  ),
+  Session.authorizeResolver,
+  Renu.runPromise$,
+);

@@ -64,7 +64,6 @@ export const paymentCurrency = PaymentCurrency("ILS");
 
 export const IFrameUrl = pipe(
   S.string,
-  S.filter((url) => Boolean(new URL(url)), { title: "Url" }),
   S.brand("IFrameUrl"),
 );
 export type IFrameUrl = S.To<typeof IFrameUrl>;

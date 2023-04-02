@@ -41,7 +41,7 @@ export function ItemForm(props: Props) {
   const [isRemoving, remove] = useReducer(() => true, false);
 
   const { handleSubmit, setFormError, formState, reset, control, formError } = form;
-  const { isSubmitting, isDirty } = formState;
+  const { isSubmitting, isDirty, errors } = formState;
 
   useEffect(() => {
     const shouldReset = pipe(
@@ -176,6 +176,7 @@ export function ItemForm(props: Props) {
                       {...form.register("identifier")}
                       label={t("identifier")}
                       placeholder="my-item"
+                      error={errors.identifier?.message}
                     />
                     <FormCategoryCombobox />
                   </div>
@@ -186,17 +187,20 @@ export function ItemForm(props: Props) {
                     min={0}
                     parser={shekelParser}
                     formatter={shekelFormatter}
+                      error={errors.price?.message}
                   />
                   <div>
                     <TextInput
                       {...form.register("en.name")}
                       label={t("english name")}
                       placeholder="My Item"
+                      error={errors.en?.name?.message}
                     />
                     <Textarea
                       {...form.register("en.description")}
                       label={t("english description")}
                       placeholder="My item is very nice and also cool"
+                      error={errors.en?.description?.message}
                     />
                   </div>
                   <div>
@@ -204,11 +208,13 @@ export function ItemForm(props: Props) {
                       {...form.register("he.name")}
                       label={t("hebrew name")}
                       placeholder="פריט שלי"
+                      error={errors.he?.name?.message}
                     />
                     <Textarea
                       {...form.register("he.description")}
                       label={t("hebrew description")}
                       placeholder="הפריט שלי מאוד נחמד וגם מגניב"
+                      error={errors.he?.description?.message}
                     />
                   </div>
                 </fieldset>

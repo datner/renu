@@ -183,8 +183,6 @@ export const layer = Layer.succeed(HttpService, {
               req.headers.append(key, value);
             }
 
-            req.clone().json().then((b) => console.log(inspect(b, false, null, true)));
-
             return fetch(req);
           },
           (cause) =>

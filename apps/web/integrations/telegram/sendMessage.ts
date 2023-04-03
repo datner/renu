@@ -41,7 +41,7 @@ export const sendJson = (json: unknown) =>
   pipe(
     Effect.flatMap(TelegramService, t =>
       Effect.promise(() =>
-        t.bot.sendDocument(t.config.chatId, { source: JSON.stringify(json), filename: "presto.json" })
+        t.bot.sendMessage(t.config.chatId, Format.pre('json')(JSON.stringify(json, undefined, 2)))
       )),
     Effect.catchAll(() =>
       Effect.logError("Failed to send message to Telegram")

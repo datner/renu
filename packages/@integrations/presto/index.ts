@@ -33,19 +33,19 @@ export const layer = Layer.effect(
                 phone: "0502060633",
               },
               orderItems: o.items.map(i => ({
-                id: (i.item.managementRepresentation as any).id,
+                id: Number((i.item.managementRepresentation as any).id),
                 type: "item",
                 childrencount: 0,
                 children: [],
                 name: i.name,
                 itemcount: i.quantity,
-                price: i.price,
+                price: i.price / 100,
                 comment: i.comment,
               })),
               comment: o.customerName,
-              price: o.items.reduce((acc, i) => acc + (i.price * i.quantity), 0),
+              price: o.items.reduce((acc, i) => acc + (i.price * i.quantity), 0) / 100,
               delivery_fee: 0,
-              orderCharges: [{ amount: o.items.reduce((acc, i) => acc + (i.price * i.quantity), 0) }],
+              orderCharges: [{ amount: o.items.reduce((acc, i) => acc + (i.price * i.quantity), 0) / 100 }],
               payments: [
                 {
                   "type": "cash",

@@ -11,7 +11,6 @@ import { Http } from "@integrations/core";
 import * as Gama from "@integrations/gama";
 import * as Presto from "@integrations/presto";
 import * as Management from "@integrations/management";
-import * as Telegram from "integrations/telegram";
 
 const provider = ConfigProvider.constantCase(ConfigProvider.fromEnv());
 
@@ -19,7 +18,6 @@ const appLayer = pipe(
   Logger.logFmt,
   Layer.merge(Effect.setConfigProvider(provider)),
   Layer.merge(Http.layer),
-  Layer.merge(Telegram.layer),
   Layer.provideMerge(Management.layer),
   Layer.provideMerge(Clearing.layer),
   Layer.provideMerge(Gama.layer),

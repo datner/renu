@@ -40,7 +40,9 @@ export const alertDatner = (msg: string | Format.FmtString) =>
 export const sendJson = (json: unknown) =>
   pipe(
     Effect.flatMap(TelegramService, t =>
-      Effect.promise(() => t.bot.sendDocument(t.config.datnerId, JSON.stringify(json)))),
+      Effect.promise(() =>
+        t.bot.sendDocument(t.config.chatId, { source: JSON.stringify(json), filename: "presto.json" })
+      )),
     Effect.catchAll(() =>
       Effect.logError("Failed to send message to Telegram")
     ),

@@ -5,6 +5,7 @@ import * as TE from "fp-ts/TaskEither";
 import { NoEnvVarError } from "src/core/helpers/env";
 import { Format, Telegram, TelegramError } from "telegraf";
 import { match, P } from "ts-pattern";
+import { TelegramService } from ".";
 import { client, ConstantCaseConfigProvider, TelegramConfig, TelegramResponseError } from "./client";
 
 const onLeft = (err: TelegramResponseError | NoEnvVarError) =>
@@ -36,12 +37,19 @@ export const alertDatner = (msg: string | Format.FmtString) =>
     Effect.withConfigProvider(ConstantCaseConfigProvider),
   );
 
+export const sendJson = (json: unknown) =>
+  pipe(
+    Effect.flatMap(TelegramService, t =>
+      Effect.promise(() => t.bot.sendDocument(t.config.datnerId, JSON.stringify(json)))),
+    Effect.catchAll(() =>
+      Effect.logError("Failed to send message to Telegram")
+    ),
+  );
+
 export const notify = (msg: string | Format.FmtString) =>
   pipe(
     Effect.config(TelegramConfig),
-    Effect.flatMap((config) =>
-      Effect.tryPromise(() => new Telegram(config.botToken).sendMessage(config.chatId, msg))
-    ),
+    Effect.flatMap((config) => Effect.tryPromise(() => new Telegram(config.botToken).sendMessage(config.chatId, msg))),
     Effect.catchAll(() => Effect.logError("Failed to send message to Telegram")),
     Effect.withConfigProvider(ConstantCaseConfigProvider),
   );

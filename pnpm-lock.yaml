@@ -207,6 +207,9 @@ importers:
       '@integrations/management':
         specifier: workspace:*
         version: link:../../packages/@integrations/management
+      '@integrations/presto':
+        specifier: workspace:*
+        version: link:../../packages/@integrations/presto
       '@juggle/resize-observer':
         specifier: 3.4.0
         version: 3.4.0

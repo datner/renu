@@ -18,7 +18,7 @@ const Max250Int = pipe(
   S.brand("Max250Int"),
 );
 
-const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx: Ctx) =>
+const getCurrentVenueCategories = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx: Ctx) =>
   pipe(
     Session.ensureOrgVenuMatch,
     Effect.flatMap(() =>
@@ -77,4 +77,4 @@ const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx
     Renu.runPromise$,
   );
 
-export default handler;
+export default getCurrentVenueCategories;

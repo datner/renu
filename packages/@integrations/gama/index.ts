@@ -28,6 +28,7 @@ import * as Settings from "./settings";
 export * as Schema from "./schema";
 import * as Cause from "@effect/io/Cause";
 import { ClearingIntegration } from "database";
+import { OrderRepository } from "database-helpers/order";
 import { Order } from "shared";
 import { inspect } from "util";
 
@@ -53,7 +54,7 @@ const toPayload = (
     P.decodeEffect(CreateSessionPayload)({
       clientId: int.vendorData.id,
       clientSecret: int.vendorData.secret_key,
-      userIp: "192.168.32.193",
+      userIp: "1.2.3.4",
       maxInstallments,
       paymentRequest: {
         paymentAmount: input.paymentAmount,
@@ -82,7 +83,7 @@ export interface Service {
   ) => Effect.Effect<
     OrderRepository,
     Cause.NoSuchElementException | ParseResult.ParseError | TransactionNotSuccessfulError,
-    void
+    Order.Decoded
   >;
 }
 export const Gama = Context.Tag<"Gama", Service>();
@@ -131,12 +132,6 @@ const JWTPayload = pipe(
     }),
   }),
 );
-
-interface OrderRepository {
-  readonly getOrder: (orderId: Order.Id) => Effect.Effect<never, never, Order.Decoded>;
-  readonly setTransactionId: (orderId: Order.Id, txId: Order.TxId) => Effect.Effect<never, never, Order.Decoded>;
-}
-export const OrderRepository = Context.Tag<OrderRepository>("OrderRepository");
 
 export const layer = Layer.effect(
   Gama,
@@ -190,7 +185,7 @@ export const layer = Layer.effect(
           const orderRepository = yield* $(OrderRepository);
           const txId = yield* $(Effect.getOrFail(transactionId));
 
-          yield* $(orderRepository.setTransactionId(orderId, txId));
+          return yield* $(orderRepository.setTransactionId(orderId, txId));
         }),
     };
   }),

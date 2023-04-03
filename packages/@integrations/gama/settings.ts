@@ -8,13 +8,7 @@ import { Clearing } from "@integrations/core";
 import { ClearingProvider } from "database";
 
 export const GamaConfig = Config.all({
-  test: Config.all({
-    url: Config.string(`gama.test.api.url`),
-  }),
-  demo: Config.all({
-    url: Config.string(`gama.demo.api.url`),
-  }),
-  url: Config.string(`gama.api.url`),
+  url: Config.string(`api.url`),
 });
 
 export const GamaClientId = pipe(S.number, S.brand("GamaClientId"));

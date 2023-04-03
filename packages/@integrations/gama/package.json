@@ -12,6 +12,7 @@
     "@integrations/core": "workspace:*",
     "database": "workspace:*",
     "database-helpers": "workspace:*",
+    "jose": "4.13.1",
     "shared": "workspace:*"
   },
   "devDependencies": {

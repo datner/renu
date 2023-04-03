@@ -1,4 +1,4 @@
-import { useMutation } from "@blitzjs/rpc";
+import { invoke, useMutation } from "@blitzjs/rpc";
 import { absurd, pipe } from "@effect/data/Function";
 import * as HashMap from "@effect/data/HashMap";
 import * as A from "@effect/data/ReadonlyArray";
@@ -19,6 +19,7 @@ import { Modal } from "./Modal";
 import { OrderModalItem } from "./OrderModalItem";
 import Script from "next/script";
 import { Branded } from "@effect/data/Brand";
+import confirmGamaTransaction from "../mutations/confirmGamaTransaction";
 
 type Props = {
   open?: boolean;
@@ -31,7 +32,7 @@ declare global {
   function gamapayInit(
     sessionId: Branded<string, "GamaSession">,
     containerId?: string,
-    callbackFunction?: () => void,
+    callbackFunction?: (jwt: string) => void,
   ): void;
 }
 
@@ -49,9 +50,8 @@ export function OrderModal(props: Props) {
       if (url instanceof URL) {
         return window.location.assign(url.href);
       }
-
-      // @ts-ignore
-      gamapayInit(url, undefined, (a,b,c,d,e) => console.log({a,b,c,d,e}));
+      
+      gamapayInit(url, undefined, (jwt) => invoke(confirmGamaTransaction, {jwt}) );
     },
   });
 
@@ -99,8 +99,7 @@ export function OrderModal(props: Props) {
   };
 
   const amount = Order.getOrderAmount(order);
-  const cost = Order.getOrderCost(order);
-  const items = Order.getOrderItems(order);
+  const cost = Order.getOrderCost(order); const items = Order.getOrderItems(order);
 
   const listItems = HashMap.mapWithIndex(
     items,

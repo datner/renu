@@ -2,8 +2,8 @@ import * as Context from "@effect/data/Context";
 import { pipe } from "@effect/data/Function";
 import * as Effect from "@effect/io/Effect";
 import * as Layer from "@effect/io/Layer";
-import * as Schema from "@effect/Schema/Schema";
-import * as ParseResult from "@effect/Schema/ParseResult";
+import * as Schema from "@effect/schema/Schema";
+import * as ParseResult from "@effect/schema/ParseResult";
 import { OrderRepository } from "database-helpers/order";
 import { Order } from "shared";
 

@@ -1,30 +1,21 @@
 import * as Context from "@effect/data/Context";
-import * as Data from "@effect/data/Data";
 import { pipe } from "@effect/data/Function";
 import * as Effect from "@effect/io/Effect";
 import * as Layer from "@effect/io/Layer";
 import * as Schema from "@effect/Schema/Schema";
-import { Prisma } from "database";
+import * as ParseResult from "@effect/Schema/ParseResult";
+import { OrderRepository } from "database-helpers/order";
 import { Order } from "shared";
 
 export interface Presto {
   readonly _tag: "Presto";
-  readonly postOrder: any;
+  readonly postOrder: (orderId: Order.Id) => Effect.Effect<OrderRepository, ParseResult.ParseError, Schema.To<typeof PrestoOrder>>;
 }
 export const Presto = Context.Tag<Presto>("Presto");
 
-export interface OrderRepository {
-  readonly _tag: "OrderRepository";
-  readonly getOrder: <Get extends Prisma.OrderArgs>(
-    id: Order.Id,
-    args: Get,
-  ) => Effect.Effect<never, never, Prisma.OrderGetPayload<Get>>;
-}
-export const OrderRepository = Context.Tag<OrderRepository>("Presto");
-
 export const layer = Layer.effect(
   Presto,
-  Effect.gen(function*($) {
+  Effect.gen(function*() {
     return {
       _tag: "Presto",
       postOrder: (orderId: Order.Id) =>
@@ -54,9 +45,7 @@ export const layer = Layer.effect(
               comment: o.customerName,
               price: o.items.reduce((acc, i) => acc + (i.price * i.quantity), 0),
               delivery_fee: 0,
-              orderCharges: [{
-                amount: o.items.reduce((acc, i) => acc + (i.price * i.quantity), 0),
-              }],
+              orderCharges: [{ amount: o.items.reduce((acc, i) => acc + (i.price * i.quantity), 0) }],
               payments: [
                 {
                   "type": "cash",

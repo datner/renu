@@ -95,7 +95,9 @@ const provideHttpConfig = Effect.provideServiceEffect(
       Settings.IntegrationService,
     );
     const { env } = vendorData;
-    const config = env === "production" ? Settings.GamaConfig : Config.nested(env)(Settings.GamaConfig);
+    const config = Config.nested("gama")(
+      env === "production" ? Settings.GamaConfig : Config.nested(env)(Settings.GamaConfig),
+    );
     const { url } = yield* $(Effect.config(config));
 
     return {

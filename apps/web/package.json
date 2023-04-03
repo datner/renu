@@ -34,6 +34,7 @@
     "@integrations/core": "workspace:*",
     "@integrations/dorix": "workspace:*",
     "@integrations/gama": "workspace:*",
+    "@integrations/presto": "workspace:*",
     "@integrations/management": "workspace:*",
     "@juggle/resize-observer": "3.4.0",
     "@mantine/core": "6.0.5",

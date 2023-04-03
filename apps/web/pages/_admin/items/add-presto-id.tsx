@@ -41,7 +41,7 @@ function Yeah() {
   );
 }
 
-export default function _AdminItemsBlurhash() {
+export default function _AdminItemsAddPrestoId() {
   return (
     <Suspense fallback={<LoadingOverlay visible />}>
       <div className="grid w-full place-items-center">

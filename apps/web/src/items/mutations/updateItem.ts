@@ -108,22 +108,19 @@ export default resolver.pipe(
                 config: {
                   ...m.config,
                   options: pipe(
-                    // @ts-expect-error what does ts want
                     m.config.options,
-                    A.map((o, i) => ({
+                    a => a.map((o,i) => (
+                      m.config._tag === 'oneOf' ? {
+                        ...o,
+                        position: i,
+                        default: m.config.defaultOption === o.identifier
+                      }: {
                       ...o,
-                      position: i,
-                    })),
-                    A.map((o) =>
-                      m.config._tag === "oneOf"
-                        ? {
-                          ...o,
-                          default: m.config.defaultOption === o.identifier,
-                        }
-                        : o
-                    ),
-                  ),
-                } as any,
+                      position: i
+                      }
+                    )),
+                  ) as unknown as Prisma.JsonValue,
+                },
               } satisfies Prisma.ItemModifierCreateWithoutItemInput),
             ),
           ),

@@ -46,3 +46,6 @@ logs
 .turbo
 
 packages/tsconfig/.tsbuildinfo
+
+# direnv
+.direnv

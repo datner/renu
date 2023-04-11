@@ -11,7 +11,7 @@ export const PayPlusCallback = S.struct({
     payment_request_uid: S.optional(S.string),
     number: S.string,
     type: S.string,
-    date: S.dateFromString,
+    date: S.dateFromString(S.string),
     status_code: S.string,
     amount: S.number,
     currency: S.literal("ILS"),

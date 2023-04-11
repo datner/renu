@@ -9,9 +9,9 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@effect/data": "0.10.2",
-    "@effect/schema": "0.9.0",
-    "next": "13.2.4",
+    "@effect/data": "0.12.2",
+    "@effect/schema": "0.11.1",
+    "next": "13.3.0",
     "react": "18.2.0",
     "react-dom": "18.2.0",
     "ui": "workspace:*"
@@ -19,10 +19,10 @@
   "devDependencies": {
     "@babel/core": "^7.21.4",
     "@types/node": "^18.15.11",
-    "@types/react": "^18.0.32",
+    "@types/react": "^18.0.34",
     "@types/react-dom": "^18.0.11",
     "eslint-config-custom": "workspace:*",
     "tsconfig": "workspace:*",
-    "typescript": "^5.0.3"
+    "typescript": "^5.0.4"
   }
 }

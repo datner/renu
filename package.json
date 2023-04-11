@@ -19,28 +19,30 @@
     "@commitlint/cli": "17.5.1",
     "@commitlint/config-conventional": "17.4.4",
     "@types/node": "18.15.11",
-    "dprint": "0.35.3",
-    "eslint": "8.37.0",
+    "dprint": "0.35.4",
+    "eslint": "8.38.0",
     "eslint-config-custom": "workspace:*",
     "husky": "8.0.3",
-    "lint-staged": "13.2.0",
+    "lint-staged": "13.2.1",
     "turbo": "1.8.8",
-    "typescript": "5.0.3"
+    "typescript": "5.0.4"
   },
   "engines": {
-    "node": "18.12.1"
+    "node": "18.15.0",
+    "pnpm": "8.1.1"
   },
   "packageManager": "pnpm@7.19.0",
   "dependencies": {
-    "@effect/io": "0.17.0",
-    "@effect/match": "0.10.1",
+    "@effect/io": "0.20.0",
+    "@effect/match": "0.12.1",
     "@fp-ts/core": "0.2.1"
   },
   "pnpm": {
     "overrides": {
       "@fp-ts/data": "npm:@effect/data",
       "@effect/data": "latest",
-      "@effect/io": "$@effect/io"
+      "@effect/io": "latest",
+      "@effect/schema": "latest"
     }
   }
 }

@@ -299,6 +299,7 @@ model Order {
   customerName String      @default("Anonymous Renu User")
   items        OrderItem[]
   state        OrderState  @default(Init)
+  totalCost    Int         @default(0)
 }
 
 model OrderItem {

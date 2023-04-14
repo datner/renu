@@ -10,14 +10,13 @@ import { memo, useMemo } from "react";
 import { Blurhash } from "react-blurhash";
 import { useIsRtl } from "src/core/hooks/useIsRtl";
 import { useLocale } from "src/core/hooks/useLocale";
-import type { OrderDispatch } from "../hooks/useOrder";
 import * as Order from "../hooks/useOrder";
 import * as _Menu from "../schema";
 import { ItemData } from "./ItemData";
+import { useOrderDispatch } from "./OrderContext";
 
 type Props = {
   item: Order.ActiveItem;
-  dispatch: OrderDispatch;
 };
 
 const PlusCircle = a(PlusCircleIcon);
@@ -28,7 +27,8 @@ const isNegative = N.lessThan(0);
 
 export const ListItem = memo(
   function ListItem(props: Props) {
-    const { item: _, dispatch } = props;
+    const { item: _ } = props;
+    const dispatch = useOrderDispatch();
     const item = Order.getActiveMenuItem(_);
     const amount = Order.getActiveAmount(_);
     const cost = Order.getActiveCost(_);

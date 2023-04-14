@@ -18,11 +18,7 @@ import * as Order from "../hooks/useOrder";
 import * as _Menu from "../schema";
 import { ItemFieldValues, ItemModalForm, partitionModifiers } from "./ItemModalForm";
 import { Modal } from "./Modal";
-
-interface Props {
-  readonly dispatch: Order.OrderDispatch;
-  readonly activeItem: O.Option<Order.ActiveItem>;
-}
+import { useOrderContext } from "./OrderContext";
 
 const ImageBasis = {
   Max: 224,
@@ -34,9 +30,8 @@ const THREE_QUATERS_PROGRESS = ImageBasis.Min * 1.5;
 const clampImgHeight = clamp(ImageBasis.Min, ImageBasis.Max);
 const clampBinary = clamp(0, 1);
 
-export function ItemModal(props: Props) {
-  const { dispatch, activeItem } = props;
-
+export function ItemModal() {
+  const [{activeItem}, dispatch] = useOrderContext()
   const [open, setOpen] = useState(true);
   const handleClose = useCallback(() => setOpen(false), []);
 

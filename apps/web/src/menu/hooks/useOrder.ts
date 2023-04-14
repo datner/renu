@@ -11,7 +11,7 @@ import * as RA from "@effect/data/ReadonlyArray";
 import * as Match from "@effect/match";
 import { Modifiers } from "database-helpers";
 import { nanoid } from "nanoid";
-import { Dispatch, useReducer } from "react";
+import { Dispatch, ReactNode, createContext, useReducer } from "react";
 import { Refinement } from "shared/effect";
 import { Number } from "shared/schema";
 import * as _Menu from "../schema";
@@ -437,9 +437,9 @@ const reducer = (state: State, action: Action): State => action(state);
 
 export type OrderDispatch = Dispatch<Action>;
 
-export const useOrder = () => {
-  return useReducer(
+export const useOrder = () =>
+  useReducer(
     reducer,
-    State({ order: EmptyOrder({} as unknown as void), activeItem: O.none() }),
+    State({ order: EmptyOrder(), activeItem: O.none() }),
   );
-};
+

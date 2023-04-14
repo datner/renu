@@ -1,15 +1,15 @@
 import { clsx } from "@mantine/core";
 import { ReactNode, forwardRef, memo } from "react";
+import { useTitle } from "src/menu/hooks/useTitle";
 import * as _Menu from "src/menu/schema";
-import { useTitle } from "../hooks/useTitle";
-import { useNavContext } from "./Navigation";
+import { useNavContext } from "../Navigation";
 
 type Props = {
   category: _Menu.Category;
   children?: ReactNode
 };
 
-export const CategoryHeader = memo(
+export const Section = memo(
   forwardRef<HTMLDivElement, Props>(({ category, children }, ref) => {
     const title = useTitle();
     const { active, observe } = useNavContext();
@@ -59,4 +59,5 @@ export const CategoryHeader = memo(
   }),
 );
 
-CategoryHeader.displayName = "CategoryHeader";
+Section.displayName = "Category.memo(Section)";
+

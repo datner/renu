@@ -2,14 +2,15 @@ import { animated, useTransition } from "@react-spring/web";
 import { useTranslations } from "next-intl";
 import { toShekel } from "src/core/helpers/content";
 import * as Order from "src/menu/hooks/useOrder";
+import { useOrderState } from "./OrderContext";
 
 type Props = {
   onClick(): void;
-  order: Order.Order;
 };
 
 export function ViewOrderButton(props: Props) {
-  const { onClick, order } = props;
+  const { onClick } = props;
+  const {order} = useOrderState()
   const show = Order.isActiveOrder(order);
   const t = useTranslations("menu.Components.ViewOrderButton");
   const transition = useTransition(show, {

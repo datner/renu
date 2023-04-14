@@ -20,12 +20,11 @@ import { OrderModalItem } from "./OrderModalItem";
 import Script from "next/script";
 import { Branded } from "@effect/data/Brand";
 import confirmGamaTransaction from "../mutations/confirmGamaTransaction";
+import { useOrderContext } from "./OrderContext";
 
 type Props = {
   open?: boolean;
   onClose(): void;
-  order: Order.Order;
-  dispatch: Order.OrderDispatch;
 };
 
 declare global {
@@ -37,10 +36,11 @@ declare global {
 }
 
 export function OrderModal(props: Props) {
-  const { onClose, open, order, dispatch } = props;
+  const { onClose, open,} = props;
   const t = useTranslations("menu.Components.OrderModal");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const locale = useLocale();
+  const [{order}, dispatch] = useOrderContext()
   const { restaurant } = useZodParams(Query);
   const [ref, { height }] = useMeasure();
   const isNoHeight = usePrevious(height) === 0;

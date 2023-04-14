@@ -6,6 +6,7 @@ import * as S from "@effect/schema/Schema";
 import { Order, OrderItem, OrderState } from "database";
 import * as Common from "../schema/common";
 import * as Venue from "../venue";
+import { Number } from "../schema";
 
 export const Id = Common.Id("OrderId");
 export type Id = S.To<typeof Id>;
@@ -25,12 +26,13 @@ export const Schema = S.struct({
   customerName: pipe(
     CustomerName,
     S.transform(
-      S.optionFromSelf(CustomerName),
-      O.liftPredicate(Str.isEmpty),
+      S.to(S.option(CustomerName)),
+      O.liftPredicate(Str.isNonEmpty),
       (a) => CustomerName(O.getOrElse(a, () => Str.empty)),
     ),
   ),
   state: S.enums(OrderState),
+  totalCost: Number.Cost
 });
 export interface Decoded extends S.To<typeof Schema> {}
 

@@ -4,8 +4,8 @@ import { Refinement } from "../effect";
 import * as Extras from "./extras";
 import * as OneOf from "./one-of";
 import * as Slider from "./slider";
-// import { pipe } from "@effect/data/Function";
-// import { Common } from "../schema";
+import { Prisma } from "database";
+import { identity } from "@effect/data/Function";
 
 export const ModifierEnum = {
   oneOf: "oneOf",
@@ -15,8 +15,8 @@ export const ModifierEnum = {
 
 export const Schema = S.union(OneOf.Modifier, Extras.Modifier, Slider.Modifier);
 export type Schema = OneOf.Modifier | Extras.Modifier | Slider.Modifier;
-
-// export const fromConfig = Common.fromJson(Schema)
+export const FromPrisma = S.transform(S.json as S.Schema<Prisma.JsonValue, S.Json>, S.to(Schema), S.parse(Schema), S.validate(S.json))
+export const FromUnknown = S.transform(S.unknown, S.to(Schema), S.parse(Schema), identity)
 
 export const isOneOf: P.Refinement<Schema, OneOf.Modifier> = Refinement.isTagged(
   "oneOf",

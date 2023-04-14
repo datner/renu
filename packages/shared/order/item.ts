@@ -16,3 +16,6 @@ export const Schema = S.struct({
   name: S.string,
   orderId: Order.Id,
 });
+export interface Decoded extends S.To<typeof Schema> {}
+
+export const getCost = (i: Decoded) => i.price * i.quantity

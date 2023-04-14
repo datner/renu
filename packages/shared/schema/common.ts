@@ -1,6 +1,6 @@
 import { pipe } from "@effect/data/Function";
 import * as S from "@effect/schema/Schema";
-import { Locale } from "database";
+import { Locale, Prisma } from "database";
 
 export const Slug = pipe(
   S.string,
@@ -30,3 +30,5 @@ export const Content = S.struct({
 export interface Content extends S.To<typeof Content> {}
 
 export const fromJson = <I extends S.Json, A>(schema: S.Schema<I, A>) => schema;
+
+export const PrismaJson = S.json as S.Schema<Prisma.JsonValue, S.Json>

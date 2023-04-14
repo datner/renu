@@ -6,15 +6,6 @@ import * as Number from "../schema/number";
 export const Id = Common.Id("OrderItemModifierId");
 export type Id = S.To<typeof Id>;
 
-export type OrderItemModifier = {
-  id: number;
-  itemModifierId: number;
-  choice: string;
-  ref: string;
-  amount: number;
-  price: number;
-};
-
 export const Schema = S.struct({
   id: Id,
   itemModifierId: Item.Modifier.Id,
@@ -23,3 +14,6 @@ export const Schema = S.struct({
   amount: Number.Amount,
   price: Number.Price,
 });
+export interface Decoded extends S.To<typeof Schema> {}
+
+export const getCost = (i: Decoded) => i.price * i.amount

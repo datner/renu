@@ -1,4 +1,6 @@
+import { pipe } from "@effect/data/Function";
 import * as S from "@effect/schema/Schema";
+import { Prisma } from "database";
 import * as Category from "../category";
 import * as Organization from "../organization";
 import * as Common from "../schema/common";
@@ -21,6 +23,15 @@ export const Schema = S.struct({
   deleted: S.optionFromNullable(S.date),
   categoryId: Category.Id,
   restaurantId: S.unknown,
-  venueId: Venue.Id,
-  managementRepresentation: S.json,
+  venueId: S.optionFromNullable(Venue.Id),
+  managementRepresentation: Common.PrismaJson,
 });
+export interface Decoded extends S.To<typeof Schema> {}
+
+export const fromProvider =
+  <A extends S.Schema<Prisma.JsonValue, any>>(managementRepresentation: A) => (schema: typeof Schema) =>
+    pipe(
+      schema,
+      S.omit("managementRepresentation"),
+      S.extend(S.struct({ managementRepresentation })),
+    );

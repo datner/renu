@@ -26,7 +26,8 @@
           "enableCloudfrontSwr": true,
           "healthCheckPath": "/api/healthcheck",
           "envVariables": {
-            "APP_ENV": "production"
+            "APP_ENV": "production",
+            "NIXPACKS_VERSION" :"1.6.0"
           }
         },
         {

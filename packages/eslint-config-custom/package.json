@@ -5,11 +5,11 @@
   "license": "MIT",
   "dependencies": {
     "@effect/data": "0.12.2",
-    "@effect/schema": "0.11.1",
+    "@effect/schema": "0.12.1",
     "eslint": "8.38.0",
     "eslint-config-next": "13.3.0",
     "eslint-config-prettier": "^8.8.0",
-    "eslint-config-turbo": "1.8.8",
+    "eslint-config-turbo": "1.9.1",
     "eslint-plugin-react": "7.32.2"
   },
   "devDependencies": {

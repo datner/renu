@@ -8,7 +8,7 @@
     "lint": "eslint *.ts*"
   },
   "devDependencies": {
-    "@types/react": "^18.0.34",
+    "@types/react": "^18.0.35",
     "@types/react-dom": "^18.0.11",
     "eslint-config-custom": "workspace:*",
     "react": "^18.2.0",
@@ -17,6 +17,6 @@
   },
   "dependencies": {
     "@effect/data": "0.12.2",
-    "@effect/schema": "0.11.1"
+    "@effect/schema": "0.12.1"
   }
 }

@@ -57,7 +57,7 @@ importers:
         specifier: latest
         version: 0.12.2
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       next:
         specifier: 13.3.0
@@ -100,7 +100,7 @@ importers:
         specifier: latest
         version: 0.12.2
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       next:
         specifier: 13.3.0
@@ -426,7 +426,7 @@ importers:
         specifier: 0.13.0
         version: 0.13.0
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       '@fp-ts/core':
         specifier: 0.2.1
@@ -472,7 +472,7 @@ importers:
         specifier: 0.13.0
         version: 0.13.0
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       shared:
         specifier: workspace:*
@@ -500,7 +500,7 @@ importers:
         specifier: 0.13.0
         version: 0.13.0
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       '@fp-ts/core':
         specifier: 0.2.1
@@ -580,7 +580,7 @@ importers:
         specifier: 0.13.0
         version: 0.13.0
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       '@fp-ts/core':
         specifier: 0.2.1
@@ -617,7 +617,7 @@ importers:
         specifier: 0.13.0
         version: 0.13.0
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       '@fp-ts/core':
         specifier: 0.2.1
@@ -660,7 +660,7 @@ importers:
         specifier: 0.13.0
         version: 0.13.0
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       '@fp-ts/core':
         specifier: 0.2.1
@@ -703,7 +703,7 @@ importers:
         specifier: 0.13.0
         version: 0.13.0
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       '@fp-ts/core':
         specifier: 0.2.1
@@ -740,7 +740,7 @@ importers:
         specifier: latest
         version: 0.12.2
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       '@prisma/client':
         specifier: 4.12.0
@@ -759,7 +759,7 @@ importers:
         specifier: latest
         version: 0.12.2
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       database:
         specifier: workspace:*
@@ -778,7 +778,7 @@ importers:
         specifier: latest
         version: 0.12.2
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       eslint:
         specifier: 8.38.0
@@ -809,7 +809,7 @@ importers:
         specifier: latest
         version: 0.20.0
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
       '@fp-ts/core':
         specifier: 0.2.1
@@ -831,7 +831,7 @@ importers:
         specifier: latest
         version: 0.12.2
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
 
   packages/ui:
@@ -840,7 +840,7 @@ importers:
         specifier: latest
         version: 0.12.2
       '@effect/schema':
-        specifier: 0.12.1
+        specifier: latest
         version: 0.12.1
     devDependencies:
       '@types/react':

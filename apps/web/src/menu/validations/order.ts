@@ -45,8 +45,18 @@ export const UpdateManagement = S.struct({
   transaction: Transaction,
 });
 
+const PrestoExtra = S.struct({
+  phoneNumber: pipe(S.string, S.brand("Phone Number")),
+});
+
+const ManagementExtra = S.union(
+  pipe(PrestoExtra, S.attachPropertySignature("_tag", "PrestoExtra")),
+);
+
 export const SendOrder = S.struct({
   locale: S.enums(Locale),
+  clearingExtra: S.optional(S.unknown),
+  managementExtra: S.optional(ManagementExtra),
   venueIdentifier: Common.Slug,
   orderItems: S.chunk(SendOrderItem),
 });

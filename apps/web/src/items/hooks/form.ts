@@ -37,7 +37,7 @@ const useCreate = (redirect = false) => {
             Effect.unit(),
           )
         ),
-        Renu.runPromise$,
+        Effect.runPromise,
       );
     },
     [redirect, router],
@@ -64,7 +64,7 @@ const useUpdate = (identifier: string) => {
           Effect.sync(() => router.push(Routes.AdminItemsItem({ identifier: item.identifier }))),
         )
       ),
-      Renu.runPromise$,
+      Effect.runPromise,
     );
 
   return { onSubmit, item: O.some(item) };

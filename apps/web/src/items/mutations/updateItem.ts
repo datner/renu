@@ -9,9 +9,9 @@ import { Session } from "src/auth";
 import * as Renu from "src/core/effect/runtime";
 import { getBlurHash } from "src/core/helpers/plaiceholder";
 import { PrismaError, prismaError } from "src/core/helpers/prisma";
+import { inspect } from "util";
 import { Modifier } from "../validations";
 import { UpdateItemSchema } from "../validations";
-import { inspect } from "util";
 
 const getItem = (id: number) =>
   Effect.flatMap(Session.Organization, (org) =>
@@ -35,7 +35,7 @@ const getItem = (id: number) =>
 
 export default resolver.pipe(
   (i: Schema.From<typeof UpdateItemSchema>) => Schema.decodeEffect(UpdateItemSchema)(i),
-    Effect.tap((it) => Effect.log('getting item with id ' + it.id )),
+  Effect.tap((it) => Effect.log("getting item with id " + it.id)),
   Effect.flatMap(i => Effect.all(Effect.succeed(i), getItem(i.id))),
   Effect.flatMap(([input, item]) =>
     pipe(
@@ -109,16 +109,19 @@ export default resolver.pipe(
                   ...m.config,
                   options: pipe(
                     m.config.options,
-                    a => a.map((o,i) => (
-                      m.config._tag === 'oneOf' ? {
-                        ...o,
-                        position: i,
-                        default: m.config.defaultOption === o.identifier
-                      }: {
-                      ...o,
-                      position: i
-                      }
-                    )),
+                    a =>
+                      a.map((o, i) => (
+                        m.config._tag === "oneOf"
+                          ? {
+                            ...o,
+                            position: i,
+                            default: m.config.defaultOption === o.identifier,
+                          }
+                          : {
+                            ...o,
+                            position: i,
+                          }
+                      )),
                   ) as unknown as Prisma.JsonValue,
                 },
               } satisfies Prisma.ItemModifierCreateWithoutItemInput),
@@ -134,22 +137,24 @@ export default resolver.pipe(
         ),
         (data, blurHash) => ({ ...data, blurHash }),
       ),
-      Effect.tap(() => Effect.log('updating item with following body')),
-      Effect.tap((body) => Effect.sync(() => console.log(inspect(body,false, null, true)))),
+      Effect.tap(() => Effect.log("updating item with following body")),
+      Effect.tap((body) => Effect.sync(() => console.log(inspect(body, false, null, true)))),
       Effect.flatMap(({ id, ...data }) =>
         Effect.tryCatchPromise(
           () =>
             db.item.update({
               where: { id },
-              include: { content: true, modifiers: true },
-              data: data,
+              include: { content: true, modifiers: { where: { deleted: null } } },
+              data,
             }),
           prismaError("Item"),
         )
       ),
-      Effect.tap(() => Effect.log('successfully updated item')),
+      Effect.map(a => a),
+      Effect.tap(() => Effect.log("successfully updated item")),
     )
   ),
+  Effect.map(a => a),
   Session.authorizeResolver,
   Renu.runPromise$,
 );

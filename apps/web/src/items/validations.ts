@@ -186,6 +186,7 @@ const managementThings = {
       O.getOrElseW(() => null),
     ),
   [ManagementProvider.RENU]: (_?: unknown) => null,
+  [ManagementProvider.PRESTO]: (_?: unknown) => null,
 } satisfies Record<ManagementProvider, (integration?: unknown) => null | string>;
 
 export const toDefaults = (integration: GetManagementIntegrationResult) =>

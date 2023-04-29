@@ -1,5 +1,4 @@
 import { Ctx } from "@blitzjs/next";
-import * as Chunk from "@effect/data/Chunk";
 import { pipe } from "@effect/data/Function";
 import * as A from "@effect/data/ReadonlyArray";
 import * as Effect from "@effect/io/Effect";
@@ -28,11 +27,11 @@ const blurhashify = (_: null, ctx: Ctx) =>
             prismaError("Item"),
           ),
           Effect.map(A.map((it) => Effect.all(Effect.succeed(it.id), getBlurHash(it.image)))),
-          Effect.flatMap((effects) => Effect.withParallelism(Effect.collectAllPar(effects), 5)),
+          Effect.flatMap((effects) => Effect.withParallelism(Effect.allPar(effects), 5)),
           Effect.flatMap((items) =>
             pipe(
-              Effect.collectAllParDiscard(
-                Chunk.map(items, ([id, blurHash]) =>
+              Effect.allParDiscard(
+                A.map(items, ([id, blurHash]) =>
                   Effect.tryCatchPromise(
                     () => db.item.update({ where: { id }, data: { blurHash } }),
                     prismaError("Item"),

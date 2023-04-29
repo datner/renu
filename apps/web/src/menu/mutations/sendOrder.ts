@@ -20,8 +20,7 @@ import { Item as PItem, ItemI18L, ItemModifier, Locale, OrderState, Prisma } fro
 import { Modifiers } from "database-helpers";
 import db from "db";
 import * as Telegram from "integrations/telegram/sendMessage";
-import { Database, Item, Order, Venue } from "shared";
-import { CreateFullOrder } from "shared/Order/request/createFullOrder";
+import { Item, Order, Venue } from "shared";
 import { Common } from "shared/schema";
 import * as Renu from "src/core/effect/runtime";
 import { prismaError } from "src/core/helpers/prisma";
@@ -133,13 +132,14 @@ const toOrderInput = (order: SendOrder) => ({
   totalCost: N.sumAll(A.map(order.orderItems, getItemCost)),
 } satisfies Prisma.OrderCreateInput);
 
-declare const anonymous: <I, A>(
+const anonymous: <I, A>(
   s: S.Schema<I, A>,
-) => (input: I, ctx: Ctx) => Effect.Effect<never, ParseError, A>;
+) => (input: I, ctx: Ctx) => Effect.Effect<never, ParseError, A> = s => (i, _) => S.decodeEffect(s)(i);
 
 const createNewOrder = (input: SendOrder) =>
   pipe(
-    Order.createDeepOrder(toOrderInput(input), {}),
+    Effect.sync(() => toOrderInput(input)),
+    Effect.flatMap(Order.createDeepOrder),
     Effect.flatMap(S.decodeEffect(Order.Schema)),
   );
 
@@ -147,6 +147,26 @@ const matchProvider = Match.discriminator("provider");
 
 export default resolver.pipe(
   anonymous(SendOrder),
+  Effect.tap((order) =>
+    Telegram.notify(`
+New Order received for ${order.venueId}!
+
+Customer ordered:
+${A.join(
+      A.map(
+        order.orderItems,
+        (oi) =>
+          `${oi.amount} x ${oi.item.identifier} for ${N.divide(oi.cost, 100).toLocaleString("us-IL", {
+            style: "currency",
+            currency: "ILS",
+          })
+          }`,
+      ),
+      `\n`,
+    )
+      }
+`)
+  ),
   Effect.flatMap(order =>
     Effect.zipPar(
       createNewOrder(order),
@@ -168,6 +188,15 @@ export default resolver.pipe(
           }, _))),
       Match.orElse(() => Effect.dieMessage("No support yet, sorry")),
     )
+  ),
+  Effect.tapErrorCause((cause) =>
+    Telegram.alertDatner(`
+Send Order Failed!
+
+pretty cause:
+${Format.pre("logs")(Cause.pretty(cause))}
+
+`)
   ),
   Renu.runPromise$,
 );

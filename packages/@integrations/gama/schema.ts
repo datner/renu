@@ -75,7 +75,7 @@ export const CreateSessionInput = S.struct({
   orderId: Order.Id,
   venueName: S.string,
 });
-export interface CreateSessionInput extends S.To<typeof CreateSessionInput> {}
+export interface CreateSessionInput extends S.To<typeof CreateSessionInput> { }
 export const CreateSessionPayload = S.struct({
   clientId: Settings.GamaClientId,
   clientSecret: Settings.GamaClientSecret,
@@ -98,14 +98,14 @@ export const CreateSessionPayload = S.struct({
     callbackUrl: S.optional(S.string),
   }),
 });
-export interface CreateSessionPayload extends S.To<typeof CreateSessionPayload> {}
+export interface CreateSessionPayload extends S.To<typeof CreateSessionPayload> { }
 
 export const PaymentResponse = S.struct({
   transactionStatus: S.literal("approved"),
   issuerAuthorizationNumber: AuthorizationNumber,
   cardNumber: CardNumber,
 });
-interface PaymentResponse extends S.To<typeof PaymentResponse> {}
+interface PaymentResponse extends S.To<typeof PaymentResponse> { }
 
 export const PaymentResponseOption = pipe(
   S.union(
@@ -123,7 +123,7 @@ export const PaymentResponseOption = pipe(
 export const CreateSessionData = pipe(
   S.struct({
     session: Session,
-    iframeUrl: IFrameUrl,
+    iframeUrl: S.optional(IFrameUrl).toOption(),
     paymentResponse: PaymentResponseOption,
   }),
 );
@@ -147,16 +147,13 @@ export const CreateSessionErrorBody = S.struct({
 export const CreateSessionSuccess = pipe(
   CreateSessionSuccessBody,
   S.transform(
-    CreateSessionData,
-    (res) => ({
-      ...res.data,
-      paymentResponse: O.getOrUndefined(res.data.paymentResponse),
-    }),
+    S.to(CreateSessionData),
+    (res) => res.data,
     (data) => ({
       success: true as const,
-      data: S.decode(CreateSessionData)(data),
+      data,
       errors: [],
     }),
   ),
 );
-export interface CreateSessionSuccess extends S.To<typeof CreateSessionSuccess> {}
+export interface CreateSessionSuccess extends S.To<typeof CreateSessionSuccess> { }

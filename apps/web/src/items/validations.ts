@@ -17,7 +17,7 @@ import getVenueManagementIntegration from "src/venues/queries/current/getVenueMa
 import { match } from "ts-pattern";
 import { z } from "zod";
 import getItem from "./queries/getItem";
-import { Item } from "shared/order";
+import { Order } from "shared";
 
 export const Content = z.object({
   name: z.string().min(1),
@@ -289,7 +289,7 @@ export interface CreateItemSchema extends S.To<typeof CreateItemSchema> {}
 
 export const UpdateItemSchema = pipe(
   CreateItemSchema,
-  S.extend(S.struct({id: Item.Id}))
+  S.extend(S.struct({id: Order.Item.Id}))
 )
 export interface UpdateItemSchema extends S.To<typeof UpdateItemSchema> {}
 

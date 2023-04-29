@@ -9,37 +9,37 @@ import { GetVenueManagementIntegration } from "./getManagementIntegration";
 import { VenueResolver } from "./resolver";
 
 export const getById = (id: number) =>
-  Effect.withRequestBatching("on")(Effect.request(
+  Effect.withRequestCaching("on")(Effect.request(
     GetVenueById({ id }),
     VenueResolver,
   ));
 
 export const getByIdentifier = (identifier: Slug) =>
-  Effect.withRequestBatching("on")(Effect.request(
+  Effect.withRequestCaching("on")(Effect.request(
     GetVenueByIdentifier({ identifier }),
     VenueResolver,
   ));
 
 export const getContent = (id: number) =>
-  Effect.withRequestBatching("on")(Effect.request(
+  Effect.withRequestCaching("on")(Effect.request(
     GetVenueContent({ id }),
     VenueResolver,
   ));
 
 export const getCategories = (id: number) =>
-  Effect.withRequestBatching("on")(Effect.request(
+  Effect.withRequestCaching("on")(Effect.request(
     GetVenueCategories({ id }),
     VenueResolver,
   ));
 
 export const getClearing = (id: number) =>
-  Effect.withRequestBatching("on")(Effect.request(
+  Effect.withRequestCaching("on")(Effect.request(
     GetVenueClearingIntegration({ id }),
     VenueResolver,
   ));
 
 export const getManagement = (id: number) =>
-  Effect.withRequestBatching("on")(Effect.request(
+  Effect.withRequestCaching("on")(Effect.request(
     GetVenueManagementIntegration({ id }),
     VenueResolver,
   ));

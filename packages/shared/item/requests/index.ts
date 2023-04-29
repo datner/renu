@@ -7,25 +7,25 @@ import { GetItemModifiers } from "./getModifiers";
 import { ItemResolver } from "./resolver";
 
 export const getById = (id: number, venueId?: number) =>
-  Effect.withRequestBatching("on")(Effect.request(
+  Effect.withRequestCaching("on")(Effect.request(
     GetItemById({ id, venueId: Option.fromNullable(venueId) }),
     ItemResolver,
   ));
 
 export const getContent = (id: number) =>
-  Effect.withRequestBatching("on")(Effect.request(
+  Effect.withRequestCaching("on")(Effect.request(
     GetItemContent({ id }),
     ItemResolver,
   ));
 
 export const getModifiers = (id: number) =>
-  Effect.withRequestBatching("on")(Effect.request(
+  Effect.withRequestCaching("on")(Effect.request(
     GetItemModifiers({ id }),
     ItemResolver,
   ));
 
 export const getModifierById = (id: number) =>
-  Effect.withRequestBatching("on")(Effect.request(
+  Effect.withRequestCaching("on")(Effect.request(
     GetItemModifierById({ id }),
     ItemResolver,
   ));

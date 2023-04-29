@@ -33,3 +33,4 @@ export const getClearingPageLink = (order: M.FullOrderWithItems) =>
 
 export const validateTransaction = (order: Order) =>
   Effect.flatMap(C.ClearingService, (_) => _.validateTransaction(order));
+

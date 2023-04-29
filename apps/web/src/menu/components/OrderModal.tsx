@@ -1,29 +1,32 @@
 import { invoke, useMutation } from "@blitzjs/rpc";
+import { Branded } from "@effect/data/Brand";
 import { absurd, pipe } from "@effect/data/Function";
 import * as HashMap from "@effect/data/HashMap";
 import * as A from "@effect/data/ReadonlyArray";
+import { useLocalStorage } from "@mantine/hooks";
 import { a, useSpring } from "@react-spring/web";
 import { useTranslations } from "next-intl";
+import Script from "next/script";
 import { useState } from "react";
 import useMeasure from "react-use-measure";
+import { Order, Venue } from "shared";
 import { Number } from "shared/schema";
 import { toShekel } from "src/core/helpers/content";
 import { useLocale } from "src/core/hooks/useLocale";
 import { useZodParams } from "src/core/hooks/useParams";
 import { usePrevious } from "src/core/hooks/usePrevious";
-import * as Order from "src/menu/hooks/useOrder";
+import * as OrderState from "src/menu/hooks/useOrder";
 import { Query } from "src/menu/validations/page";
+import confirmGamaTransaction from "../mutations/confirmGamaTransaction";
 import sendOrder from "../mutations/sendOrder";
 import { FeedbackModal } from "./FeedbackModal";
 import { Modal } from "./Modal";
-import { OrderModalItem } from "./OrderModalItem";
-import Script from "next/script";
-import { Branded } from "@effect/data/Brand";
-import confirmGamaTransaction from "../mutations/confirmGamaTransaction";
 import { useOrderContext } from "./OrderContext";
+import { OrderModalItem } from "./OrderModalItem";
 
 type Props = {
   open?: boolean;
+  venueId: Venue.Id;
   onClose(): void;
 };
 
@@ -36,54 +39,57 @@ declare global {
 }
 
 export function OrderModal(props: Props) {
-  const { onClose, open,} = props;
+  const { onClose, open, venueId } = props;
   const t = useTranslations("menu.Components.OrderModal");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const locale = useLocale();
-  const [{order}, dispatch] = useOrderContext()
-  const { restaurant } = useZodParams(Query);
+  const [{ order }, dispatch] = useOrderContext();
   const [ref, { height }] = useMeasure();
   const isNoHeight = usePrevious(height) === 0;
   const { h } = useSpring({ h: height, immediate: isNoHeight });
-  const [sendOrderMutation, { isLoading, isSuccess }] = useMutation(sendOrder, {
-    onSuccess: (url) => {
-      if (url instanceof URL) {
-        return window.location.assign(url.href);
-      }
-      
-      gamapayInit(url, undefined, (jwt) => invoke(confirmGamaTransaction, {jwt}) );
+  const [phoneNumber] = useLocalStorage({ key: "phone-number" });
+  const [sendOrderMutation, { isLoading, isSuccess, reset }] = useMutation(sendOrder, {
+    onSuccess: (_) => {
+      reset();
+      // if (url instanceof URL) {
+      //   return window.location.assign(url.href);
+      // }
+
+      // gamapayInit(url, undefined, (jwt) => invoke(confirmGamaTransaction, { jwt }));
     },
   });
 
   const handleOrder = () => {
-    if (Order.isEmptyOrder(order)) return;
+    if (OrderState.isEmptyOrder(order)) return;
 
     sendOrderMutation({
       locale,
-      venueIdentifier: restaurant,
+      clearingExtra: Order.Clearing.Extra("Gama")({ phoneNumber }),
+      managementExtra: Order.Management.Extra("Presto")({ phoneNumber }),
+      venueId,
       orderItems: pipe(
         order.items,
         HashMap.map((it) => ({
           comment: it.comment,
-          amount: Order.isMultiOrderItem(it) ? it.amount : Number.Amount(1),
+          amount: OrderState.isMultiOrderItem(it) ? it.amount : Number.Amount(1),
           cost: it.cost,
           item: it.item.id,
           modifiers: pipe(
             it.modifiers,
             A.fromIterable,
-            A.map(([id, mod]) => {
-              if (Order.isOneOf(mod)) {
+            A.map(([modifier, mod]) => {
+              if (OrderState.isOneOf(mod)) {
                 return {
                   _tag: "OneOf",
-                  id,
+                  modifier,
                   choice: mod.choice,
                   amount: mod.amount,
                 } as const;
               }
-              if (Order.isExtras(mod)) {
+              if (OrderState.isExtras(mod)) {
                 return {
                   _tag: "Extras",
-                  id,
+                  modifier,
                   choices: A.fromIterable(mod.choices),
                 } as const;
               }
@@ -98,8 +104,9 @@ export function OrderModal(props: Props) {
     });
   };
 
-  const amount = Order.getOrderAmount(order);
-  const cost = Order.getOrderCost(order); const items = Order.getOrderItems(order);
+  const amount = OrderState.getOrderAmount(order);
+  const cost = OrderState.getOrderCost(order);
+  const items = OrderState.getOrderItems(order);
 
   const listItems = HashMap.mapWithIndex(
     items,

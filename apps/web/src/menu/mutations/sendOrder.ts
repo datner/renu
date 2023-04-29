@@ -1,3 +1,4 @@
+import { Ctx } from "@blitzjs/next";
 import { resolver } from "@blitzjs/rpc";
 import * as Chunk from "@effect/data/Chunk";
 import * as Equal from "@effect/data/Equal";
@@ -8,7 +9,9 @@ import * as A from "@effect/data/ReadonlyArray";
 import * as Ord from "@effect/data/typeclass/Order";
 import * as Cause from "@effect/io/Cause";
 import * as Effect from "@effect/io/Effect";
+import * as Match from "@effect/match";
 import * as P from "@effect/schema/Parser";
+import { ParseError } from "@effect/schema/ParseResult";
 import * as S from "@effect/schema/Schema";
 import * as Clearing from "@integrations/clearing";
 import { fullOrderInclude } from "@integrations/core/clearing";
@@ -17,187 +20,58 @@ import { Item as PItem, ItemI18L, ItemModifier, Locale, OrderState, Prisma } fro
 import { Modifiers } from "database-helpers";
 import db from "db";
 import * as Telegram from "integrations/telegram/sendMessage";
-import { Item, Order } from "shared";
-import { Common, Number } from "shared/schema";
+import { Database, Item, Order, Venue } from "shared";
+import { CreateFullOrder } from "shared/Order/request/createFullOrder";
+import { Common } from "shared/schema";
 import * as Renu from "src/core/effect/runtime";
 import { prismaError } from "src/core/helpers/prisma";
 import * as _Item from "src/core/prisma/item";
-import { EncodedSendOrder, SendOrder, SendOrderItem, SendOrderModifiers } from "src/menu/validations/order";
+import {
+  EncodedSendOrder,
+  getItemCost,
+  SendOrder,
+  SendOrderItem,
+  SendOrderModifiers,
+} from "src/menu/validations/order";
 import { Format } from "telegraf";
 import { inspect } from "util";
 import * as _Menu from "../schema";
 
-const ByItemModifierId = Ord.contramap(
-  Ord.number,
-  (it: ItemModifier | SendOrderModifiers) => it.id,
-);
-type ItemP = Prisma.ItemGetPayload<
-  { include: { modifiers: true; content: true } }
->;
-
-const parseOneOf = P.parse(Modifiers.OneOf);
-const parseExtras = P.parse(Modifiers.Extras);
-
-const createNewOrderModifier = (om: SendOrderModifiers, m: ItemModifier) =>
-  Effect.gen(function*($) {
-    if (om._tag === "OneOf") {
-      const oneOf = parseOneOf(m.config);
-
-      return yield* $(
-        pipe(
-          Effect.find(
-            oneOf.options,
-            (o) => Effect.succeed(o.identifier === om.choice),
-          ),
-          Effect.someOrFailException,
-          Effect.map((opt) =>
-            Chunk.of(
-              {
-                amount: om.amount,
-                price: opt.price,
-                choice: om.choice,
-                ref: oneOf.identifier,
-                modifier: { connect: { id: m.id } },
-              } satisfies Prisma.OrderItemModifierCreateWithoutReferencedInInput,
-            )
-          ),
-        ),
+const createNewOrderModifier_ = (om: SendOrderModifiers) => {
+  switch (om._tag) {
+    case "OneOf":
+      return pipe(
+        om.modifier.config.options,
+        A.findFirst((o) => o.identifier === om.choice),
+        O.map((opt) => ({
+          amount: om.amount,
+          price: opt.price,
+          choice: om.choice,
+          ref: om.modifier.config.identifier,
+          modifier: { connect: { id: om.modifier.id } },
+        } satisfies Prisma.OrderItemModifierCreateWithoutReferencedInInput)),
+        A.fromOption,
       );
-    }
 
-    if (om._tag === "Extras") {
-      const extras = parseExtras(m.config);
-
-      const totalAmount = Chunk.reduce(om.choices, 0, (acc, [_, a]) => acc + a);
-      if (
-        !N.between(
-          totalAmount,
-          O.getOrElse(extras.min, () => 0),
-          O.getOrElse(extras.max, () => Infinity),
-        )
-      ) {
-        yield* $(Effect.dieMessage("not in range"));
-      }
-
-      return yield* $(
-        Effect.collectAllPar(
-          Chunk.map(om.choices, ([choice, amount]) =>
-            pipe(
-              Effect.find(extras.options, (o) => Effect.succeed(o.identifier === choice)),
-              Effect.someOrFailException,
-              Effect.filterOrDieMessage(
-                (o) => o.multi || amount === 1,
-                "tried to order multiple of a singular option",
-              ),
-              Effect.map((o) => (
-                {
-                  amount,
-                  price: o.price,
-                  choice,
-                  ref: extras.identifier,
-                  modifier: { connect: { id: m.id } },
-                } satisfies Prisma.OrderItemModifierCreateWithoutReferencedInInput
-              )),
-            )),
-        ),
-      );
-    }
-
-    absurd(om);
-    return yield* $(Effect.dieMessage("unrecognized modifier"));
-  });
-
-const createNewOrder = (
-  venue: Common.Slug,
-  locale: Locale,
-  zipped: Chunk.Chunk<readonly [ItemP, SendOrderItem]>,
-) =>
-  pipe(
-    Effect.succeed(zipped),
-    Effect.map(
-      Chunk.map(
-        ([it, oi]) =>
-          [
-            { ...oi, modifiers: A.sort(oi.modifiers, ByItemModifierId) },
-            { ...it, modifiers: A.sort(it.modifiers, ByItemModifierId) },
-          ] as const,
-      ),
-    ),
-    Effect.filterOrDieMessage(
-      Chunk.every(([oi, it]) => it.id === oi.item),
-      "items not all equal",
-    ),
-    Effect.flatMap((zipped) =>
-      Effect.collectAllPar(
-        Chunk.map(zipped, ([oi, it]) =>
+    case "Extras":
+      return pipe(
+        A.map(om.choices, ([choice, amount]) =>
           pipe(
-            Effect.succeed(A.zip(oi.modifiers, it.modifiers)),
-            Effect.filterOrDieMessage(
-              A.every(([itm, oim]) => itm.id === oim.id),
-              "modifiers not all equal",
-            ),
-            Effect.map(A.map(tupled(createNewOrderModifier))),
-            Effect.flatMap(Effect.collectAllPar),
-            Effect.map(Chunk.flatten),
-            Effect.filterOrDieMessage(
-              (mods) =>
-                Equal.equals(
-                  pipe(
-                    mods,
-                    Chunk.map((om) => om.price * om.amount),
-                    Chunk.append(it.price),
-                    N.sumAll,
-                    N.multiply(oi.amount),
-                  ),
-                  oi.cost,
-                ),
-              "reported wrong cost",
-            ),
-            Effect.map(
-              (orderModifiers) => (
-                {
-                  item: { connect: { id: it.id } },
-                  price: it.price,
-                  comment: oi.comment ?? "",
-                  name: pipe(
-                    A.findFirst(it.content, (c) => c.locale === locale),
-                    O.orElse(() => A.head(it.content)),
-                    O.map((o) => o.name),
-                    O.getOrElse(() => "Unknown"),
-                  ),
-                  quantity: oi.amount,
-                  modifiers: {
-                    create: A.fromIterable(orderModifiers),
-                  },
-                } satisfies Prisma.OrderItemCreateWithoutOrderInput
-              ),
-            ),
+            A.findFirst(om.modifier.config.options, (o) => o.identifier === choice),
+            O.map((o) => (
+              {
+                amount,
+                price: o.price,
+                choice,
+                ref: om.modifier.config.identifier,
+                modifier: { connect: { id: om.modifier.id } },
+              } satisfies Prisma.OrderItemModifierCreateWithoutReferencedInInput
+            )),
           )),
-      )
-    ),
-    Effect.map(
-      (orderItems) => (
-        {
-          venue: { connect: { identifier: venue } },
-          state: "Init",
-          items: {
-            create: A.fromIterable(orderItems),
-          },
-        } satisfies Prisma.OrderCreateInput
-      ),
-    ),
-    Effect.tap((order) => Effect.sync(() => console.log(inspect(order, false, null, true)))),
-    Effect.flatMap((data) =>
-      Effect.tryCatchPromise(
-        () =>
-          db.order.create({
-            data,
-            include: fullOrderInclude,
-          }),
-        prismaError("Order"),
-      )
-    ),
-  );
+        A.compact,
+      );
+  }
+};
 
 const getIntegration = (identifier: string) =>
   pipe(
@@ -217,37 +91,17 @@ const getIntegration = (identifier: string) =>
     ),
   );
 
-const getItems = (venue: Common.Slug, ids: Chunk.Chunk<_Menu.ItemId>) =>
-  pipe(
-    Effect.tryCatchPromise(
-      () =>
-        db.item.findMany({
-          where: { AND: [_Item.belongsToVenue(venue), _Item.idIn(ids)] },
-          orderBy: { id: "asc" },
-          include: { modifiers: { where: { deleted: null } }, content: true },
-        }),
-      prismaError("Item"),
-    ),
-    Effect.filterOrDieMessage(
-      (items) => items.length === ids.length,
-      "not all items present in venue",
-    ),
-    Effect.map(Chunk.unsafeFromArray),
-  );
-
-const ByItemId = Ord.contramap(Ord.number, (it: SendOrderItem) => it.item);
-
 const FullOrder = pipe(
   Order.Schema,
   S.extend(S.struct({
     items: pipe(
       Order.Item.Schema,
       S.extend(S.struct({
-        item: Item.Schema,
+        item: Item.Item,
         modifiers: pipe(
           Order.Modifier.Schema,
           S.extend(S.struct({
-            modifier: Item.Modifier.Schema,
+            modifier: Item.Modifier.fromPrisma,
           })),
           S.array,
         ),
@@ -257,107 +111,157 @@ const FullOrder = pipe(
   })),
 );
 
-export default resolver.pipe((input: EncodedSendOrder) => {
-  let _items: Chunk.Chunk<
-    readonly [
-      PItem & { modifiers: ItemModifier[]; content: ItemI18L[] },
-      SendOrderItem,
-    ]
-  >;
-  return pipe(
-    P.decodeEffect(SendOrder)(input),
-    Effect.orDie,
-    Effect.let(
-      "sortedItems",
-      ({ orderItems }) => Chunk.sort(orderItems, ByItemId),
-    ),
-    Effect.bind("items", ({ sortedItems, venueIdentifier }) =>
-      Effect.map(
-        getItems(
-          venueIdentifier,
-          Chunk.map(sortedItems, (it) => it.item),
-        ),
-        Chunk.zip(sortedItems),
-      )),
-    Effect.flatMap(({ items, venueIdentifier, locale }) => {
-      _items = items;
-      return createNewOrder(venueIdentifier, locale, items);
-    }),
-    a => a,
-    Effect.flatMap((order) =>
-      Effect.ifEffect(
-        // Hack to work with papa
-        Effect.succeed(input.venueIdentifier === "papa"),
-        pipe(
-          Effect.tryCatchPromise(
-            () =>
-              db.order.update({
-                where: { id: order.id },
-                data: { state: OrderState.Unconfirmed },
-                include: fullOrderInclude,
-              }),
-            prismaError("Order"),
-          ),
-          Effect.tap((order) =>
-            Telegram.notify(`
-Order ${order.id} received!
+const toOrderItemInput = (orderItem: SendOrderItem) => ({
+  item: { connect: { id: orderItem.item.id } },
+  price: orderItem.item.price,
+  comment: orderItem.comment ?? "",
+  name: orderItem.item.identifier,
+  quantity: orderItem.amount,
+  modifiers: {
+    create: A.flatMap(orderItem.modifiers, createNewOrderModifier_),
+  },
+} satisfies Prisma.OrderItemCreateWithoutOrderInput);
 
-Customer ordered:
-${
-              Chunk.join(
-                Chunk.map(
-                  _items,
-                  ([it, oi]) =>
-                    `${oi.amount} x ${it.identifier} for ${
-                      N.divide(oi.cost, 100).toLocaleString("us-IL", {
-                        style: "currency",
-                        currency: "ILS",
-                      })
-                    }`,
-                ),
-                `\n`,
-              )
-            }
-`)
-          ),
-          Effect.flatMap(S.parseEffect(FullOrder)),
-          Effect.flatMap((o) =>
-            Effect.flatMap(Gama.Gama, (g) =>
-              g.createSession({
-                orderId: o.id,
-                payerName: Gama.Schema.Name("datner"),
-                venueName: Gama.Schema.Name("Papa"),
-                paymentAmount: Number.Price(A.reduce(
-                  o.items,
-                  0,
-                  (acc, it) =>
-                    acc
-                    + (N.sumAll(
-                      A.append(it.price)(
-                        A.map(it.modifiers, (m) => m.price * m.amount),
-                      ),
-                    ) * it.quantity),
-                )),
-                payerPhoneNumber: Gama.Schema.PhoneNumber("0502060633"),
-              }))
-          ),
-        ),
-        Clearing.getClearingPageLink(order),
-      )
-    ),
-    Effect.tapErrorCause((cause) =>
-      Telegram.alertDatner(`
-Send Order Failed!
+const toOrderInput = (order: SendOrder) => ({
+  venue: { connect: { id: order.venueId } },
+  state: "Init",
+  items: {
+    create: A.map(order.orderItems, toOrderItemInput),
+  },
+  managementExtra: S.encode(Order.Management.ExtraSchema)(order.managementExtra),
+  clearingExtra: S.encode(Order.Clearing.ExtraSchema)(order.clearingExtra),
+  totalCost: N.sumAll(A.map(order.orderItems, getItemCost)),
+} satisfies Prisma.OrderCreateInput);
 
-pretty cause:
-${Format.pre("logs")(Cause.pretty(cause))}
+declare const anonymous: <I, A>(
+  s: S.Schema<I, A>,
+) => (input: I, ctx: Ctx) => Effect.Effect<never, ParseError, A>;
 
-`)
-    ),
-    Effect.provideServiceEffect(
-      Clearing.IntegrationSettingsService,
-      getIntegration(input.venueIdentifier),
-    ),
-    Renu.runPromise$,
+const createNewOrder = (input: SendOrder) =>
+  pipe(
+    Order.createDeepOrder(toOrderInput(input), {}),
+    Effect.flatMap(S.decodeEffect(Order.Schema)),
   );
-});
+
+const matchProvider = Match.discriminator("provider");
+
+export default resolver.pipe(
+  anonymous(SendOrder),
+  Effect.flatMap(order =>
+    Effect.zipPar(
+      createNewOrder(order),
+      S.decodeEffect(Venue.Clearing.fromVenue)(order.venueId),
+    )
+  ),
+  Effect.tap(o => Effect.sync(() => console.log(inspect(o, false, null, true)))),
+  Effect.flatMap(([o, clearing]) =>
+    pipe(
+      Match.value(clearing),
+      matchProvider("GAMA", (_) =>
+        Effect.flatMap(Gama.Gama, gama =>
+          gama.createSession({
+            orderId: o.id,
+            payerName: Gama.Schema.Name("datner"),
+            venueName: Gama.Schema.Name("Papa"),
+            paymentAmount: o.totalCost,
+            payerPhoneNumber: Gama.Schema.PhoneNumber("0502060633"),
+          }, _))),
+      Match.orElse(() => Effect.dieMessage("No support yet, sorry")),
+    )
+  ),
+  Renu.runPromise$,
+);
+
+// const old = resolver.pipe((input: EncodedSendOrder) => {
+//   let _items: ReadonlyArray<
+//     readonly [
+//       PItem & { modifiers: ItemModifier[]; content: ItemI18L[] },
+//       SendOrderItem,
+//     ]
+//   >;
+//   return pipe(
+//     P.decodeEffect(SendOrder)(input),
+//     Effect.orDie,
+//     Effect.let(
+//       "sortedItems",
+//       ({ orderItems }) => A.sort(orderItems, ByItemId),
+//     ),
+//     Effect.bind("items", ({ sortedItems, venueIdentifier }) =>
+//       Effect.map(
+//         getItems(
+//           venueIdentifier,
+//           A.map(sortedItems, (it) => it.item),
+//         ),
+//         A.zip(sortedItems),
+//       )),
+//     Effect.flatMap(({ items, venueIdentifier, locale, managementExtra }) => {
+//       _items = items;
+//       return createNewOrder(venueIdentifier, locale, items);
+//     }),
+//     Effect.flatMap((order) =>
+//       Effect.ifEffect(
+//         // Hack to work with papa
+//         Effect.succeed(input.venueIdentifier === "papa"),
+//         pipe(
+//           Effect.tryCatchPromise(
+//             () =>
+//               db.order.update({
+//                 where: { id: order.id },
+//                 data: { state: OrderState.Unconfirmed },
+//                 include: fullOrderInclude,
+//               }),
+//             prismaError("Order"),
+//           ),
+//           Effect.tap((order) =>
+//             Telegram.notify(`
+// Order ${order.id} received!
+//
+// Customer ordered:
+// ${
+//               A.join(
+//                 A.map(
+//                   _items,
+//                   ([it, oi]) =>
+//                     `${oi.amount} x ${it.identifier} for ${
+//                       N.divide(oi.cost, 100).toLocaleString("us-IL", {
+//                         style: "currency",
+//                         currency: "ILS",
+//                       })
+//                     }`,
+//                 ),
+//                 `\n`,
+//               )
+//             }
+// `)
+//           ),
+//           Effect.flatMap(S.parseEffect(FullOrder)),
+//           Effect.flatMap((o) =>
+//             Effect.flatMap(Gama.Gama, (g) =>
+//               g.createSession({
+//                 orderId: o.id,
+//                 payerName: Gama.Schema.Name("datner"),
+//                 venueName: Gama.Schema.Name("Papa"),
+//                 paymentAmount: o.totalCost,
+//                 payerPhoneNumber: Gama.Schema.PhoneNumber("0502060633"),
+//               }))
+//           ),
+//         ),
+//         Clearing.getClearingPageLink(order),
+//       )
+//     ),
+//     Effect.tapErrorCause((cause) =>
+//       Telegram.alertDatner(`
+// Send Order Failed!
+//
+// pretty cause:
+// ${Format.pre("logs")(Cause.pretty(cause))}
+//
+// `)
+//     ),
+//     Effect.provideServiceEffect(
+//       Clearing.IntegrationSettingsService,
+//       getIntegration(input.venueIdentifier),
+//     ),
+//     Renu.runPromise$,
+//   );
+// });

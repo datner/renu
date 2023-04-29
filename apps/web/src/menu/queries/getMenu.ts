@@ -1,18 +1,22 @@
 import { resolver } from "@blitzjs/rpc";
+import { pipe } from "@effect/data/Function";
+import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
-import db from "db";
-import { Common } from "shared/schema";
-import { selectTheEntireMenu } from "../prisma";
+import { Venue } from "shared";
+import { Renu } from "src/core/effect";
 
 const GetMenu = Schema.struct({
-  identifier: Common.Slug,
+  identifier: Venue.Identifier,
 });
 
 export default resolver.pipe(
   (i: Schema.From<typeof GetMenu>) => Schema.decode(GetMenu)(i),
   (where) =>
-    db.venue.findUniqueOrThrow({
-      where,
-      select: selectTheEntireMenu,
-    }),
+    pipe(
+      Venue.getByIdentifier(where.identifier),
+      Effect.flatMap(Schema.decodeEffect(Venue.Menu.fromVenue)),
+      Effect.flatMap(Schema.encodeEffect(Venue.Menu.Menu)),
+      Effect.withParallelism(1),
+      Renu.runPromise$,
+    ),
 );

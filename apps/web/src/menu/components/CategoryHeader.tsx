@@ -40,7 +40,7 @@ export const CategoryHeader = memo(
               ],
             )}
           >
-            {title(category)}
+            {title(category.content as any)}
           </h3>
         </div>
         {children}

@@ -2,9 +2,10 @@ import clsx from "clsx";
 import * as _Menu from "src/menu/schema";
 import { useNavContext } from "./context";
 import { useTitle } from "src/menu/hooks/useTitle";
+import { Venue } from "shared";
 
 interface NavListProps {
-  readonly categories: ReadonlyArray<_Menu.Category>;
+  readonly categories: ReadonlyArray<Venue.Menu.MenuCategory>;
 }
 
 export const NavList = (props: NavListProps) => {
@@ -38,7 +39,7 @@ export const NavList = (props: NavListProps) => {
             "block flex-shrink-0 rounded-md snap-start px-3 py-2 text-sm font-semibold scroll-m-2",
           )}
         >
-          {title(it)}
+          {title(it.content)}
         </button>
       ))}
     </div>

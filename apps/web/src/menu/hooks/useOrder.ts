@@ -9,24 +9,23 @@ import * as O from "@effect/data/Option";
 import * as P from "@effect/data/Predicate";
 import * as RA from "@effect/data/ReadonlyArray";
 import * as Match from "@effect/match";
-import { Modifiers } from "database-helpers";
 import { nanoid } from "nanoid";
-import { Dispatch, ReactNode, createContext, useReducer } from "react";
+import { Dispatch, useReducer } from "react";
+import { Item, Venue, ModifierConfig } from "shared";
 import { Refinement } from "shared/effect";
 import { Number } from "shared/schema";
-import * as _Menu from "../schema";
 
 export type OrderItemKey = string & Brand.Brand<"OrderItemKey">;
 export const OrderItemKey = Brand.nominal<OrderItemKey>();
 
-export type OrderItemModifierHashMap = HashMap.HashMap<_Menu.ItemModifierId, OrderItemModifier>;
+export type OrderItemModifierHashMap = HashMap.HashMap<Item.Modifier.Id, OrderItemModifier>;
 export type OrderItemHashMap = HashMap.HashMap<OrderItemKey, OrderItem>;
 
 export interface SingleOrderItem extends Data.Case {
   readonly _tag: "SingleOrderItem";
   readonly comment: string;
   readonly modifiers: OrderItemModifierHashMap;
-  readonly item: Data.Data<_Menu.Item>;
+  readonly item: Data.Data<Venue.Menu.MenuItem>;
   readonly cost: Number.Cost;
 }
 export const SingleOrderItem = Data.tagged<SingleOrderItem>("SingleOrderItem");
@@ -36,7 +35,7 @@ export interface MultiOrderItem extends Data.Case {
   readonly amount: Number.Multiple;
   readonly comment: string;
   readonly modifiers: OrderItemModifierHashMap;
-  readonly item: Data.Data<_Menu.Item>;
+  readonly item: Data.Data<Venue.Menu.MenuItem>;
   readonly cost: Number.Cost;
 }
 export const MultiOrderItem = Data.tagged<MultiOrderItem>("MultiOrderItem");
@@ -45,18 +44,18 @@ export type OrderItem = SingleOrderItem | MultiOrderItem;
 
 export interface OneOf extends Data.Case {
   readonly _tag: "OneOf";
-  readonly id: _Menu.ItemModifierId;
+  readonly id: Item.Modifier.Id;
   readonly choice: string;
   readonly amount: Number.Amount;
-  readonly config: Data.Data<Modifiers.OneOf>;
+  readonly config: Data.Data<ModifierConfig.OneOf.OneOf>;
 }
 export const OneOf = Data.tagged<OneOf>("OneOf");
 
 export interface Extras extends Data.Case {
   readonly _tag: "Extras";
-  readonly id: _Menu.ItemModifierId;
+  readonly id: Item.Modifier.Id;
   readonly choices: HashMap.HashMap<string, Number.Amount>;
-  readonly config: Data.Data<Modifiers.Extras>;
+  readonly config: Data.Data<ModifierConfig.Extras.Extras>;
 }
 export const Extras = Data.tagged<Extras>("Extras");
 export type OrderItemModifier = OneOf | Extras;
@@ -77,7 +76,7 @@ export const EmptyOrder = Data.tagged<EmptyOrder>("EmptyOrder");
 
 export interface NewActiveItem extends Data.Case {
   readonly _tag: "NewActiveItem";
-  readonly item: Data.Data<_Menu.Item>;
+  readonly item: Data.Data<Venue.Menu.MenuItem>;
 }
 export const NewActiveItem = Data.tagged<NewActiveItem>("NewActiveItem");
 
@@ -158,7 +157,7 @@ const getItemCost = (item: OrderItem) => N.sum(item.item.price, getAllModifiersC
 
 export const getSumCost = HashMap.reduce(0, (accumulated, item: OrderItem) => N.sum(accumulated, item.cost));
 
-export const addEmptyItem = (item: _Menu.Item): Action => (state) => {
+export const addEmptyItem = (item: Venue.Menu.MenuItem): Action => (state) => {
   const key = OrderItemKey(nanoid());
   const orderItem = SingleOrderItem({
     item: Data.struct(item),
@@ -409,7 +408,7 @@ export const updateItem = (hash: OrderItemKey, update: (v: OrderItem) => OrderIt
     ),
   );
 
-export const setNewActiveItem = (item: _Menu.Item): Action => (state) =>
+export const setNewActiveItem = (item: Venue.Menu.MenuItem): Action => (state) =>
   State({
     ...state,
     activeItem: O.some(NewActiveItem({ item: Data.struct(item) })),
@@ -442,4 +441,3 @@ export const useOrder = () =>
     reducer,
     State({ order: EmptyOrder(), activeItem: O.none() }),
   );
-

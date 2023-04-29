@@ -1,13 +1,15 @@
 import clsx from "clsx";
+import * as O from '@effect/data/Option'
 import { useTranslations } from "next-intl";
 import { PropsWithChildren, ReactNode } from "react";
 import { toShekel } from "src/core/helpers/content";
 import * as _Menu from "src/menu/schema";
 import { AmountCounter } from "./AmountCounter";
+import { Common } from "shared/schema";
 
 type Props = {
   price: number;
-  content: _Menu.Content;
+  content: Common.Content;
   amount: number;
 };
 
@@ -23,7 +25,7 @@ const StaticData = (
       <dd className="text-sm sm:text-base text-gray-800">{children}</dd>
       <dt className="sr-only">{t("description")}</dt>
       <dd className="text-xs sm:text-sm text-gray-500 whitespace-normal line-clamp-2 ">
-        {content.description}
+        {O.getOrNull(content.description)}
       </dd>
       <dt className="sr-only">{t("price")}</dt>
       <div className="flex-grow" />

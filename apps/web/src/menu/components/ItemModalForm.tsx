@@ -1,11 +1,9 @@
-import * as E from "@effect/data/Either";
 import { pipe } from "@effect/data/Function";
 import * as HashMap from "@effect/data/HashMap";
 import * as N from "@effect/data/Number";
 import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as RR from "@effect/data/ReadonlyRecord";
-import { Modifiers } from "database-helpers";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { createPortal } from "react-dom";
@@ -18,17 +16,17 @@ import {
   useFormState,
   useWatch,
 } from "react-hook-form";
+import { Item, ModifierConfig, Venue } from "shared";
 import { LabeledTextArea } from "src/core/components/LabeledTextArea";
 import { toShekel } from "src/core/helpers/content";
 import * as Order from "src/menu/hooks/useOrder";
-import * as _Menu from "src/menu/schema";
 import { ItemForm } from "../validations/item";
 import { AmountButtons } from "./AmountButtons";
 import { ModifiersBlock } from "./ModifiersBlock";
 
 interface ItemModalFormProps {
   order: O.Option<Order.OrderItem>;
-  item: _Menu.Item;
+  item: Venue.Menu.MenuItem;
   // Note on containerEl: this is a filthy dirty hack because I can't find a fuck to do it right
   containerEl: HTMLElement | null;
   onSubmit(data: ItemForm): void;
@@ -42,13 +40,37 @@ const OrderState = {
 
 type OrderState = (typeof OrderState)[keyof typeof OrderState];
 
-export const partitionModifiers = E.liftPredicate(
-  (mod: _Menu.ItemModifier): mod is _Menu.ItemModifier<Modifiers.OneOf> => mod.config._tag === "oneOf",
-  (mod) => mod as _Menu.ItemModifier<Modifiers.Extras>,
-);
+type OneOfModifier<I extends { config: ModifierConfig.Schema }> = I & { config: ModifierConfig.OneOf.OneOf };
+type ExtrasModifier<I extends { config: ModifierConfig.Schema }> = I & { config: ModifierConfig.Extras.Extras };
+type SliderModifier<I extends { config: ModifierConfig.Schema }> = I & { config: ModifierConfig.Slider.Slider };
 
-const makeDefaults = (item: _Menu.Item): DefaultValues<ItemFieldValues["modifiers"]> => {
-  const [extras, oneOfs] = A.partitionMap(item.modifiers, partitionModifiers);
+export const getModifiers = <I extends { config: ModifierConfig.Schema }>(modifiers: ReadonlyArray<I>) => {
+  let oneOfs: OneOfModifier<I>[] = [],
+    extras: ExtrasModifier<I>[] = [],
+    sliders: SliderModifier<I>[] = [];
+  for (const mod of modifiers) {
+    switch (mod.config._tag) {
+      case "oneOf": {
+        oneOfs.push(mod as OneOfModifier<I>);
+        continue;
+      }
+      case "extras": {
+        extras.push(mod as ExtrasModifier<I>);
+        continue;
+      }
+
+      case "Slider": {
+        sliders.push(mod as SliderModifier<I>);
+        continue;
+      }
+    }
+  }
+
+  return { oneOfs, extras, sliders };
+};
+
+const makeDefaults = (item: Venue.Menu.MenuItem): DefaultValues<ItemFieldValues["modifiers"]> => {
+  const { extras, oneOfs } = getModifiers(item.modifiers);
   return {
     oneOf: Object.fromEntries(
       A.map(oneOfs, (oneOf) => [
@@ -77,7 +99,7 @@ const makeDefaults = (item: _Menu.Item): DefaultValues<ItemFieldValues["modifier
 };
 
 const makeOrderDefaults = (order: Order.OrderItem): DefaultValues<ItemFieldValues["modifiers"]> => {
-  const [allExtras, oneOfs] = A.partitionMap(order.item.modifiers, partitionModifiers);
+  const { extras: allExtras, oneOfs } = getModifiers(order.item.modifiers);
   return {
     oneOf: Object.fromEntries(
       A.map(oneOfs, (oneOf) => [
@@ -128,7 +150,7 @@ export interface ItemFieldValues {
   amount: number;
   modifiers: {
     oneOf: Record<
-      _Menu.ItemModifierId,
+      Item.Modifier.Id,
       {
         amount: number;
         identifier: string;
@@ -136,7 +158,7 @@ export interface ItemFieldValues {
       }
     >;
     extras: Record<
-      _Menu.ItemModifierId,
+      Item.Modifier.Id,
       {
         identifier: string;
         choices: Record<string, number>;
@@ -230,7 +252,7 @@ export function ItemModalForm(props: ItemModalFormProps) {
 interface SubmitButtonProps {
   price: number;
   isCreate?: boolean;
-  modifierMap: HashMap.HashMap<_Menu.ItemModifierId, _Menu.ItemModifier>;
+  modifierMap: HashMap.HashMap<Item.Modifier.Id, Venue.Menu.MenuModifierItem>;
 }
 
 function SubmitButton(props: SubmitButtonProps) {
@@ -251,9 +273,9 @@ function SubmitButton(props: SubmitButtonProps) {
   const oneOf = RR.collect(oneOfs, (id, { choice, amount }) =>
     pipe(
       modifierMap,
-      HashMap.get(_Menu.ItemModifierId(Number(id))),
+      HashMap.get(Item.Modifier.Id(Number(id))),
       O.map((o) => o.config),
-      O.filter(Modifiers.isOneOf),
+      O.filter(ModifierConfig.isOneOf),
       O.flatMap((m) => A.findFirst(m.options, (o) => o.identifier === choice)),
       O.map((o) => o.price * amount),
       O.getOrElse(() => 0),
@@ -262,9 +284,9 @@ function SubmitButton(props: SubmitButtonProps) {
   const extras = RR.collect(extrases, (id, { choices }) =>
     pipe(
       modifierMap,
-      HashMap.get(_Menu.ItemModifierId(Number(id))),
+      HashMap.get(Item.Modifier.Id(Number(id))),
       O.map((m) => m.config),
-      O.filter(Modifiers.isExtras),
+      O.filter(ModifierConfig.isExtras),
       O.map((ex) =>
         RR.collect(choices, (choice, amount) =>
           pipe(

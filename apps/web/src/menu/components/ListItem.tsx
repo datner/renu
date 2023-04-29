@@ -1,6 +1,8 @@
 import * as B from "@effect/data/Boolean";
 import * as Equal from "@effect/data/Equal";
+import { pipe } from "@effect/data/Function";
 import * as N from "@effect/data/Number";
+import * as O from "@effect/data/Option";
 import { MinusCircleIcon, PlusCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { a, useSpring } from "@react-spring/web";
 import { useDrag } from "@use-gesture/react";
@@ -137,14 +139,14 @@ export const ListItem = memo(
             <ItemData content={content} price={cost} amount={amount} />
           </div>
           <div className="w-32 relative xs:w-48 m-2 rounded-md overflow-hidden h-32">
-            {item.blurHash && <Blurhash hash={item.blurHash} width={192} height={128} />}
+            {pipe(O.map(item.blurHash, hash => <Blurhash hash={hash} width={192} height={128} />), O.getOrNull)}
             {item.image && (
               <Image
                 className="object-cover"
                 fill
                 src={item.image}
-                placeholder={item.blurDataUrl ? "blur" : "empty"}
-                blurDataURL={item.blurDataUrl ?? undefined}
+                placeholder={O.match(item.blurDataUrl, () => "empty", () => "blur")}
+                blurDataURL={O.getOrUndefined(item.blurDataUrl)}
                 quality={20}
                 alt={item.identifier}
                 sizes="(min-width: 370px) 12rem,

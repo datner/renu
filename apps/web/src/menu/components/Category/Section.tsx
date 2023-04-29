@@ -3,9 +3,10 @@ import { ReactNode, forwardRef, memo } from "react";
 import { useTitle } from "src/menu/hooks/useTitle";
 import * as _Menu from "src/menu/schema";
 import { useNavContext } from "../Navigation";
+import { Venue } from "shared";
 
 type Props = {
-  category: _Menu.Category;
+  category: Venue.Menu.MenuCategory;
   children?: ReactNode
 };
 
@@ -40,7 +41,7 @@ export const Section = memo(
               ],
             )}
           >
-            {title(category)}
+            {title(category.content)}
           </h3>
         </div>
         {children}

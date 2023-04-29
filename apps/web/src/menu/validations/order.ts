@@ -1,36 +1,130 @@
-import { pipe } from "@effect/data/Function";
+import * as Data from "@effect/data/Data";
+import * as Equal from "@effect/data/Equal";
+import { identity, pipe } from "@effect/data/Function";
+import * as N from "@effect/data/Number";
+import * as O from "@effect/data/Option";
+import * as A from "@effect/data/ReadonlyArray";
+import * as Str from "@effect/data/String";
+import { TaggedEnum, taggedEnum } from "@effect/match/TaggedEnum";
 import * as S from "@effect/schema/Schema";
 import { PAYMENT_TYPES } from "@integrations/dorix/types";
 import { Locale } from "database";
+import { Item, Order, Venue } from "shared";
 import { Common, Number } from "shared/schema";
-import * as _Menu from "../schema";
 
 export const SendOrderOneOf = S.struct({
   _tag: S.literal("OneOf"),
-  id: _Menu.ItemModifierId,
+  modifier: pipe(
+    Item.modifierFromId,
+    S.filter(Item.Modifier.isOneOf),
+  ),
   choice: Common.Slug,
-  amount: Number.Amount,
+  // TODO: right now, one-of can't be multiple. Probably shouldn't ever be
+  amount: pipe(Number.Amount, S.lessThan(2)),
 });
 export interface SendOrderOneOf extends S.To<typeof SendOrderOneOf> {}
 
-export const SendOrderExtras = S.struct({
-  _tag: S.literal("Extras"),
-  id: _Menu.ItemModifierId,
-  choices: S.chunk(S.tuple(Common.Slug, Number.Amount)),
-});
+const getMin = O.getOrElse(() => 0);
+const getMax = O.getOrElse(() => Infinity);
+
+export const SendOrderExtras = pipe(
+  S.struct({
+    _tag: S.literal("Extras"),
+    modifier: pipe(
+      Item.modifierFromId,
+      S.filter(Item.Modifier.isExtras),
+    ),
+    choices: S.array(S.tuple(Common.Slug, Number.Amount)),
+  }),
+  S.filter(({ modifier, choices }) =>
+    pipe(
+      choices.every(([choice]) => modifier.config.options.some(o => o.identifier === choice)),
+    ), {
+    message: (m) =>
+      `Item Modifier ${m.modifier.config.identifier} did not have all if the requested options. Expected ${
+        m.choices.map(([c]) => c)
+      }`,
+  }),
+  S.filter(({ modifier, choices }) =>
+    pipe(
+      choices.every(([choice, amount]) =>
+        pipe(
+          A.findFirst(modifier.config.options, o => o.identifier === choice),
+          O.filter(o => amount === 1 || o.multi),
+          O.isSome,
+        )
+      ),
+    ), {
+    message: (m) =>
+      `Item Modifier ${m.modifier.config.identifier} sent with a choice with a greater amount than allowed`,
+  }),
+  S.filter(({ modifier, choices }) =>
+    pipe(
+      A.map(choices, ([_, amount]) => amount),
+      N.sumAll,
+      N.between(
+        getMin(modifier.config.min),
+        getMax(modifier.config.max),
+      ),
+    ), {
+    message: (m) =>
+      `Item Modifier ${m.modifier.config.identifier} sent with a modifier amount outside of range.
+      Expected: { ${getMin(m.modifier.config.min)} ... ${getMax(m.modifier.config.max)} }
+      Recieved: ${N.sumAll(A.map(m.choices, ([_, amount]) => amount))}
+`,
+  }),
+);
 export interface SendOrderExtras extends S.To<typeof SendOrderExtras> {}
 
 export const SendOrderModifiers = S.union(SendOrderOneOf, SendOrderExtras);
 export type SendOrderModifiers = SendOrderOneOf | SendOrderExtras;
 
-export const SendOrderItem = S.struct({
-  item: _Menu.ItemId,
+export const getModCost = (mod: SendOrderModifiers) => {
+  switch (mod._tag) {
+    case "OneOf":
+      return pipe(
+        A.findFirst(mod.modifier.config.options, o => o.identifier === mod.choice),
+        O.map(o => o.price),
+        O.map(N.multiply(mod.amount)),
+        O.getOrElse(() => 0),
+      );
+
+    case "Extras":
+      return pipe(
+        A.map(mod.choices, ([choice, amount]) =>
+          pipe(
+            A.findFirst(mod.modifier.config.options, o => o.identifier === choice),
+            O.map(o => o.price),
+            O.map(N.multiply(amount)),
+          )),
+        O.sumCompact,
+      );
+  }
+};
+
+export const getItemCost = ({ modifiers, item, amount }: SendOrderItem) =>
+  pipe(
+    A.map(modifiers, getModCost),
+    A.append(item.price),
+    N.sumAll,
+    N.multiply(amount),
+  );
+
+const _SendOrderItem = S.struct({
+  item: Item.fromId,
   amount: Number.Amount,
   cost: Number.Cost,
   comment: S.optional(S.string),
-  modifiers: S.chunk(SendOrderModifiers),
+  modifiers: S.array(SendOrderModifiers),
 });
-export interface SendOrderItem extends S.To<typeof SendOrderItem> {}
+
+export const SendOrderItem = pipe(
+  _SendOrderItem,
+  S.filter((oi) => getItemCost(oi) === oi.cost, {
+    message: (i) => `Item ${i.item} reported cost (${i.cost}) did not match expected`,
+  }),
+);
+export interface SendOrderItem extends S.To<typeof _SendOrderItem> {}
 
 export const Transaction = S.struct({
   id: S.string,
@@ -45,20 +139,24 @@ export const UpdateManagement = S.struct({
   transaction: Transaction,
 });
 
-const PrestoExtra = S.struct({
-  phoneNumber: pipe(S.string, S.brand("Phone Number")),
-});
-
-const ManagementExtra = S.union(
-  pipe(PrestoExtra, S.attachPropertySignature("_tag", "PrestoExtra")),
+export const SendOrder = pipe(
+  S.struct({
+    locale: S.enums(Locale),
+    clearingExtra: Order.Clearing.ExtraSchema,
+    managementExtra: Order.Management.ExtraSchema,
+    venueId: Venue.Id,
+    orderItems: S.array(SendOrderItem),
+  }),
+  S.filter((order) =>
+    order.orderItems.every(({ item }) =>
+      pipe(
+        item.venueId,
+        O.filter(Equal.equals(order.venueId)),
+        O.isSome,
+      )
+    )
+  ),
 );
 
-export const SendOrder = S.struct({
-  locale: S.enums(Locale),
-  clearingExtra: S.optional(S.unknown),
-  managementExtra: S.optional(ManagementExtra),
-  venueIdentifier: Common.Slug,
-  orderItems: S.chunk(SendOrderItem),
-});
 export interface SendOrder extends S.To<typeof SendOrder> {}
 export interface EncodedSendOrder extends S.From<typeof SendOrder> {}

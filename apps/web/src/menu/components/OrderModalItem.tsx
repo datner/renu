@@ -1,3 +1,5 @@
+import { pipe } from "@effect/data/Function";
+import * as O from "@effect/data/Option";
 import { ResizeObserver } from "@juggle/resize-observer";
 import { a, useChain, useSpring, useSpringRef } from "@react-spring/web";
 import Image from "next/image";
@@ -33,7 +35,7 @@ export function OrderModalItem(props: Props) {
         >
           <div className="flex">
             <div className="h-16 w-24 relative rounded-md overflow-hidden mx-2">
-              {item.blurHash && <Blurhash hash={item.blurHash} width={96} height={64} />}
+              {pipe(item.blurHash, O.map(hash => <Blurhash hash={hash} width={96} height={64} />), O.getOrNull)}
               {item.image && (
                 <Image
                   priority
@@ -42,15 +44,15 @@ export function OrderModalItem(props: Props) {
                   fill
                   sizes="(min-width: 370px) 12rem,
               8rem"
-                  placeholder={item.blurDataUrl ? "blur" : "empty"}
-                  blurDataURL={item.blurDataUrl ?? undefined}
+                  placeholder={O.match(item.blurDataUrl, () => "empty", () => "blur")}
+                  blurDataURL={O.getOrUndefined(item.blurDataUrl)}
                   quality={20}
                   alt={item.identifier}
                 />
               )}
             </div>
             <p className="text-sm whitespace-pre-line">
-              <span>{title(item)}</span>
+              <span>{title(item.content)}</span>
               <br />
               <span className="rounded-full mx-1 text-xs font-medium text-emerald-800">
                 {toShekel(orderItem.cost)}

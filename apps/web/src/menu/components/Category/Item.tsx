@@ -7,9 +7,10 @@ import * as Order from "src/menu/hooks/useOrder";
 import * as _Menu from "src/menu/schema";
 import { ListItem } from "../ListItem";
 import { useOrderState } from "../OrderContext";
+import { Venue } from "shared";
 
 interface ItemProps {
-  item: _Menu.CategoryItem;
+  item: Venue.Menu.MenuCategoryItem
 }
 
 export const Item = memo<ItemProps>(({ item }) => {
@@ -17,7 +18,7 @@ export const Item = memo<ItemProps>(({ item }) => {
   const orderItems = Order.getOrderItems(state.order);
 
   const orderItem = pipe(
-    HashMap.filter(orderItems, (it) => it.item.id === item.Item.id),
+    HashMap.filter(orderItems, (it) => it.item.id === item.item.id),
     HashMap.mapWithIndex((oi, key) => [key, oi] as const),
     HashMap.values,
     A.fromIterable,
@@ -27,8 +28,8 @@ export const Item = memo<ItemProps>(({ item }) => {
     orderItem,
     () => [
       <ListItem
-        key={`${item.Item.identifier}-${item.position}`}
-        item={Order.NewActiveItem({ item: Data.struct(item.Item) })}
+        key={`${item.item.identifier}-${item.position}`}
+        item={Order.NewActiveItem({ item: Data.struct(item.item) })}
       />,
     ],
     A.map(([key, item]) => (

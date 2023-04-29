@@ -1,22 +1,25 @@
 import * as Data from "@effect/data/Data";
-import { pipe } from "@effect/data/Function";
+import { absurd, pipe } from "@effect/data/Function";
 import * as HashMap from "@effect/data/HashMap";
 import * as N from "@effect/data/Number";
 import * as O from "@effect/data/Option";
 import * as RA from "@effect/data/ReadonlyArray";
 import * as RR from "@effect/data/ReadonlyRecord";
+import * as S from "@effect/data/String";
+import * as Ord from "@effect/data/typeclass/Order";
 import { a, animated, useSpring } from "@react-spring/web";
 import { useScroll } from "@use-gesture/react";
 import Image from "next/image";
 import { useCallback, useMemo, useState } from "react";
 import { Blurhash } from "react-blurhash";
+import { Item, ModifierConfig } from "shared";
 import { Number } from "shared/schema";
 import { descriptionFor, priceShekel, titleFor } from "src/core/helpers/content";
 import { clamp } from "src/core/helpers/number";
 import { useLocale } from "src/core/hooks/useLocale";
 import * as Order from "../hooks/useOrder";
 import * as _Menu from "../schema";
-import { ItemFieldValues, ItemModalForm, partitionModifiers } from "./ItemModalForm";
+import { ItemFieldValues, ItemModalForm, getModifiers } from "./ItemModalForm";
 import { Modal } from "./Modal";
 import { useOrderContext } from "./OrderContext";
 
@@ -31,7 +34,7 @@ const clampImgHeight = clamp(ImageBasis.Min, ImageBasis.Max);
 const clampBinary = clamp(0, 1);
 
 export function ItemModal() {
-  const [{activeItem}, dispatch] = useOrderContext()
+  const [{ activeItem }, dispatch] = useOrderContext();
   const [open, setOpen] = useState(true);
   const handleClose = useCallback(() => setOpen(false), []);
 
@@ -103,7 +106,7 @@ function _ItemModal(props: Props2) {
   const handleSubmit = useCallback(
     ({ amount, comment, modifiers }: ItemFieldValues) => {
       onClose();
-      const [extras, oneOfs] = RA.partitionMap(item.modifiers, partitionModifiers);
+      const { extras, oneOfs } = getModifiers(item.modifiers);
 
       const oneOfMap = HashMap.make(...RA.map(oneOfs, (oo) => [String(oo.id), oo] as const));
       const extrasMap = HashMap.make(...RA.map(extras, (oo) => [String(oo.id), oo] as const));
@@ -218,14 +221,20 @@ function _ItemModal(props: Props2) {
             style={{ height: imgHeight, opacity: imgOpacity }}
             className="relative w-full self-end grow-0 shrink-0"
           >
-            {item.blurHash && <AnimatedBlurhash hash={item.blurHash} width="100%" style={{ height: imgHeight }} />}
+            {pipe(
+              O.map(
+                item.blurHash,
+                (hash) => <AnimatedBlurhash hash={hash} width="100%" style={{ height: imgHeight }} />,
+              ),
+              O.getOrNull,
+            )}
             {item?.image && (
               <Image
                 className="object-cover"
                 fill
                 src={item.image}
-                placeholder={item.blurDataUrl ? "blur" : "empty"}
-                blurDataURL={item.blurDataUrl ?? undefined}
+                placeholder={O.match(item.blurDataUrl, () => "empty", () => "blur")}
+                blurDataURL={O.getOrUndefined(item.blurDataUrl)}
                 alt={item.identifier}
                 sizes="100vw"
               />
@@ -237,10 +246,10 @@ function _ItemModal(props: Props2) {
             style={{ opacity: titleOpacity }}
             className="text-3xl leading-6 font-medium text-gray-900"
           >
-            {title(item)}
+            {title(item.content)}
           </a.h3>
           <p className="mt-2 text-emerald-600">{priceShekel(item)}</p>
-          <p className="mt-2 text-sm text-gray-500">{desc(item)}</p>
+          <p className="mt-2 text-sm text-gray-500">{desc(item.content)}</p>
         </div>
         <div className="flex flex-col px-4">
           <ItemModalForm
@@ -256,13 +265,12 @@ function _ItemModal(props: Props2) {
         style={{
           y,
           boxShadow: shadow.to(
-            (s) =>
-              `0 20px 25px -5px rgb(0 0 0 / ${s * 0.1}),
+            (s) => `0 20px 25px -5px rgb(0 0 0 / ${s * 0.1}),
               0 8px 10px -6px rgb(0 0 0 / ${s * 0.1})`,
           ),
         }}
       >
-        <a.h3 className="text-2xl leading-6 font-medium text-gray-900">{title(item)}</a.h3>
+        <a.h3 className="text-2xl leading-6 font-medium text-gray-900">{title(item.content)}</a.h3>
       </a.div>
     </>
   );

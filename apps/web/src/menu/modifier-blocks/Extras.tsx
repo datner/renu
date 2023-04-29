@@ -5,34 +5,30 @@ import * as A from "@effect/data/ReadonlyArray";
 import * as RR from "@effect/data/ReadonlyRecord";
 import { Transition } from "@headlessui/react";
 import { useTimeout } from "@mantine/hooks";
-import { Modifiers } from "database-helpers";
-import { Locale } from "db";
 import { constTrue } from "fp-ts/lib/function";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useController, useFormContext, useWatch } from "react-hook-form";
+import { ModifierConfig, Venue } from "shared";
 import { toShekel } from "src/core/helpers/content";
-import { useLocale } from "src/core/hooks/useLocale";
-import * as _Menu from "src/menu/schema";
 import { AmountCounter } from "../components/AmountCounter";
+import { useTitle } from "../hooks/useTitle";
 import { ItemForm } from "../validations/item";
-import { getLabel } from "./helpers";
 
 type Props = {
-  modifier: _Menu.ItemModifier<Modifiers.Extras>;
+  modifier: Venue.Menu.MenuModifierItem & { config: ModifierConfig.Extras.Extras };
 };
 
 const ExtrasCheck = ({
   option,
-  locale,
   name,
   maxReached,
 }: {
-  option: Modifiers.ExtrasOption;
-  locale: Locale;
+  option: ModifierConfig.Extras.Option;
   name: string;
   maxReached: boolean;
 }) => {
+  const title = useTitle();
   const { field } = useController({ name, defaultValue: 0 });
   const handleChange = () => {
     changeValue(field.value > 0 ? 0 : 1);
@@ -71,7 +67,7 @@ const ExtrasCheck = ({
       />
       <div className="absolute inset-0 z-10" onClick={handleClick} />
       <label htmlFor={"input-" + field.name} className="label-text grow">
-        <AmountCounter label={getLabel(option)(locale)} amount={field.value} />
+        <AmountCounter label={title(option.content)} amount={field.value} />
       </label>
       {option.price > 0 && <span className="label-text">{toShekel(option.price * Math.max(1, field.value))}</span>}
       <Transition
@@ -113,8 +109,10 @@ const getAmount = (choices?: Record<string, number>) =>
 
 export const ExtrasComponent = (props: Props) => {
   const { modifier } = props;
-  const { id, config } = modifier;
-  const locale = useLocale();
+  const { id } = modifier;
+  // TODO: actually make this strict
+  const config = modifier.config as ModifierConfig.Extras.Extras;
+  const title = useTitle();
   const t = useTranslations("menu.Components.Extras");
   const { control } = useFormContext<ItemForm>();
 
@@ -150,7 +148,7 @@ export const ExtrasComponent = (props: Props) => {
     <fieldset ref={field.ref} tabIndex={0} className="form-control">
       <legend className="label w-full">
         <p className="label-text">
-          {getLabel(config)(locale)}
+          {title(config.content)}
           <br />
           {minMaxText}
           <br />
@@ -161,7 +159,6 @@ export const ExtrasComponent = (props: Props) => {
         <ExtrasCheck
           maxReached={maxReached}
           key={o.identifier}
-          locale={locale}
           option={o}
           name={`modifiers.extras.${id}.choices.${o.identifier}`}
         />

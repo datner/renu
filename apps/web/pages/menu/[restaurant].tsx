@@ -119,7 +119,6 @@ export const getStaticProps = gSP(async (context) => {
         menu,
         messages: (await import(`src/core/messages/${context.locale}.json`)).default,
       },
-      revalidate: 60,
     };
   } catch (e) {
     throw new NotFoundError();

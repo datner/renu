@@ -36,57 +36,49 @@ export interface Identified {
 }
 
 export const ModifierOption = pipe(
-  S.struct({ name: Name }),
-  S.optionsFromOptionals({
-    id: ModifierOptionId,
-    price: Number.Price,
+  S.struct({
+    id: S.optional(ModifierOptionId).toOption(),
+    price: S.optional(Number.Price).toOption(),
+    name: Name,
   }),
 );
 export interface ModifierOption extends S.To<typeof ModifierOption> {}
 
 export const Modifier = pipe(
   S.struct({
+    id: S.optional(ModifierId).toOption(),
+    min: S.optional(Number.Amount).toOption(),
+    max: S.optional(Number.Amount).toOption(),
     name: Name,
     options: S.array(ModifierOption),
-  }),
-  S.optionsFromOptionals({
-    id: ModifierId,
-    min: Number.Amount,
-    max: Number.Amount,
   }),
 );
 export interface Modifier extends S.To<typeof Modifier> {}
 
 export const Item = pipe(
   S.struct({
+    id: S.optional(ItemId).toOption(),
     name: Name,
     description: S.string,
     price: Number.Price,
     modifiers: S.array(Modifier),
-  }),
-  S.optionsFromOptionals({
-    id: ItemId,
   }),
 );
 export interface Item extends S.To<typeof Item> {}
 
 export const Category = pipe(
   S.struct({
+    id: S.optional(CategoryId).toOption(),
     name: Name,
     items: S.array(Item),
-  }),
-  S.optionsFromOptionals({
-    id: CategoryId,
   }),
 );
 export interface Category extends S.To<typeof Category> {}
 
 export const Menu = pipe(
   S.struct({
+    id: S.optional(MenuId).toOption(),
     categories: S.array(Category),
-  }),
-  S.optionsFromOptionals({
-    id: MenuId,
   }),
 );
 export interface Menu extends S.To<typeof Menu> {}

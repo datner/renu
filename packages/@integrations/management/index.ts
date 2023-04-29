@@ -2,16 +2,17 @@ import * as Effect from "@effect/io/Effect";
 import * as Layer from "@effect/io/Layer";
 import * as M from "@integrations/core/management";
 import * as Dorix from "@integrations/dorix";
-import { Order } from "database";
+import { ManagementProvider, Order } from "database";
 export { IntegrationSettingsService as Integration, ManagementService } from "@integrations/core/management";
 export * from "@integrations/core/management-menu";
 
 export const ManagementServiceLayer = Layer.effect(
   M.ManagementService,
   Effect.gen(function*($) {
-    const services: Record<"DORIX" | "RENU", M.ManagementService> = {
+    const services: Record<ManagementProvider, M.ManagementService> = {
       DORIX: yield* $(Dorix.Dorix),
       RENU: yield* $(Dorix.Dorix),
+      PRESTO: yield* $(Dorix.Dorix)
     };
 
     return {

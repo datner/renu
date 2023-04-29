@@ -100,6 +100,11 @@
         "please provide feedback": "Thank you for trying out Renu! We are still rolling out and want *your* feedback to make the best product we can. Please, spare no detail!",
         "I loved it! but": "I loved it! But I think it could be better if....",
         "send": "Send!"
+      },
+      "PhoneModal": {
+        "title": "Before we continue...",
+        "please give phone number": "Please tell us your phone number, we promise not to send anything 💚",
+        "phone label": "Sure, heres my number:"
       }
     }
   }

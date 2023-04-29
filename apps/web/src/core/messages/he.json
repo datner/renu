@@ -100,6 +100,11 @@
         "please provide feedback": "תודה רבה שניסתם את רניו! אנחנו עדיין בפריסה ורוצים את הדעה *שלכם* כדי להשיג את החוויה הטובה ביותר. בבקשה, אל תחסכו בפרטים!",
         "I loved it! but": "וואי עפתי! אבל אני חושב שניתן לשפר את....",
         "send": "סיימתי!"
+      },
+      "PhoneModal": {
+        "title": "לפני שאנחנו ממשיכים...",
+        "please give phone number": "בבקשה תן לנו את את מספר הפלאפון שלך, אנחנו מבטיחים לא לשלוח כלום 💚",
+        "phone label": "יאללה נו, הנה המספר שלי:"
       }
     }
   }

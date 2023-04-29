@@ -1,0 +1,93 @@
+diff --git a/Parser.js b/Parser.js
+index 8e78e127b55994010953dda60e8f459f25089089..033e5f8003d471a04f62917aa7a374b4de0b906c 100644
+--- a/Parser.js
++++ b/Parser.js
+@@ -484,7 +484,7 @@ const go = /*#__PURE__*/(0, _Debug.untracedMethod)(() => (ast, isBoundary = true
+                 es: Array.from(es),
+                 output: Array.from(output)
+               };
+-              return Effect.flatMap(Effect.forEachDiscard(cqueue, f => f(state)), () => computeResult(state));
++              return Effect.flatMap(Effect.forEachParDiscard(cqueue, f => f(state)), () => computeResult(state));
+             }));
+           }
+           return computeResult({
+@@ -677,7 +677,7 @@ const go = /*#__PURE__*/(0, _Debug.untracedMethod)(() => (ast, isBoundary = true
+                 es: Array.from(es),
+                 output: Object.assign({}, output)
+               };
+-              return Effect.flatMap(Effect.forEachDiscard(cqueue, f => f(state)), () => computeResult(state));
++              return Effect.flatMap(Effect.forEachParDiscard(cqueue, f => f(state)), () => computeResult(state));
+             }));
+           }
+           return computeResult({
+@@ -773,7 +773,7 @@ const go = /*#__PURE__*/(0, _Debug.untracedMethod)(() => (ast, isBoundary = true
+               const state = {
+                 es: Array.from(es)
+               };
+-              return Effect.flatMap(Effect.forEachDiscard(cqueue, f => f(state)), () => {
++              return Effect.flatMap(Effect.forEachParDiscard(cqueue, f => f(state)), () => {
+                 if ("finalResult" in state) {
+                   return state.finalResult;
+                 }
+diff --git a/mjs/Parser.mjs b/mjs/Parser.mjs
+index f8f42ad2ea77b67f578bd319a2a3dab6482024ea..fd0e2aaede6c5eda3acfebdcce2454fcb8f56f05 100644
+--- a/mjs/Parser.mjs
++++ b/mjs/Parser.mjs
+@@ -449,7 +449,7 @@ const go = /*#__PURE__*/untracedMethod(() => (ast, isBoundary = true) => {
+                 es: Array.from(es),
+                 output: Array.from(output)
+               };
+-              return Effect.flatMap(Effect.forEachDiscard(cqueue, f => f(state)), () => computeResult(state));
++              return Effect.flatMap(Effect.forEachParDiscard(cqueue, f => f(state)), () => computeResult(state));
+             }));
+           }
+           return computeResult({
+@@ -642,7 +642,7 @@ const go = /*#__PURE__*/untracedMethod(() => (ast, isBoundary = true) => {
+                 es: Array.from(es),
+                 output: Object.assign({}, output)
+               };
+-              return Effect.flatMap(Effect.forEachDiscard(cqueue, f => f(state)), () => computeResult(state));
++              return Effect.flatMap(Effect.forEachParDiscard(cqueue, f => f(state)), () => computeResult(state));
+             }));
+           }
+           return computeResult({
+@@ -738,7 +738,7 @@ const go = /*#__PURE__*/untracedMethod(() => (ast, isBoundary = true) => {
+               const state = {
+                 es: Array.from(es)
+               };
+-              return Effect.flatMap(Effect.forEachDiscard(cqueue, f => f(state)), () => {
++              return Effect.flatMap(Effect.forEachParDiscard(cqueue, f => f(state)), () => {
+                 if ("finalResult" in state) {
+                   return state.finalResult;
+                 }
+diff --git a/src/Parser.ts b/src/Parser.ts
+index 1cbc930f633ec8d9f839db6a5e56072ebb6e757d..d472c866418c0a7d2af9de84e8806360a4569403 100644
+--- a/src/Parser.ts
++++ b/src/Parser.ts
+@@ -573,7 +573,7 @@ const go = untracedMethod(() =>
+                   output: Array.from(output)
+                 }
+                 return Effect.flatMap(
+-                  Effect.forEachDiscard(cqueue, (f) => f(state)),
++                  Effect.forEachParDiscard(cqueue, (f) => f(state)),
+                   () => computeResult(state)
+                 )
+               })
+@@ -787,7 +787,7 @@ const go = untracedMethod(() =>
+                   output: Object.assign({}, output)
+                 }
+                 return Effect.flatMap(
+-                  Effect.forEachDiscard(cqueue, (f) => f(state)),
++                  Effect.forEachParDiscard(cqueue, (f) => f(state)),
+                   () => computeResult(state)
+                 )
+               })
+@@ -905,7 +905,7 @@ const go = untracedMethod(() =>
+               Effect.suspend(() => {
+                 const state: State = { es: Array.from(es) }
+                 return Effect.flatMap(
+-                  Effect.forEachDiscard(cqueue, (f) => f(state)),
++                  Effect.forEachParDiscard(cqueue, (f) => f(state)),
+                   () => {
+                     if ("finalResult" in state) {
+                       return state.finalResult

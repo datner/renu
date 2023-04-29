@@ -1,5 +1,5 @@
 import * as S from "@effect/schema/Schema";
-import * as Item from "../item";
+import * as Item from "../Item/item";
 import * as Common from "../schema/common";
 import * as Number from "../schema/number";
 import * as Order from "./order";

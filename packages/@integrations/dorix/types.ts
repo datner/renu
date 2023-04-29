@@ -39,12 +39,12 @@ export const DELIVERY_TYPES = {
 } as const;
 export type DELIVERY_TYPES = (typeof DELIVERY_TYPES)[keyof typeof DELIVERY_TYPES];
 
-export const Transaction: S.Schema<Transaction> = S.struct({
+export const Transaction = S.struct({
   type: S.enums(PAYMENT_TYPES),
   amount: S.number,
-  id: pipe(S.string, S.description("Payment reference number"), S.optional),
+  id: S.optional(pipe(S.string, S.description("Payment reference number"))),
   transactionInfo: S.optional(S.record(S.string, S.unknown)),
-});
+}) satisfies S.Schema<any, Transaction>;
 
 export const Payment = S.struct({
   totalAmount: S.number,
@@ -59,20 +59,18 @@ export const Payment = S.struct({
 });
 export interface Payment extends S.To<typeof Payment> {}
 
-export const Modifier: S.Schema<Modifier> = S.lazy(() =>
+export const Modifier: S.Schema<Modifier, Modifier> = S.lazy(() =>
   S.struct({
-    modifierId: pipe(
+    modifierId: S.optional(pipe(
       S.union(S.number, S.string),
       S.description("Will be added \"soon\""),
-      S.optional,
-    ),
-    modifierText: pipe(
+    )),
+    modifierText: S.optional(pipe(
       S.string,
       S.description("Title of the modifier ex. \"Toppings\", \"Chicken or Beef\""),
-      S.optional,
-    ),
+    )),
     id: pipe(S.string, S.description("The id of the item to modifier")),
-    name: pipe(S.string, S.description("Name of the selected modifier"), S.optional),
+    name: S.optional(pipe(S.string, S.description("Name of the selected modifier"))),
     price: pipe(S.number, S.description("price of single modifier in shekels")),
     quantity: S.number,
     included: pipe(
@@ -83,23 +81,23 @@ export const Modifier: S.Schema<Modifier> = S.lazy(() =>
    false - price is calculated witht the modifier, do not add
 `),
     ),
-    modifiers: pipe(Item, S.array, S.optional),
+    modifiers: S.optional(pipe(Item, S.array)),
   })
 );
 
 export const Item = S.lazy(() =>
   S.struct({
     id: pipe(S.string, S.description("As appears in Dorix POS, or not...")),
-    name: pipe(S.string, S.description("If not in Dorix POS, use this name"), S.optional),
+    name: S.optional(pipe(S.string, S.description("If not in Dorix POS, use this name"))),
     price: pipe(S.number, S.description("Of a single item, in shekels")),
     quantity: S.number,
     notes: S.string,
-    modifiers: pipe(Modifier, S.array, S.optional),
+    modifiers: S.optional(pipe(Modifier, S.array)),
   })
 );
 export interface Item extends S.To<typeof Item> {}
 
-export const Order: S.Schema<Order> = S.struct({
+export const Order = S.struct({
   branchId: S.string,
   source: S.literal("RENU"),
   externalId: S.string,
@@ -108,17 +106,16 @@ export const Order: S.Schema<Order> = S.struct({
   type: S.literal("PICKUP"),
   payment: Payment,
   metadata: S.record(S.string, S.any),
-  webhooks: pipe(
+  webhooks: S.optional(
     S.struct({
       status: S.string,
     }),
-    S.optional,
   ),
   items: S.array(Item),
   customer: S.any,
-  delivery: pipe(S.any, S.optional),
+  delivery: S.optional(S.any),
   discounts: S.any,
-});
+}) satisfies S.Schema<any, Order>;
 
 export const OrderCustomer: S.Schema<OrderCustomer> = S.struct({
   firstName: S.string,

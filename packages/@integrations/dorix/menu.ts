@@ -23,7 +23,7 @@ const DorixPrice = S.struct({
 const DorixAnswer = S.struct({
   id: S.string,
   name: S.string,
-  price: pipe(DorixPrice, S.partial, S.optional),
+  price: S.optional(pipe(DorixPrice, S.partial)),
 });
 
 const DorixQuestion = S.struct({
@@ -35,7 +35,7 @@ const DorixQuestion = S.struct({
 
 export const DorixItem = S.struct({
   _id: S.string,
-  price: pipe(DorixPrice, S.partial, S.optional),
+  price: S.optional(pipe(DorixPrice, S.partial)),
   name: S.string,
   description: S.option(S.string),
   questions: S.option(
@@ -72,7 +72,7 @@ export interface DorixMenu extends S.To<typeof DorixMenu> {}
 
 export const MenuResponse = S.union(
   S.struct({ ack: S.literal(true), data: S.struct({ menu: DorixMenu }) }),
-  S.struct({ ack: S.literal(false), message: pipe(S.string, S.optional) }),
+  S.struct({ ack: S.literal(false), message: S.optional(S.string) }),
 );
 
 export interface MenuSuccess {

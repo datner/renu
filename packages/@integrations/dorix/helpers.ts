@@ -39,7 +39,7 @@ export interface Integration extends S.To<typeof Integration> {}
 
 export const IntegrationService = Context.Tag<Integration>();
 
-const ManagementRepresentation = S.struct({ id: pipe(S.string, S.nullable, S.optional) });
+const ManagementRepresentation = S.struct({ id: S.optional(pipe(S.string, S.nullable)) });
 
 export const toModifier = A.map((m: FullOrderModifier) =>
   pipe(
@@ -150,7 +150,7 @@ const ORDER_STATUS = {
 
 export const OrderStatus = S.enums(ORDER_STATUS);
 
-const nullishString = pipe(S.string, S.nullable, S.optional);
+const nullishString = S.optional(pipe(S.string, S.nullable));
 
 export const StatusResponse = S.struct({
   branch: S.struct({
@@ -162,28 +162,26 @@ export const StatusResponse = S.struct({
     id: nullishString,
     externalId: S.string,
     source: S.literal("RENU"),
-    metadata: pipe(S.struct({}), S.optional),
-    estimatedTime: pipe(S.number, S.optional),
+    metadata: S.optional(S.struct({})),
+    estimatedTime: S.optional(S.number),
   }),
-  history: pipe(
+  history: S.optional(pipe(
     S.struct({
       status: OrderStatus,
       timestamp: S.string,
     }),
     S.array,
-    S.optional,
-  ),
-  error: pipe(
+  )),
+  error: S.optional(pipe(
     S.struct({
       message: S.string,
       stack: S.string,
     }),
     S.partial,
-    S.optional,
-  ),
+  )),
 });
 
 export const SendOrderResponse = S.union(
   S.struct({ ack: S.literal(true) }),
-  S.struct({ ack: S.literal(false), message: pipe(S.string, S.optional) }),
+  S.struct({ ack: S.literal(false), message: S.optional(S.string) }),
 );

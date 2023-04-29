@@ -11,7 +11,7 @@ import * as ItemRequest from "../Item/requests";
 import * as OI from "./item";
 import * as OrderModifier from "./modifier";
 import * as Order from "./order";
-import * as OrderRequest from "./request";
+import * as OrderRequest from "./requests";
 
 export const OrderItemModifier = pipe(
   OrderModifier.Schema,

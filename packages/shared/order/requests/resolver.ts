@@ -55,7 +55,7 @@ export const OrderResolver = pipe(
           pipe(
             Effect.flatMap(
               Database,
-              db => Effect.promise(() => db.order.create({ data: req.order, include: req.include })),
+              db => Effect.promise(() => db.order.create({ data: req.order })),
             ),
             Effect.flatMap(order => Request.succeed(req, order)),
           )

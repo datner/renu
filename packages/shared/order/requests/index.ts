@@ -6,19 +6,19 @@ import { GetOrderItems } from "./getItems";
 import { OrderResolver } from "./resolver";
 
 export const getItems = (id: number) =>
-  Effect.withRequestBatching("on")(Effect.request(
+  Effect.withRequestCaching("on")(Effect.request(
     GetOrderItems({ id }),
     OrderResolver,
   ));
 
 export const getById = (id: number) =>
-  Effect.withRequestBatching("on")(Effect.request(
+  Effect.withRequestCaching("on")(Effect.request(
     GetOrderById({ id }),
     OrderResolver,
   ));
 
-export const createDeepOrder = <I extends Prisma.OrderInclude>(order: Prisma.OrderCreateInput, include: I) =>
+export const createDeepOrder = (order: Prisma.OrderCreateInput) =>
   Effect.request(
-    CreateFullOrder({ order, include }) as CreateFullOrder<I>,
+    CreateFullOrder({ order }),
     OrderResolver,
   );

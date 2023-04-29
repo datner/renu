@@ -5,7 +5,6 @@ import * as P from "@effect/data/Predicate";
 import * as S from "@effect/schema/Schema";
 import { Refinement } from "shared/effect";
 import { Common, Number } from "shared/schema";
-import { Content } from "./common";
 
 export const ModifierEnum = {
   oneOf: "oneOf",
@@ -18,7 +17,7 @@ export const BaseOption = S.struct({
   identifier: S.string,
   position: pipe(S.number, S.int()),
   price: S.number,
-  content: S.nonEmptyArray(Content),
+  content: S.nonEmptyArray(Common.Content),
 });
 export interface BaseOption extends S.To<typeof BaseOption> {}
 
@@ -39,12 +38,12 @@ export const SliderOption = S.struct({
   identifier: Common.Slug,
   position: Number.ArrayIndex,
   price: Number.Price,
-  content: S.nonEmptyArray(Content),
+  content: S.nonEmptyArray(Common.Content),
 });
 
 export const BaseModifier = S.struct({
   identifier: S.string,
-  content: S.nonEmptyArray(Content),
+  content: S.nonEmptyArray(Common.Content),
   options: S.nonEmptyArray(BaseOption),
 });
 export interface BaseModifier extends S.To<typeof BaseModifier> {}

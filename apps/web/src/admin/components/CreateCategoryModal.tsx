@@ -1,5 +1,4 @@
 import { create, useModal } from "@ebay/nice-modal-react";
-import * as P from "@effect/schema/Parser";
 import { DefaultValues } from "react-hook-form";
 import { category } from "src/categories/hooks/form";
 import { CreateCategory } from "src/categories/validations";
@@ -25,8 +24,7 @@ export const CreateCategoryModal = create<Props>(({ name }) => {
     <Modal {...renuModal(modal)}>
       <CategoryForm
         onSubmit={async (form) => {
-          const data = P.decode(CreateCategory)(form);
-          const category = await onSubmit(data);
+          const category = await onSubmit(form);
           modal.resolve(category);
           modal.hide();
         }}

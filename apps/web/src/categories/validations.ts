@@ -1,21 +1,10 @@
 import * as S from "@effect/schema/Schema";
 import { Common } from "shared/schema";
-import { z } from "zod";
-
-export const Content = z.object({
-  name: z.string().min(1),
-  description: z.string().default(""),
-});
-
-const _CategoryContent = S.struct({
-  name: Common.Name,
-  description: Common.Description,
-});
 
 export const CreateCategory = S.struct({
   identifier: Common.Slug,
-  en: _CategoryContent,
-  he: _CategoryContent,
+  en: Common.Content,
+  he: Common.Content,
 });
 
 export const CreateCategoryResult = S.struct({

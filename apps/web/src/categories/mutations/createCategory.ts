@@ -1,15 +1,16 @@
 import { Ctx } from "@blitzjs/next";
 import { pipe } from "@effect/data/Function";
+import * as O from "@effect/data/Option";
 import * as Effect from "@effect/io/Effect";
 import * as P from "@effect/schema/Parser";
-import { Locale, Prisma } from "database";
+import { Prisma } from "database";
 import db from "db";
 import { Session } from "src/auth";
 import { Renu } from "src/core/effect";
 import { prismaError } from "src/core/helpers/prisma";
-import { CreateCategory } from "../validations";
+import { CategoryForm, CreateCategory } from "../validations";
 
-export const handler = (input: CreateCategory, ctx: Ctx) =>
+export const handler = (input: CategoryForm, ctx: Ctx) =>
   pipe(
     P.decodeEffect(CreateCategory)(input),
     Effect.map(
@@ -18,8 +19,8 @@ export const handler = (input: CreateCategory, ctx: Ctx) =>
         content: {
           createMany: {
             data: [
-              { ...he, locale: Locale.he },
-              { ...en, locale: Locale.en },
+              { ...he, description: O.getOrUndefined(he.description) },
+              { ...en, description: O.getOrUndefined(en.description) },
             ],
           },
         },

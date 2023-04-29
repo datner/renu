@@ -148,16 +148,16 @@ function OrderList(props: { state: OrderState }) {
             {order.items.map((item) => (
               <li key={item.id} data-content={item.quantity} className="step">
                 <div>
-                  <h4>{title(item.item)}</h4>
+                  <h4>{title(item.item.content)}</h4>
                   {item.modifiers.map((i) => (
                     <div key={i.id}>
-                      {title(i.modifier.config)}: {O.getOrNull(
+                      {title(i.modifier.config.content)}: {O.getOrNull(
                         O.map(
                           A.findFirst(
                             i.modifier.config.options as unknown as Modifiers.BaseOption[],
                             (o) => o.identifier === i.choice,
                           ),
-                          title,
+                          _ => title(_.content),
                         ),
                       )}
                     </div>
@@ -169,14 +169,14 @@ function OrderList(props: { state: OrderState }) {
           {state === OrderState.Init
             ? <ConfirmOrders orderId={order.id} />
             : state === OrderState.Unconfirmed
-            ? <ConfirmOrders orderId={order.id} />
-            : state === OrderState.Confirmed
-            ? <DeliverOrder orderId={order.id} />
-            : state === OrderState.Delivered
-            ? <RestoreOrder orderId={order.id} />
-            : state === OrderState.Cancelled
-            ? <RestoreOrder orderId={order.id} />
-            : null}
+              ? <ConfirmOrders orderId={order.id} />
+              : state === OrderState.Confirmed
+                ? <DeliverOrder orderId={order.id} />
+                : state === OrderState.Delivered
+                  ? <RestoreOrder orderId={order.id} />
+                  : state === OrderState.Cancelled
+                    ? <RestoreOrder orderId={order.id} />
+                    : null}
         </div>
       ))}
     </div>

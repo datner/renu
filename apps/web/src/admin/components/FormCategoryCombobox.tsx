@@ -36,7 +36,7 @@ export function FormCategoryCombobox() {
     () =>
       pipe(
         queryBag.categories,
-        A.map((category) => ({ label: title(category), value: String(category.id), category })),
+        A.map((category) => ({ label: title(category.content as any), value: String(category.id), category })),
       ),
     [title, queryBag],
   );

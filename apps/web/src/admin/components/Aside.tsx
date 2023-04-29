@@ -1,12 +1,23 @@
 import { Routes } from "@blitzjs/next";
 import { useQuery } from "@blitzjs/rpc";
+import { pipe } from "@effect/data/Function";
+import * as Option from "@effect/data/Option";
+import * as A from "@effect/data/ReadonlyArray";
 import { Loader, LoadingOverlay } from "@mantine/core";
+import { CategoryI18L, ItemI18L, Locale } from "database";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import getCurrentVenueCategories from "src/categories/queries/getCurrentVenueCategories";
-import { priceShekel, titleFor } from "src/core/helpers/content";
+import { priceShekel } from "src/core/helpers/content";
 import { useLocale } from "src/core/hooks/useLocale";
+
+const titleFor = (locale: Locale) => (content: ReadonlyArray<CategoryI18L | ItemI18L>) =>
+  pipe(
+    A.findFirst(content, _ => _.locale === locale),
+    Option.map(c => c.name),
+    Option.getOrElse(() => "Unknown"),
+  );
 
 function AsideDirectory() {
   const locale = useLocale();
@@ -27,7 +38,7 @@ function AsideDirectory() {
         {categories.map(({ categoryItems: items, identifier, ...rest }, i) => (
           <div key={identifier + i} className="relative">
             <div className="z-10 sticky top-0 border-t border-b border-gray-200 bg-gray-50 px-6 py-1 text-sm font-medium text-gray-500">
-              <h3>{title(rest)}</h3>
+              <h3>{title(rest.content)}</h3>
             </div>
             <ul role="list" className="relative z-0 divide-y divide-gray-200">
               {items.map(({ Item: item }) => (
@@ -54,7 +65,7 @@ function AsideDirectory() {
                       >
                         {/* Extend touch target to entire panel */}
                         <span className="absolute inset-0" aria-hidden="true" />
-                        <p className="text-sm font-medium text-gray-900">{title(item)}</p>
+                        <p className="text-sm font-medium text-gray-900">{title(item.content)}</p>
                         <p className="text-sm text-gray-500 truncate">{priceShekel(item)}</p>
                       </Link>
                     </div>
@@ -96,7 +107,7 @@ function AsideCategories() {
                 >
                   {/* Extend touch target to entire panel */}
                   <span className="absolute inset-0" aria-hidden="true" />
-                  <p className="text-sm font-medium text-gray-900">{title(rest)}</p>
+                  <p className="text-sm font-medium text-gray-900">{title(rest.content)}</p>
                 </Link>
               </div>
             </li>

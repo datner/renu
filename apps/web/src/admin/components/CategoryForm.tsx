@@ -3,6 +3,7 @@ import { PromiseReturnType } from "blitz";
 import { useTranslations } from "next-intl";
 import { DefaultValues, FormProvider, useForm } from "react-hook-form";
 import getCategory from "src/categories/queries/getCategory";
+import { CategoryForm } from "src/categories/validations";
 import { match, P } from "ts-pattern";
 
 type Props = {
@@ -10,12 +11,6 @@ type Props = {
   onSubmit(category: CategoryForm): Promise<void>;
   defaultValues?: DefaultValues<CategoryForm>;
 };
-
-export interface CategoryForm {
-  identifier: string;
-  en: { name: string; description?: string };
-  he: { name: string; description?: string };
-}
 
 const DEFAULT_VALUES: DefaultValues<CategoryForm> = {
   identifier: "",

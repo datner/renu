@@ -4,13 +4,13 @@ import * as Effect from "@effect/io/Effect";
 import createCategory from "../mutations/createCategory";
 import getCategory from "../queries/getCategory";
 import getCurrentVenueCategories from "../queries/getCurrentVenueCategories";
-import { CreateCategory } from "../validations";
+import { CategoryForm } from "../validations";
 
 export const category = {
   useCreate: () => {
     const [create] = useMutation(createCategory);
     return {
-      onSubmit: (data: CreateCategory) =>
+      onSubmit: (data: CategoryForm) =>
         pipe(
           Effect.promise(() => create(data)),
           Effect.tap((c) =>

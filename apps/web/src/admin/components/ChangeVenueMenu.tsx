@@ -1,12 +1,14 @@
 import { useAuthenticatedSession } from "@blitzjs/auth";
 import { getQueryClient, useMutation, useQuery } from "@blitzjs/rpc";
+import * as O from "@effect/data/Option";
+import * as RA from "@effect/data/ReadonlyArray";
+import * as Schema from "@effect/schema/Schema";
 import { Menu, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { clsx, Loader } from "@mantine/core";
 import { pipe } from "fp-ts/function";
-import * as O from "fp-ts/Option";
-import * as RA from "fp-ts/ReadonlyArray";
 import { Fragment } from "react";
+import { Content } from "shared/schema/common";
 import { titleFor } from "src/core/helpers/content";
 import { useLocale } from "src/core/hooks/useLocale";
 import changeCurrentVenue from "src/venues/mutations/changeCurrentVenue";
@@ -25,16 +27,13 @@ export const ChangeVenueMenu = () => {
 
   const currentVenue = pipe(
     O.fromNullable(venue),
-    O.chain(({ id }) =>
-      pipe(
-        venues,
-        RA.findFirst((venue) => venue.id === id),
-      )
-    ),
+    O.flatMap(({ id }) => RA.findFirst(venues, (venue) => venue.id === id)),
   );
 
   const currentTitle = pipe(
     currentVenue,
+    O.map(_ => _.content),
+    O.map(Schema.decode(Schema.array(Content))),
     O.match(() => "unknown venue", title),
   );
   return (
@@ -83,7 +82,7 @@ export const ChangeVenueMenu = () => {
                         "block w-full px-4 py-2 text-sm text-gray-700 text-left rtl:text-right",
                       )}
                     >
-                      {title(venue)}
+                      {title(Schema.decode(Schema.array(Content))(venue.content))}
                     </button>
                   )}
                 </Menu.Item>

@@ -53,7 +53,7 @@ export function ItemForm(props: Props) {
       reset(getDefaultValues(item));
     }
     prevItem.current = item;
-  }, [item, getDefaultValues]);
+  }, [item, getDefaultValues, reset]);
 
   const onSubmit = handleSubmit(
     async (data) => {

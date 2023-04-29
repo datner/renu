@@ -1,5 +1,7 @@
+import * as Layer from "@effect/io/Layer";
 import { EnhancedPrismaClientAddedMethods, enhancePrisma } from "blitz";
 import { PrismaClient } from "database";
+import { Database } from "shared";
 
 const EnhancedPrisma = enhancePrisma(PrismaClient);
 
@@ -19,6 +21,8 @@ function getDb() {
 
 // Prevent multiple instances of Prisma Client in development
 const db = getDb();
+
+export const layer = Layer.sync(Database.Database, () => Object.assign(getDb(), { _tag: "Database" as const }));
 
 export * from "database";
 export default db;

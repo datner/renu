@@ -5,10 +5,13 @@ import * as A from "@effect/data/ReadonlyArray";
 import * as Effect from "@effect/io/Effect";
 import * as Layer from "@effect/io/Layer";
 import * as P from "@effect/schema/Parser";
+import * as Schema from "@effect/schema/Schema";
 import { CircuitBreaker, Clearing, Common, Http } from "@integrations/core";
 import { ClearingError } from "@integrations/core/clearing";
 import crypto from "crypto";
 import { ClearingProvider } from "database";
+import { Order } from "shared";
+import { FullOrder } from "shared/Order/fullOrder";
 import { GeneratePaymentLinkResponse, GetStatusResponse, StatusSuccess } from "./responses";
 import { Integration, IntegrationService, PayPlusConfig } from "./settings";
 import { GeneratePaymentLinkBody, PaymentItem } from "./types";
@@ -33,7 +36,7 @@ const provideHttpConfig = Effect.provideServiceEffect(
   }),
 );
 
-const toPayload = ({ items, id, venueId }: Clearing.FullOrderWithItems) =>
+const toPayload = ({ items, id, venueId }: FullOrder) =>
   Effect.gen(function*($) {
     const integration = yield* $(IntegrationService);
     const { host } = yield* $(Effect.config(Common.config));
@@ -42,7 +45,7 @@ const toPayload = ({ items, id, venueId }: Clearing.FullOrderWithItems) =>
     const callbackUrl = new URL(`payments/callback`, host);
 
     // to satisfy typescript I need the double negative
-    if (!A.isNonEmptyArray(items)) return yield* $(Effect.die(new Error("order has no items")));
+    if (!A.isNonEmptyReadonlyArray(items)) return yield* $(Effect.die(new Error("order has no items")));
 
     return {
       items: pipe(
@@ -124,12 +127,12 @@ const parseIntegration = Effect.provideServiceEffect(
 export const layer = Layer.effect(
   Tag,
   Effect.gen(function*($) {
-    const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "Gama" }));
+    const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "PayPlus" }));
     const Client = yield* $(Http.Http);
 
     return {
       _tag: ClearingProvider.PAY_PLUS,
-      validateTransaction: (order) =>
+      validateTransaction: (order: any) =>
         pipe(
           Client.request("/api/v1.0/PaymentPages/ipn", {
             method: "POST",
@@ -174,11 +177,12 @@ export const layer = Layer.effect(
             },
             (r) => Clearing.TxId(r.data.transaction_uid),
           ),
-        ),
+        ) as any,
 
-      getClearingPageLink: (order) =>
+      getClearingPageLink: (orderId: Order.Id) =>
         pipe(
-          toPayload(order),
+          Schema.decodeEffect(FullOrder)(orderId),
+          Effect.flatMap(toPayload),
           parseIntegration,
           Effect.map(JSON.stringify),
           Effect.tap(Effect.log),
@@ -207,6 +211,6 @@ export const layer = Layer.effect(
             });
           }),
         ),
-    };
+    } as any;
   }),
 );

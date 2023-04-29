@@ -14,13 +14,13 @@ export const ModifierEnum = {
 } as const;
 
 export const Schema = S.union(OneOf.Modifier, Extras.Modifier, Slider.Modifier);
-export type Schema = OneOf.Modifier | Extras.Modifier | Slider.Modifier;
+export type Schema = OneOf.OneOf | Extras.Extras | Slider.Slider;
 export const FromPrisma = S.transform(S.json as S.Schema<Prisma.JsonValue, S.Json>, S.to(Schema), S.parse(Schema), S.validate(S.json))
 export const FromUnknown = S.transform(S.unknown, S.to(Schema), S.parse(Schema), identity)
 
-export const isOneOf: P.Refinement<Schema, OneOf.Modifier> = Refinement.isTagged(
+export const isOneOf: P.Refinement<Schema, OneOf.OneOf> = Refinement.isTagged(
   "oneOf",
 );
 
-export const isExtras: P.Refinement<Schema, Extras.Modifier> = Refinement
+export const isExtras: P.Refinement<Schema, Extras.Extras> = Refinement
   .isTagged("extras");

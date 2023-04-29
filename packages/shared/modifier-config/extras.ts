@@ -4,12 +4,6 @@ import * as O from "@effect/data/Option";
 import * as S from "@effect/schema/Schema";
 import * as Base from "./base";
 
-export const ModifierEnum = {
-  oneOf: "oneOf",
-  extras: "extras",
-  Slider: "Slider",
-} as const;
-
 export const Quantity = pipe(
   S.number,
   S.int(),
@@ -39,4 +33,4 @@ export const Modifier = pipe(
     }),
   ),
 );
-export interface Modifier extends S.To<typeof Modifier> {}
+export interface Extras extends S.To<typeof Modifier> {}

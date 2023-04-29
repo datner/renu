@@ -1,9 +1,37 @@
 import { pipe } from "@effect/data/Function";
+import { TaggedEnum, taggedEnum } from "@effect/match/TaggedEnum";
 import * as S from "@effect/schema/Schema";
+import * as Schema from "@effect/schema/Schema";
 import { Common } from "../schema";
 
+export const ManagementRepresentation = taggedEnum<{
+  Presto: { id: number };
+  None: {};
+}>();
+
+export const Representation = {
+  Presto: Schema.struct({
+    _tag: Schema.literal("Presto"),
+    id: Schema.number,
+  }),
+  None: Schema.transform(
+    Schema.null,
+    Schema.struct({ _tag: Schema.literal("None") }),
+    () => ({ _tag: "None" }) as const,
+    () => null,
+  ),
+};
+
+export const ManagementRepresentationSchema = Schema.union(
+  Representation.Presto,
+  Representation.None,
+);
+
+export type ManagementRepresentation = TaggedEnum.Infer<typeof ManagementRepresentation>;
+
+
 export const Option = S.struct({
-  managementRepresentation: S.optional(S.unknown),
+  managementRepresentation: ManagementRepresentationSchema,
   identifier: S.string,
   position: pipe(S.number, S.int()),
   price: S.number,

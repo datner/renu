@@ -2,12 +2,6 @@ import { pipe } from "@effect/data/Function";
 import * as S from "@effect/schema/Schema";
 import * as Base from "./base";
 
-export const ModifierEnum = {
-  oneOf: "oneOf",
-  extras: "extras",
-  Slider: "Slider",
-} as const;
-
 export const Option = pipe(
   Base.Option,
   S.extend(S.struct({ default: S.boolean })),
@@ -25,4 +19,4 @@ export const Modifier = pipe(
     }),
   ),
 );
-export interface Modifier extends S.To<typeof Modifier> {}
+export interface OneOf extends S.To<typeof Modifier> {}

@@ -9,7 +9,7 @@ import * as Layer from "@effect/io/Layer";
 import * as P from "@effect/schema/Parser";
 import * as ParseResult from "@effect/schema/ParseResult";
 import * as Schema from "@effect/schema/Schema";
-import { CircuitBreaker, Clearing, Http } from "@integrations/core";
+import { CircuitBreaker, Http } from "@integrations/core";
 import * as jose from "jose";
 import {
   CreateSessionErrorBody,
@@ -27,9 +27,8 @@ import {
 import * as Settings from "./settings";
 export * as Schema from "./schema";
 import * as Cause from "@effect/io/Cause";
-import { ClearingIntegration } from "database";
 import { OrderRepository } from "database-helpers/order";
-import { Order } from "shared";
+import { Order, Venue } from "shared";
 import { inspect } from "util";
 
 interface BitPayment {
@@ -49,32 +48,32 @@ type Payment = BitPayment | CreditPayment;
 
 const toPayload = (
   input: CreateSessionInput,
+  int: Venue.Clearing.GamaIntegration,
 ) =>
-  Effect.flatMap(Settings.IntegrationService, (int) =>
-    P.decodeEffect(CreateSessionPayload)({
-      clientId: int.vendorData.id,
-      clientSecret: int.vendorData.secret_key,
-      userIp: "1.2.3.4",
-      maxInstallments,
-      paymentRequest: {
-        paymentAmount: input.paymentAmount,
-        orderId: input.orderId,
-        payerName: input.payerName,
-        autoCapture: true,
-        paymentNetwork,
-        paymentProcess,
-        paymentCurrencyType: paymentCurrency,
-        payerPhoneNumber: input.payerPhoneNumber,
-        paymentDescription: input.venueName,
-      },
-    }));
+  P.decodeEffect(CreateSessionPayload)({
+    clientId: int.vendorData.id,
+    clientSecret: int.vendorData.secret_key,
+    userIp: "1.2.3.4",
+    maxInstallments,
+    paymentRequest: {
+      paymentAmount: input.paymentAmount,
+      orderId: input.orderId,
+      payerName: input.payerName,
+      autoCapture: true,
+      paymentNetwork,
+      paymentProcess,
+      paymentCurrencyType: paymentCurrency,
+      payerPhoneNumber: input.payerPhoneNumber,
+      paymentDescription: input.venueName,
+    },
+  });
 
-export interface Service {
-  readonly _tag: "GamaService";
+export interface GamaService {
   readonly createSession: (
     input: CreateSessionInput,
+    integration: Venue.Clearing.GamaIntegration,
   ) => Effect.Effect<
-    ClearingIntegration,
+    never,
     CircuitBreaker.CircuitBreakerError,
     Session
   >;
@@ -86,52 +85,44 @@ export interface Service {
     Order.Decoded
   >;
 }
-export const Gama = Context.Tag<"Gama", Service>();
+interface Gama {
+  readonly _: unique symbol;
+}
+export const Gama = Context.Tag<Gama, GamaService>();
 
-const provideHttpConfig = Effect.provideServiceEffect(
-  Http.HttpConfigService,
-  Effect.orDie(Effect.gen(function*($) {
-    const { vendorData } = yield* $(
-      Settings.IntegrationService,
-    );
-    const { env } = vendorData;
-    const config = Config.nested("gama")(
-      env === "production" ? Settings.GamaConfig : Config.nested(env)(Settings.GamaConfig),
-    );
-    const { url } = yield* $(Effect.config(config));
+const provideHttpConfig = (int: Venue.Clearing.GamaIntegration) =>
+  Effect.provideServiceEffect(
+    Http.HttpConfigService,
+    pipe(
+      Settings.GamaConfig,
+      Config.nested(int.vendorData.env),
+      Config.nested("gama"),
+      Effect.config,
+      Effect.map(({ url }) => ({ baseUrl: url })),
+      Effect.orDie,
+    ),
+  );
 
-    return {
-      baseUrl: url,
-    };
-  })),
-);
-
-const parseIntegration = Effect.provideServiceEffect(
-  Settings.IntegrationService,
-  Effect.map(Clearing.Settings, P.parse(Settings.Integration)),
+const TransactionId = pipe(
+  Schema.string,
+  Schema.numberFromString,
+  Schema.reverse,
+  Schema.fromBrand(Order.TxId),
 );
 
 const JWTPayload = pipe(
   Schema.struct({
     orderId: Order.Id,
     iat: Schema.number,
-  }),
-  Schema.optionsFromOptionals({
-    transactionId: pipe(
-      Schema.number,
-      Schema.transform(
-        Schema.string,
-        String,
-        Number,
-      ),
-      Schema.fromBrand(Order.TxId),
-    ),
-    jtoken: Schema.string,
-    paymentResponse: Schema.struct({
-      transactionStatus: Schema.string,
-      issuerAuthorizationNumber: Schema.number,
-      cardNumber: Schema.number,
-    }),
+    transactionId: Schema.optional(TransactionId).toOption(),
+    jtoken: Schema.optional(Schema.string).toOption(),
+    paymentResponse: Schema.optional(
+      Schema.struct({
+        transactionStatus: Schema.string,
+        issuerAuthorizationNumber: Schema.number,
+        cardNumber: Schema.number,
+      }),
+    ).toOption(),
   }),
 );
 
@@ -142,10 +133,9 @@ export const layer = Layer.effect(
     const Client = yield* $(Http.Http);
 
     return {
-      _tag: "GamaService" as const,
-      createSession: (input) =>
+      createSession: (input, integration) =>
         pipe(
-          toPayload(input),
+          toPayload(input, integration),
           Effect.flatMap((body) =>
             Client.request("/api/gpapi/v1/session", {
               method: "POST",
@@ -172,8 +162,7 @@ export const layer = Layer.effect(
               Effect.flatMap(Effect.dieMessage),
             )),
           Effect.refineTagOrDie("CircuitBreakerError"),
-          provideHttpConfig,
-          parseIntegration,
+          provideHttpConfig(integration),
         ),
       attachTxId: jwt =>
         Effect.gen(function*($) {
@@ -193,4 +182,4 @@ export const layer = Layer.effect(
   }),
 );
 
-class TransactionNotSuccessfulError extends Data.TaggedClass("TransactionNotSuccessfulError")<{}> {}
+class TransactionNotSuccessfulError extends Data.TaggedClass("TransactionNotSuccessfulError")<{}> { }

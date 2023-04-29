@@ -2,7 +2,7 @@ import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as S from "@effect/schema/Schema";
 import { Order } from "shared";
-import { Price } from "../../shared/schema/number";
+import { Cost } from "../../shared/schema/number";
 import * as Settings from "./settings";
 
 export const PhoneNumber = pipe(
@@ -69,7 +69,7 @@ export const IFrameUrl = pipe(
 export type IFrameUrl = S.To<typeof IFrameUrl>;
 
 export const CreateSessionInput = S.struct({
-  paymentAmount: Price,
+  paymentAmount: Cost,
   payerName: Name,
   payerPhoneNumber: PhoneNumber,
   orderId: Order.Id,
@@ -81,21 +81,21 @@ export const CreateSessionPayload = S.struct({
   clientSecret: Settings.GamaClientSecret,
   userIp: S.string,
   maxInstallments: S.number,
-  customerCssUrl: pipe(S.string, S.optional),
-  enableDefaultCss: pipe(S.boolean, S.optional),
+  customerCssUrl: S.optional(S.string),
+  enableDefaultCss: S.optional(S.boolean),
   paymentRequest: S.struct({
-    paymentAmount: Price,
+    paymentAmount: Cost,
     paymentNetwork: PaymentNetwork,
     paymentProcess: PaymentProcess,
     paymentCurrencyType: PaymentCurrency,
     paymentDescription: S.string,
     payerName: Name,
     payerPhoneNumber: PhoneNumber,
-    autoCapture: pipe(S.boolean, S.optional),
+    autoCapture: S.optional(S.boolean),
     orderId: Order.Id,
-    sendSMS: pipe(S.boolean, S.optional),
+    sendSMS: S.optional(S.boolean),
     captureTimeout: S.optional(S.number),
-    callbackUrl: pipe(S.string, S.optional),
+    callbackUrl: S.optional(S.string),
   }),
 });
 export interface CreateSessionPayload extends S.To<typeof CreateSessionPayload> {}

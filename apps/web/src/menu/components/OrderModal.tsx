@@ -55,7 +55,7 @@ export function OrderModal(props: Props) {
       //   return window.location.assign(url.href);
       // }
 
-      // gamapayInit(url, undefined, (jwt) => invoke(confirmGamaTransaction, { jwt }));
+      gamapayInit(_, undefined, (jwt) => invoke(confirmGamaTransaction, { jwt }));
     },
   });
 

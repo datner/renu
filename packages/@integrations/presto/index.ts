@@ -1,56 +1,22 @@
 import * as Context from "@effect/data/Context";
-import { identity, pipe } from "@effect/data/Function";
+import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
+import * as A from "@effect/data/ReadonlyArray";
 import * as Effect from "@effect/io/Effect";
 import * as Layer from "@effect/io/Layer";
-import * as ParseResult from "@effect/schema/ParseResult";
+import * as Match from "@effect/match";
 import * as Schema from "@effect/schema/Schema";
-import { Prisma } from "database";
-import { OrderRepository } from "database-helpers/order";
-import { Item, Order } from "shared";
+import { Database, Order } from "shared";
+import { refineTag } from "shared/effect/Refinement";
+import { FullOrder } from "shared/Order/fullOrder";
 
 export interface Presto {
   readonly _tag: "Presto";
   readonly postOrder: (
     orderId: Order.Id,
-  ) => Effect.Effect<OrderRepository, ParseResult.ParseError, Schema.To<typeof PrestoOrder>>;
+  ) => Effect.Effect<Database.Database, never, Schema.To<typeof PrestoOrder>>;
 }
 export const Presto = Context.Tag<Presto>("Presto");
-
-const _PrestoRep = Schema.struct({
-  id: Schema.number,
-});
-
-const PrestoRepresentation = Schema.transform(
-  Schema.json as Schema.Schema<Prisma.JsonValue, Schema.Json>,
-  _PrestoRep,
-  Schema.parse(_PrestoRep),
-  identity,
-);
-
-const FullOrder = pipe(
-  Order.Schema,
-  Schema.extend(Schema.struct({
-    items: pipe(
-      Order.Item.Schema,
-      Schema.extend(Schema.struct({
-        item: Item.fromProvider(PrestoRepresentation)(Item.Schema),
-        modifiers: pipe(
-          Order.Modifier.Schema,
-          Schema.extend(Schema.struct({
-            modifier: pipe(
-              Item.Modifier.FromPrisma,
-              Item.Modifier.fromProvider(PrestoRepresentation),
-            ),
-          })),
-          Schema.array,
-        ),
-      })),
-      Schema.array,
-    ),
-  })),
-);
-interface FullOrder extends Schema.To<typeof FullOrder> {}
 
 export const layer = Layer.succeed(
   Presto,
@@ -58,39 +24,82 @@ export const layer = Layer.succeed(
     _tag: "Presto",
     postOrder: (orderId: Order.Id) =>
       pipe(
-        Effect.flatMap(
-          OrderRepository,
-          o =>
-            o.getOrder(orderId, {
-              include: {
-                items: {
-                  include: {
-                    item: true,
-                    modifiers: {
-                      include: {
-                        modifier: true,
-                      },
-                    },
-                  },
-                },
-              },
-            }),
-        ),
-        Effect.flatMap(Schema.decodeEffect(FullOrder)),
-        Effect.flatMap(o => {
-          return Schema.decodeEffect(PrestoOrder)({
+        Schema.decodeEffect(FullOrder)(orderId),
+        Effect.flatMap((o) =>
+          Schema.decodeEffect(PrestoOrder)({
             id: o.id,
             contact: {
-              firstName: O.getOrElse(o.customerName, () => "Renu"),
+              firstName: O.getOrElse(o.customerName, () => "Anonymous"),
               lastName: "",
               // TODO: get the users phone number!
-              phone: "0502060633",
+              phone: pipe(
+                O.map(o.managementExtra, _ => _.phoneNumber),
+                O.getOrElse(() => "0505555555"),
+              ),
             },
             orderItems: o.items.map(i => ({
-              type: "item",
-              id: i.item.managementRepresentation.id,
+              type: "item" as const,
+              // TODO: disallow no representation
+              id: i.item.managementRepresentation._tag === "Presto" ? i.item.managementRepresentation.id : -1,
               childrencount: 0,
-              children: [],
+              children: pipe(
+                i.modifiers,
+                A.map(i =>
+                  pipe(
+                    Match.value(i.modifier.config),
+                    Match.tag("oneOf", o =>
+                      pipe(
+                        o.options,
+                        A.findFirst(_ => _.identifier === i.choice),
+                        O.map(_ => _.managementRepresentation),
+                        O.filterMap(refineTag("Presto")),
+                        O.map(_ => _.id),
+                        O.map(id => ({
+                          type: "option" as const,
+                          id,
+                          price: i.price,
+                          comment: "",
+                          name: i.choice,
+                          itemcount: i.amount,
+                        })),
+                      )),
+                    Match.tag("extras", o =>
+                      pipe(
+                        o.options,
+                        A.findFirst(_ => _.identifier === i.choice),
+                        O.map(_ => _.managementRepresentation),
+                        O.filterMap(refineTag("Presto")),
+                        O.map(_ => _.id),
+                        O.map(id => ({
+                          type: "option" as const,
+                          id,
+                          price: i.price,
+                          comment: "",
+                          name: i.choice,
+                          itemcount: i.amount,
+                        })),
+                      )),
+                    Match.tag("Slider", o =>
+                      pipe(
+                        o.options,
+                        A.findFirst(_ => _.identifier === i.choice),
+                        O.map(_ => _.managementRepresentation),
+                        O.filterMap(refineTag("Presto")),
+                        O.map(_ => _.id),
+                        O.map(id => ({
+                          type: "option" as const,
+                          id,
+                          price: i.price,
+                          comment: "",
+                          name: i.choice,
+                          itemcount: i.amount,
+                        })),
+                      )),
+                    Match.exhaustive,
+                  )
+                ),
+                A.compact,
+              ),
               name: i.name,
               itemcount: i.quantity,
               price: i.price / 100,
@@ -102,9 +111,9 @@ export const layer = Layer.succeed(
             orderCharges: [{ amount: 0 }],
             payments: [
               {
-                "type": "costtiket",
-                "amount": o.totalCost / 100,
-                "card": { "number": "", "expireMonth": 1, "expireYear": 1, "holderId": "", "holderName": "" },
+                type: "costtiket",
+                amount: o.totalCost / 100,
+                card: { number: "", expireMonth: 1, expireYear: 1, holderId: "", holderName: "" },
               },
             ],
             takeoutPacks: 1,
@@ -124,8 +133,9 @@ export const layer = Layer.succeed(
               numppl: 1,
               workercode: 1,
             },
-          });
-        }),
+          })
+        ),
+        Effect.orDie,
       ),
   } as const,
 );
@@ -155,7 +165,7 @@ const PrestoOrder = Schema.struct({
   }),
   orderItems: Schema.array(
     Schema.struct({
-      type: Schema.literal('item'),
+      type: Schema.literal("item"),
       id: Schema.number,
       price: Schema.number,
       comment: Schema.string,
@@ -163,7 +173,7 @@ const PrestoOrder = Schema.struct({
       name: Schema.string,
       childrencount: Schema.number,
       children: Schema.array(Schema.struct({
-        type: Schema.literal('option'),
+        type: Schema.literal("option"),
         id: Schema.number,
         price: Schema.number,
         comment: Schema.string,

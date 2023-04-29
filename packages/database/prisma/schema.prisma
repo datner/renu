@@ -243,7 +243,9 @@ model Item {
 
   content ItemI18L[]
 
+  // @deprecated
   category   Category @relation(fields: [categoryId], references: [id])
+  // @deprecated
   categoryId Int
 
   categoryItems CategoryItem[]
@@ -290,16 +292,18 @@ model ShortenedUrl {
 }
 
 model Order {
-  id           Int         @id @default(autoincrement())
-  venue        Venue       @relation(fields: [venueId], references: [id])
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @default(now()) @updatedAt
-  venueId      Int
-  txId         String?     @unique
-  customerName String      @default("Anonymous Renu User")
-  items        OrderItem[]
-  state        OrderState  @default(Init)
-  totalCost    Int         @default(0)
+  id              Int         @id @default(autoincrement())
+  venue           Venue       @relation(fields: [venueId], references: [id])
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @default(now()) @updatedAt
+  venueId         Int
+  txId            String?     @unique
+  customerName    String      @default("Anonymous Renu User")
+  items           OrderItem[]
+  state           OrderState  @default(Init)
+  totalCost       Int         @default(0)
+  managementExtra Json?
+  clearingExtra   Json?
 }
 
 model OrderItem {
@@ -360,6 +364,7 @@ enum ClearingProvider {
 
 enum ManagementProvider {
   DORIX
+  PRESTO
   RENU
 }
 

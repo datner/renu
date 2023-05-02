@@ -3,7 +3,6 @@ import * as O from "@effect/data/Option";
 import * as S from "@effect/schema/Schema";
 import { Order } from "shared";
 import { Cost } from "../../shared/schema/number";
-import * as Settings from "./settings";
 
 export const PhoneNumber = pipe(
   S.string,
@@ -77,8 +76,8 @@ export const CreateSessionInput = S.struct({
 });
 export interface CreateSessionInput extends S.To<typeof CreateSessionInput> { }
 export const CreateSessionPayload = S.struct({
-  clientId: Settings.GamaClientId,
-  clientSecret: Settings.GamaClientSecret,
+  clientId: S.number,
+  clientSecret: S.string,
   userIp: S.string,
   maxInstallments: S.number,
   customerCssUrl: S.optional(S.string),

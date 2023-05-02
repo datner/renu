@@ -1,9 +1,11 @@
 import * as Effect from "@effect/io/Effect";
 import { Prisma } from "database";
+import * as Order from "../order";
 import { CreateFullOrder } from "./createFullOrder";
 import { GetOrderById } from "./getById";
 import { GetOrderItems } from "./getItems";
 import { OrderResolver } from "./resolver";
+import { SetOrderTransactionId } from "./setTransactionId";
 
 export const getItems = (id: number) =>
   Effect.withRequestCaching("on")(Effect.request(
@@ -20,5 +22,11 @@ export const getById = (id: number) =>
 export const createDeepOrder = (order: Prisma.OrderCreateInput) =>
   Effect.request(
     CreateFullOrder({ order }),
+    OrderResolver,
+  );
+
+export const setTransactionId = (id: Order.Id, transactionId: Order.TxId) =>
+  Effect.request(
+    SetOrderTransactionId({ id, transactionId }),
     OrderResolver,
   );

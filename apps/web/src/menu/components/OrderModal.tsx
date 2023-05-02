@@ -2,6 +2,7 @@ import { invoke, useMutation } from "@blitzjs/rpc";
 import { Branded } from "@effect/data/Brand";
 import { absurd, pipe } from "@effect/data/Function";
 import * as HashMap from "@effect/data/HashMap";
+import * as Exit from "@effect/io/Exit";
 import * as A from "@effect/data/ReadonlyArray";
 import { useLocalStorage } from "@mantine/hooks";
 import { a, useSpring } from "@react-spring/web";
@@ -13,10 +14,8 @@ import { Order, Venue } from "shared";
 import { Number } from "shared/schema";
 import { toShekel } from "src/core/helpers/content";
 import { useLocale } from "src/core/hooks/useLocale";
-import { useZodParams } from "src/core/hooks/useParams";
 import { usePrevious } from "src/core/hooks/usePrevious";
 import * as OrderState from "src/menu/hooks/useOrder";
-import { Query } from "src/menu/validations/page";
 import confirmGamaTransaction from "../mutations/confirmGamaTransaction";
 import sendOrder from "../mutations/sendOrder";
 import { FeedbackModal } from "./FeedbackModal";
@@ -34,7 +33,7 @@ declare global {
   function gamapayInit(
     sessionId: Branded<string, "GamaSession">,
     containerId?: string,
-    callbackFunction?: (jwt: string) => void,
+    callbackFunction?: (payload: { url: false; confirmation: string }) => void,
   ): void;
 }
 
@@ -51,11 +50,7 @@ export function OrderModal(props: Props) {
   const [sendOrderMutation, { isLoading, isSuccess, reset }] = useMutation(sendOrder, {
     onSuccess: (_) => {
       reset();
-      // if (url instanceof URL) {
-      //   return window.location.assign(url.href);
-      // }
-
-      gamapayInit(_, undefined, (jwt) => invoke(confirmGamaTransaction, { jwt }));
+      gamapayInit(_, undefined, ({ confirmation }) => invoke(confirmGamaTransaction, { jwt: confirmation }));
     },
   });
 
@@ -115,7 +110,7 @@ export function OrderModal(props: Props) {
 
   return (
     <Modal open={open} onClose={onClose}>
-      <Script src="https://gpapi.gamaf.co.il/dist/gamapay-bundle.js" />
+      <Script src="https://gpapidemo.gamaf.co.il/dist/gamapay-bundle-demo.js" />
       <div className="p-3 pb-16 bg-white rounded-t-xl overflow-auto">
         <h3 className="text-2xl rtl:mt-9">{t("yourOrder")}</h3>
         <hr className="w-1/2 mt-1 mb-2" />

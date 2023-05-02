@@ -7,6 +7,7 @@ import { setDefaultOrganizationId } from "src/auth/helpers/setDefaultOrganizatio
 import { setDefaultVenueId } from "src/auth/helpers/setDefaultVenueId";
 import { IdOrSlug } from "src/core/helpers/zod";
 
+// @deprecated
 export default resolver.pipe(
   resolver.authorize(),
   resolver.zod(IdOrSlug),

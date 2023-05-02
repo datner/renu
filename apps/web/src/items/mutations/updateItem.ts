@@ -12,6 +12,7 @@ import { PrismaError, prismaError } from "src/core/helpers/prisma";
 import { inspect } from "util";
 import { Modifier } from "../validations";
 import { UpdateItemSchema } from "../validations";
+import { FullItem, toFullItem } from "../queries/getItemNew";
 
 const getItem = (id: number) =>
   Effect.flatMap(Session.Organization, (org) =>
@@ -130,8 +131,8 @@ export default resolver.pipe(
         } satisfies Prisma.ItemModifierUncheckedUpdateManyWithoutItemNestedInput,
       })),
       Effect.zipWith(
-        Effect.ifEffect(
-          Effect.succeed(item.image === input.image),
+        Effect.if(
+          item.image === input.image,
           Effect.succeed(item.blurHash),
           getBlurHash(input.image),
         ),
@@ -150,11 +151,11 @@ export default resolver.pipe(
           prismaError("Item"),
         )
       ),
-      Effect.map(a => a),
       Effect.tap(() => Effect.log("successfully updated item")),
     )
   ),
-  Effect.map(a => a),
+  Effect.flatMap(Schema.decodeEffect(toFullItem)),
+  Effect.flatMap(Schema.encodeEffect(FullItem)),
   Session.authorizeResolver,
   Renu.runPromise$,
 );

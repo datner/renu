@@ -9,7 +9,7 @@ import { prismaError } from "src/core/helpers/prisma";
 // TODO: change to branded type
 const killOrder = (orderId: number, ctx: Ctx) =>
   pipe(
-    Session.ensureOrgVenuMatch,
+    Session.ensureOrgVenueMatch,
     Effect.flatMap(() =>
       Session.with(
         (s) => ({

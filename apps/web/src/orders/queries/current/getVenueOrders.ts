@@ -25,7 +25,7 @@ const Max250Int = pipe(
 
 const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx: Ctx) =>
   pipe(
-    Session.ensureOrgVenuMatch,
+    Session.ensureOrgVenueMatch,
     Effect.flatMap(() =>
       Session.with(
         (s) => ({

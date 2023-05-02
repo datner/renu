@@ -42,7 +42,7 @@ export type AuthError =
   | AuthorizationErrorCase
   | CSRFTokenMismatchErrorCase;
 
-export const ensureOrgVenuMatch = Effect.asUnit(
+export const ensureOrgVenueMatch = Effect.asUnit(
   Effect.filterOrFail(
     Session,
     (session) => session.venue.organizationId === session.organization.id,

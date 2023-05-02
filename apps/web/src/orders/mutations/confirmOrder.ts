@@ -10,7 +10,7 @@ import { inspect } from "util";
 // TODO: change to branded type
 const confirmOrder = (orderId: number, ctx: Ctx) =>
   pipe(
-    Session.ensureOrgVenuMatch,
+    Session.ensureOrgVenueMatch,
     Effect.flatMap(() =>
       Session.with(
         (s) => ({

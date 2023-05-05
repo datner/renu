@@ -37,7 +37,7 @@ const LazyPhoneModal = dynamic(() => import("src/menu/components/PhoneModal").th
 
 export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) => {
   const { menu } = props;
-  const restaurant = useMemo(() => Parser.decode(Venue.Menu.Menu)(menu as any), [menu]);
+  const restaurant = useMemo(() => Parser.decode(Venue.Menu.Menu)(menu), [menu]);
   const { categories } = restaurant;
   // add the item modal state to the dispatch as well, just for laughs
   const locale = useLocale();

@@ -5,9 +5,9 @@
   "license": "MIT",
   "dependencies": {
     "@effect/data": "0.12.2",
-    "@effect/schema": "0.16.0",
-    "eslint": "8.39.0",
-    "eslint-config-next": "13.3.2",
+    "@effect/schema": "0.17.4",
+    "eslint": "8.40.0",
+    "eslint-config-next": "13.4.1",
     "eslint-config-prettier": "^8.8.0",
     "eslint-config-turbo": "1.9.3",
     "eslint-plugin-react": "7.32.2"

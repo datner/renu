@@ -16,11 +16,11 @@
     "check:everything": "pnpm run typecheck lint test"
   },
   "devDependencies": {
-    "@commitlint/cli": "17.6.1",
-    "@commitlint/config-conventional": "17.6.1",
-    "@types/node": "18.16.3",
-    "dprint": "0.36.0",
-    "eslint": "8.39.0",
+    "@commitlint/cli": "17.6.3",
+    "@commitlint/config-conventional": "17.6.3",
+    "@types/node": "20.1.0",
+    "dprint": "0.36.1",
+    "eslint": "8.40.0",
     "eslint-config-custom": "workspace:*",
     "husky": "8.0.3",
     "lint-staged": "13.2.2",
@@ -34,7 +34,7 @@
   "packageManager": "pnpm@8.1.1",
   "dependencies": {
     "@effect/io": "0.25.8",
-    "@effect/match": "0.18.1",
+    "@effect/match": "0.19.1",
     "@fp-ts/core": "0.2.1"
   },
   "pnpm": {

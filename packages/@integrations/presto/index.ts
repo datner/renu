@@ -31,7 +31,6 @@ export const layer = Layer.succeed(
             contact: {
               firstName: O.getOrElse(o.customerName, () => "Anonymous"),
               lastName: "",
-              // TODO: get the users phone number!
               phone: pipe(
                 O.map(o.managementExtra, _ => _.phoneNumber),
                 O.getOrElse(() => "0505555555"),

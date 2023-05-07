@@ -4,23 +4,23 @@ import { ActionIcon, Button, NumberInput, Switch, TextInput } from "@mantine/cor
 import * as A from "fp-ts/Array";
 import { pipe } from "fp-ts/function";
 import { useEffect } from "react";
-import { Control, Controller, useFieldArray, UseFieldArrayUpdate } from "react-hook-form";
+import { Control, Controller, useFieldArray, UseFieldArrayUpdate, useForm } from "react-hook-form";
+import { schemaResolver } from "shared/effect/Schema";
 import { shekelFormatter, shekelParser } from "src/core/helpers/form";
-import { useZodForm } from "src/core/hooks/useZodForm";
-import { ExtrasSchema, ItemSchema } from "src/items/validations";
+import { ExtrasSchema, ItemFormSchema } from "../validations/item-form";
 
 type Props = {
-  control: Control<ItemSchema>;
-  update: UseFieldArrayUpdate<ItemSchema, "modifiers">;
+  control: Control<ItemFormSchema>;
+  update: UseFieldArrayUpdate<ItemFormSchema, "modifiers">;
   onDuplicate(): void;
-  field: { config: ExtrasSchema };
+  field: { readonly config: ExtrasSchema };
   index: number;
 };
 
 export const ExtrasForm = (props: Props) => {
   const { index, update, field, onDuplicate } = props;
-  const { register, reset, control, handleSubmit, formState } = useZodForm({
-    schema: ExtrasSchema,
+  const { register, reset, control, handleSubmit, formState } = useForm({
+    resolver: schemaResolver(ExtrasSchema),
     defaultValues: field.config,
   });
 

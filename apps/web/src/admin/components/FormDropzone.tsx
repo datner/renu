@@ -1,21 +1,28 @@
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { useDropzone } from "react-dropzone";
-import { useController } from "react-hook-form";
+import { useController, useFormContext } from "react-hook-form";
 import { useEvent } from "src/core/hooks/useEvent";
-import { ItemSchema } from "src/items/validations";
-import { z } from "zod";
+import { ItemFormSchema } from "../validations/item-form";
 
 export function FormDropzone() {
   const t = useTranslations("admin.Components.FormDropzone");
-  const { field, fieldState } = useController<z.input<typeof ItemSchema>, "image">({
+  const { control } = useFormContext<ItemFormSchema>();
+  const { field, fieldState } = useController({
+    control,
+    name: "imageFile",
+  });
+
+  const image = useController({
+    control,
     name: "image",
   });
 
   const onDrop = useEvent((acceptedFiles: File[]) => {
     const [file] = acceptedFiles;
     if (!file) return;
-    field.onChange({ src: URL.createObjectURL(file), file });
+    field.onChange(file);
+    image.field.onChange({ src: URL.createObjectURL(file) });
   });
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -37,14 +44,14 @@ export function FormDropzone() {
       </div>
 
       <div className="mt-2 relative grow">
-        {field.value.src && (
+        {image.field.value && (
           <Image
             className="object-cover"
             unoptimized={fieldState.isDirty}
             alt="preview"
-            placeholder={!fieldState.isDirty && field.value.blur ? "blur" : "empty"}
-            src={field.value.src}
-            blurDataURL={field.value.blur}
+            placeholder={!fieldState.isDirty && image.field.value.blur ? "blur" : "empty"}
+            src={image.field.value.src}
+            blurDataURL={image.field.value.blur}
             fill
             sizes="100vw"
           />

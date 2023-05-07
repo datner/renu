@@ -1,28 +1,24 @@
-import { invoke, useQuery } from "@blitzjs/rpc";
-import * as E from "@effect/data/Either";
+import { invoke } from "@blitzjs/rpc";
 import { constNull, pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as RR from "@effect/data/ReadonlyRecord";
 import * as Match from "@effect/match";
-import * as ParseResult from "@effect/schema/ParseResult";
 import * as Schema from "@effect/schema/Schema";
 import { AdjustmentsVerticalIcon, DocumentTextIcon } from "@heroicons/react/20/solid";
 import { PuzzlePieceIcon } from "@heroicons/react/24/solid";
 import { Button, NumberInput, Paper, Tabs, Textarea, TextInput } from "@mantine/core";
 import { nanoid } from "nanoid";
 import { useTranslations } from "next-intl";
-import { useEffect, useMemo, useReducer, useRef } from "react";
-import { DefaultValues, FormProvider, UseFormHandleSubmit, useController, useForm } from "react-hook-form";
+import { useReducer } from "react";
+import { FormProvider, useController, useForm, UseFormHandleSubmit } from "react-hook-form";
 import { toast } from "react-toastify";
-import { Category } from "shared";
-import { Common, Number } from "shared/schema";
+import { Item } from "shared";
+import { Schema as SchemaUtils } from "shared/effect";
 import { shekelFormatter, shekelParser } from "src/core/helpers/form";
-import { useZodForm } from "src/core/hooks/useZodForm";
-import { GetItemResult, toDefaults } from "src/items/validations";
-import getVenueManagementIntegration from "src/venues/queries/current/getVenueManagementIntegration";
+import { FullItem } from "src/items/hooks/form";
 import { match } from "ts-pattern";
-import getUploadUrl from "../mutations/getUploadUrl";
+import { ExtrasSchema, ItemFormSchema, ModifierSchema, OneOfSchema } from "../validations/item-form";
 import { DeleteButton } from "./DeleteButton";
 import { FormCategoryCombobox } from "./FormCategoryCombobox";
 import { FormDropzone } from "./FormDropzone";
@@ -30,163 +26,113 @@ import { IntegrationsPanel } from "./IntegrationsPanel";
 import { ModifierPanel } from "./ModifierPanel";
 
 type Props = {
-  item: O.Option<GetItemResult>;
-  onSubmit(data: Schema.To<typeof Form>): void;
+  item: O.Option<FullItem>;
+  onSubmit(data: Schema.To<typeof ItemFormSchema>): Promise<void>;
 };
 
-const Content_ = Schema.struct({ name: Schema.string, description: Schema.string })
-const Content = Schema.struct({
-  en: Content_,
-  he: Content_
-})
-
-const ExtrasOption = Schema.struct({
-  identifier: Common.Slug,
-  managementId: Schema.nullable(Schema.string),
-  price: Number.Price,
-  multi: Schema.boolean,
-  content: Content
-})
-
-const ExtrasSchema = Schema.struct({
-  _tag: Schema.literal("extras"),
-  identifier: Common.Slug,
-  content: Content,
-  options: Schema.nonEmptyArray(ExtrasOption),
-  min: Schema.number,
-  max: Schema.number
-})
-const OneOfOption = Schema.struct({
-  identifier: Common.Slug,
-  managementId: Schema.nullable(Schema.string),
-  price: Number.Price,
-  content: Content
-})
-
-const OneOfSchema = Schema.struct({
-  _tag: Schema.literal("oneOf"),
-  defaultOption: Schema.string,
-  identifier: Common.Slug,
-  content: Content,
-  options: Schema.nonEmptyArray(OneOfOption),
-})
-
-const ModifierSchema = Schema.struct({
-  modifierId: Schema.optional(Schema.number),
-  managementId: Schema.optional(Schema.number),
-  config: Schema.union(
-    OneOfSchema,
-    ExtrasSchema
-  )
-})
-const Form = Schema.struct({
-  identifier: Common.Slug,
-  categoryId: Category.Id,
-  price: Number.Price,
-  content: Content,
-  // image: Schema.union(Schema.instanceOf(FileList),Schema.string)
-  image: Schema.struct({
-    file: Schema.any,
-    src: Schema.string,
-    blur: Schema.optional(Schema.string),
+type F = Schema.From<typeof ItemFormSchema>;
+const toDefaultModifier = pipe(
+  Match.type<Item.Modifier.Modifier>(),
+  Match.tag("OneOf", (_): OneOfSchema => ({
+    _tag: "oneOf",
+    identifier: _.config.identifier,
+    defaultOption: _.config.defaultOption,
+    content: RR.fromIterable(
+      _.config.content,
+      _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
+    ) as any,
+    options: A.mapNonEmpty(_.config.options, _ => ({
+      identifier: _.identifier,
+      content: RR.fromIterable(
+        _.content,
+        _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
+      ) as any,
+      managementId: null,
+      price: _.price,
+    })),
+  })),
+  Match.tag("Extras", (_): ExtrasSchema => ({
+    _tag: "extras",
+    identifier: _.config.identifier,
+    max: O.getOrElse(_.config.max, () => 0),
+    min: O.getOrElse(_.config.min, () => 0),
+    content: RR.fromIterable(
+      _.config.content,
+      _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
+    ) as any,
+    options: A.mapNonEmpty(_.config.options, _ => ({
+      identifier: _.identifier,
+      content: RR.fromIterable(
+        _.content,
+        _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
+      ) as any,
+      managementId: null,
+      price: _.price,
+      multi: _.multi,
+    })),
+  })),
+  Match.tag("Slider", _ => {
+    throw "not there yet";
   }),
-  modifiers: Schema.array(ModifierSchema)
-});
-interface Form extends Schema.From<typeof Form> { }
+  Match.exhaustive,
+);
 
-type Entry = [string, { readonly message: string }];
-
-const buildError = (error: ParseResult.ParseErrors, path = [] as string[]): Array<Entry> =>
+const toDefault = (item: O.Option<FullItem>): F =>
   pipe(
-    Match.value(error),
-    Match.tag("Key", (e) => A.flatMap(e.errors, _ => buildError(_, A.append(path, String(e.key))))),
-    Match.tag("Index", (e) => A.flatMap(e.errors, _ => buildError(_, A.append(path, String(e.index))))),
-    Match.tag("UnionMember", (e) => A.flatMap(e.errors, _ => buildError(_, path))),
-    Match.tag("Type", (_) => [
-      [A.join(path, "."), {
-        message: O.getOrElse(_.message, () => `expected: ${_.expected._tag} actual: ${_.actual}`),
-      }] as Entry,
-    ]),
-    Match.tag("Missing", (_) => [[A.join(path, "."), { message: "Missing" }] as Entry]),
-    Match.tag("Forbidden", (_) => [[A.join(path, "."), { message: "Forbidden" }] as Entry]),
-    Match.tag("Unexpected", (_) => [[A.join(path, "."), { message: `Unexpected: ${_.actual}` }] as Entry]),
-    Match.exhaustive,
+    O.match(
+      item,
+      (): F => ({
+        price: 0,
+        identifier: "",
+        categoryId: -1,
+        modifiers: [],
+        content: {
+          en: { name: "", description: "" },
+          he: { name: "", description: "" },
+        },
+      }),
+      _ => ({
+        price: _.price,
+        identifier: _.identifier,
+        categoryId: _.categoryId,
+        image: {
+          src: _.image,
+          blur: O.getOrUndefined(_.blurHash),
+        },
+        modifiers: A.map(_.modifiers, (_): ModifierSchema => ({
+          modifierId: _.id,
+          config: toDefaultModifier(_),
+        })),
+        content: RR.fromIterable(
+          _.content,
+          _ => [_.locale, { name: _.name, description: _.description }],
+        ) as any,
+      }),
+    ),
   );
-
-const schemaResolver = <I, A>(schema: Schema.Schema<I, A>) => (data: I, _context: any) =>
-  pipe(
-    Schema.decodeEither(schema)(data, { errors: "all" }),
-    E.match(({ errors }) => {
-      return ({
-        values: {},
-        errors: RR.fromEntries(A.flatMap(errors, _ => buildError(_))),
-      });
-    }, values => ({ values, errors: {} })),
-  );
-
-type DD = DefaultValues<Schema.From<typeof Form>>
 
 export function ItemForm(props: Props) {
   const { onSubmit: onSubmit_, item } = props;
-  const [integration] = useQuery(getVenueManagementIntegration, null);
   const t = useTranslations("admin.Components.ItemForm");
-  const prevItem = useRef(item);
   const isEdit = O.isSome(item);
-  const getDefaultValues = useMemo(() => toDefaults(integration), [integration]);
-  const defaultValues = useMemo(() => getDefaultValues(item) as DD, [item, getDefaultValues]);
   const form = useForm({
-    resolver: schemaResolver(Form),
-    // resolver: ItemSchema,
-    defaultValues,
+    resolver: SchemaUtils.schemaResolver(ItemFormSchema),
+    defaultValues: async (_) => {
+      return toDefault(item);
+    },
   });
   const [isRemoving, remove] = useReducer(() => true, false);
 
-  const { formState, reset, control } = form;
-  const handleSubmit = form.handleSubmit as UseFormHandleSubmit<Schema.To<typeof Form>>
+  const { formState, control } = form;
   const { isSubmitting, isDirty, errors } = formState;
 
-  useEffect(() => {
-    const shouldReset = pipe(
-      O.tuple(item, prevItem.current),
-      O.filter(([i1, i2]) => i1.id === i2.id),
-      O.isNone,
-    );
-    if (shouldReset) {
-      reset(getDefaultValues(item) as DD);
-    }
-    prevItem.current = item;
-  }, [item, getDefaultValues, reset]);
-
+  // patches a react-hook-form type limitation
+  const handleSubmit = form.handleSubmit as UseFormHandleSubmit<Schema.To<typeof ItemFormSchema>>;
   const onSubmit = handleSubmit(
     async (data) => {
-      async function doAction() {
-        let image = pipe(
-          O.map(item, i => i.image),
-          O.getOrElse(() => ""),
-        );
-          if (data.image.file) {
-            const file = data.image.file;
-            const { url, headers: h } = await invoke(getUploadUrl, {
-              name: `${data.identifier}-${nanoid()}.${file.name.split(".").pop()}`,
-            });
-            const headers = new Headers(h);
-            headers.append("Content-Length", `${file.size + 5000}`);
-
-            const {
-              data: {
-                attributes: { origin_path },
-              },
-            } = await fetch(url, {
-              method: "POST",
-              headers,
-              body: await file.arrayBuffer(),
-            }).then((res) => res.json());
-            image = origin_path;
-          }
-          return onSubmit_(data);
-      }
+      console.log(data)
       const isCreate = O.isNone(item);
-      await toast.promise(doAction(), {
+      await toast.promise(onSubmit_(data), {
         pending: `${isCreate ? "Creating" : "Updating"} in progress...`,
         success: `${data.identifier} ${isCreate ? "created" : "updated"} successfully!`,
         error: `Oops! Couldn't ${isCreate ? "create" : "update"} ${data.identifier}`,
@@ -257,7 +203,7 @@ export function ItemForm(props: Props) {
                 Modifiers
               </Tabs.Tab>
               <Tabs.Tab
-                disabled={integration.id === -1}
+                disabled
                 value="integrations"
                 icon={<PuzzlePieceIcon className="h-5 w-5" />}
               >

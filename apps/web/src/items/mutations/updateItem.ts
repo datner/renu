@@ -5,13 +5,12 @@ import * as A from "@effect/data/ReadonlyArray";
 import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
 import db, { Prisma } from "db";
+import { UpdateItemPayload } from "src/admin/validations/item-form";
 import { Session } from "src/auth";
 import * as Renu from "src/core/effect/runtime";
 import { getBlurHash } from "src/core/helpers/plaiceholder";
 import { PrismaError, prismaError } from "src/core/helpers/prisma";
 import { inspect } from "util";
-import { Modifier } from "../validations";
-import { UpdateItemSchema } from "../validations";
 import { FullItem, toFullItem } from "../queries/getItemNew";
 
 const getItem = (id: number) =>
@@ -35,7 +34,7 @@ const getItem = (id: number) =>
     ));
 
 export default resolver.pipe(
-  (i: Schema.From<typeof UpdateItemSchema>) => Schema.decodeEffect(UpdateItemSchema)(i),
+  (i: Schema.From<typeof UpdateItemPayload>) => Schema.decodeEffect(UpdateItemPayload)(i),
   Effect.tap((it) => Effect.log("getting item with id " + it.id)),
   Effect.flatMap(i => Effect.all(Effect.succeed(i), getItem(i.id))),
   Effect.flatMap(([input, item]) =>
@@ -66,7 +65,6 @@ export default resolver.pipe(
           ),
           O.getOrUndefined,
         ),
-        managementRepresentation: { id: input.managementId },
         modifiers: {
           update: pipe(
             input.modifiers,
@@ -101,11 +99,9 @@ export default resolver.pipe(
           create: pipe(
             input.modifiers,
             A.filter((m) => m.modifierId == null),
-            A.map(m => Schema.encode(Modifier)(m)),
             A.map(
               (m, p) => ({
                 position: p,
-                managementRepresentation: { id: m.managementId },
                 config: {
                   ...m.config,
                   options: pipe(
@@ -134,7 +130,7 @@ export default resolver.pipe(
         Effect.if(
           item.image === input.image,
           Effect.succeed(item.blurHash),
-          getBlurHash(input.image),
+          getBlurHash(input.image!),
         ),
         (data, blurHash) => ({ ...data, blurHash }),
       ),

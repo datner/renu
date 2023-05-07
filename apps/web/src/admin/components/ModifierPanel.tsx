@@ -1,19 +1,18 @@
 import { useModal } from "@ebay/nice-modal-react";
+import { pipe } from "@effect/data/Function";
+import * as O from "@effect/data/Option";
+import * as A from "@effect/data/ReadonlyArray";
+import * as Effect from "@effect/io/Effect";
 import { ModifierEnum } from "db/itemModifierConfig";
-import { useStableO } from "fp-ts-react-stable-hooks";
-import * as A from "fp-ts/Array";
-import { pipe } from "fp-ts/function";
-import * as NA from "fp-ts/NonEmptyArray";
-import * as O from "fp-ts/Option";
-import * as T from "fp-ts/Task";
-import * as TO from "fp-ts/TaskOption";
 import * as L from "monocle-ts/Lens";
+import { useState } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { ModifierField } from "src/items/helpers/form";
-import { ExtrasSchemaInput, ItemSchema, ModifierSchema, OneOfSchemaInput } from "src/items/validations";
+import { ExtrasSchemaInput, OneOfSchemaInput } from "src/items/validations";
 import { match } from "ts-pattern";
 import { ExtrasForm } from "../modifier-forms/ExtrasForm";
 import { OneOfForm } from "../modifier-forms/OneOfForm";
+import { ItemFormSchema, ModifierSchema } from "../validations/item-form";
 import { ModifiersSortableList } from "./ModifiersSortableList";
 import { NewModifierModal } from "./NewModiferModal";
 
@@ -75,20 +74,21 @@ const addCopy = pipe(
 
 export function ModifierPanel() {
   const modal = useModal(NewModifierModal);
-  const { control, getValues } = useFormContext<ItemSchema>();
+  const { control, getValues } = useFormContext<ItemFormSchema>();
   const { fields, move, append, update } = useFieldArray({ control, name: "modifiers" });
-  const [fieldIndex, setFieldIndex] = useStableO<number>(O.none);
+  const [fieldIndex, setFieldIndex] = useState<O.Option<number>>(O.none());
 
   const updateConfig: typeof update = (i, m) => {
     update(i, Object.assign(getValues(`modifiers.${i}`), m));
   };
 
   const handleAddModifier = pipe(
-    (() => modal.show()) as T.Task<{ _tag: ModifierEnum } | undefined>,
-    T.map(O.fromNullable),
-    TO.map(getInitialModifierValues),
-    TO.bindTo("config"),
-    TO.map(append),
+    Effect.promise(() => modal.show() as Promise<{ _tag: ModifierEnum } | undefined>),
+    Effect.flatMap(O.fromNullable),
+    Effect.map(getInitialModifierValues),
+    Effect.bindTo("config"),
+    Effect.map(append),
+    Effect.asUnit,
   );
 
   return (
@@ -98,13 +98,13 @@ export function ModifierPanel() {
           fields={fields}
           move={move}
           onClick={(field) => setFieldIndex(O.some(field))}
-          onAddModifier={handleAddModifier}
+          onAddModifier={() => Effect.runPromise(handleAddModifier)}
         />
       </div>
       {pipe(
-        fieldIndex,
-        O.bindTo("index"),
-        O.bind("field", ({ index }) => A.lookup(index)(fields)),
+        O.Do(),
+        O.bind("index", () => fieldIndex),
+        O.bind("field", ({ index }) => A.get(index)(fields)),
         O.let("update", () => updateConfig),
         O.let("control", () => control),
         O.let(

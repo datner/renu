@@ -19,9 +19,9 @@ import { constNull, pipe } from "fp-ts/function";
 import * as O from "fp-ts/Option";
 import { ComponentPropsWithoutRef, ComponentPropsWithRef, forwardRef, PropsWithChildren, Ref } from "react";
 import { FieldArrayWithId } from "react-hook-form";
-import { ItemSchema } from "src/items/validations";
+import { ItemFormSchema } from "../validations/item-form";
 
-type ModifierField = FieldArrayWithId<ItemSchema, "modifiers", "id">;
+type ModifierField = FieldArrayWithId<ItemFormSchema, "modifiers", "id">;
 
 type ModifierCardProps = {
   field: ModifierField;

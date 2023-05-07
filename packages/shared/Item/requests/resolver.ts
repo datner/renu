@@ -3,8 +3,9 @@ import * as Option from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as Effect from "@effect/io/Effect";
 import * as Exit from "@effect/io/Exit";
-import * as Request from "@effect/io/Request";
 import * as RequestResolver from "@effect/io/RequestResolver";
+import * as Match from "@effect/match";
+import { Item } from "database";
 import { inspect } from "util";
 import { Database } from "../../Database";
 import { filterRequestsByTag, resolveBatch, resolveSingle } from "../../effect/Request";
@@ -79,6 +80,49 @@ export const ItemResolver = pipe(
           ),
       ),
       resolveSingle(
+        A.appendAll(
+          filterRequestsByTag(requests, "GetItemByIdentifier"),
+          filterRequestsByTag(requests, "GetItemById"),
+        ),
+        (reqs, db) =>
+          db.item.findMany({
+            where: {
+              OR: [
+                { id: { in: filterRequestsByTag(reqs, "GetItemById").map(_ => _.id) } },
+                { identifier: { in: filterRequestsByTag(reqs, "GetItemByIdentifier").map(_ => _.identifier) } },
+              ],
+            },
+          }),
+        (req, items) =>
+          pipe(
+            Match.value(req),
+            Match.tag("GetItemById", _ =>
+              Option.match(
+                A.findFirst(items, it => {
+                  if (Option.isSome(_.venueId)) {
+                    return _.id === it.id && it.venueId === _.venueId.value;
+                  }
+                  return _.id === it.id;
+                }),
+                () => Exit.fail(req._tag === "GetItemById" ? new GetItemByIdError() : new GetItemByIdentifierError()),
+                Exit.succeed,
+              )),
+            Match.tag("GetItemByIdentifier", _ =>
+              Option.match(
+                A.findFirst(items, it => {
+                  if (Option.isSome(_.venueId)) {
+                    return _.identifier === it.identifier && it.venueId === _.venueId.value;
+                  }
+
+                  return _.identifier === it.identifier;
+                }),
+                () => Exit.fail(req._tag === "GetItemById" ? new GetItemByIdError() : new GetItemByIdentifierError()),
+                Exit.succeed,
+              )),
+            Match.exhaustive,
+          ) as any,
+      ),
+      resolveSingle(
         filterRequestsByTag(requests, "GetItemModifierById"),
         (reqs, db) =>
           db.itemModifier.findMany({
@@ -90,55 +134,6 @@ export const ItemResolver = pipe(
             () => Exit.fail(new GetItemModifierByIdError()),
             Exit.succeed,
           ),
-      ),
-      pipe(
-        Effect.flatMap(Database, db =>
-          Effect.promise(
-            () =>
-              db.item.findMany({
-                where: {
-                  OR: [
-                    { id: { in: filterRequestsByTag(requests, "GetItemById").map(_ => _.id) } },
-                    { identifier: { in: filterRequestsByTag(requests, "GetItemByIdentifier").map(_ => _.identifier) } },
-                  ],
-                  deleted: null,
-                },
-              }),
-          )),
-        Effect.flatMap(items =>
-          Effect.allPar(
-            Effect.forEachPar(filterRequestsByTag(requests, "GetItemById"), req =>
-              Request.complete(
-                req,
-                Option.match(
-                  A.findFirst(items, _ => {
-                    if (Option.isSome(req.venueId)) {
-                      return _.id === req.id && _.venueId === req.venueId.value;
-                    }
-
-                    return _.id === req.id;
-                  }),
-                  () => Exit.fail(new GetItemByIdError()),
-                  Exit.succeed,
-                ),
-              )),
-            Effect.forEachPar(filterRequestsByTag(requests, "GetItemByIdentifier"), req =>
-              Request.complete(
-                req,
-                Option.match(
-                  A.findFirst(items, _ => {
-                    if (Option.isSome(req.venueId)) {
-                      return _.identifier === req.identifier && _.venueId === req.venueId.value;
-                    }
-
-                    return _.identifier === req.identifier;
-                  }),
-                  () => Exit.fail(new GetItemByIdentifierError()),
-                  Exit.succeed,
-                ),
-              )),
-          )
-        ),
       ),
     )
   ),

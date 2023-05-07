@@ -1,26 +1,26 @@
+import * as A from "@effect/data/ReadonlyArray";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { ActionIcon, Button, NumberInput, Select, TextInput } from "@mantine/core";
-import * as A from "fp-ts/Array";
 import { pipe } from "fp-ts/function";
 import { useEffect } from "react";
-import { Control, Controller, useFieldArray, UseFieldArrayUpdate } from "react-hook-form";
+import { Control, Controller, useFieldArray, UseFieldArrayUpdate, useForm } from "react-hook-form";
+import { schemaResolver } from "shared/effect/Schema";
 import { shekelFormatter, shekelParser } from "src/core/helpers/form";
-import { useZodForm } from "src/core/hooks/useZodForm";
-import { ItemSchema, OneOfSchema } from "src/items/validations";
+import { ItemFormSchema, OneOfSchema } from "../validations/item-form";
 
 type Props = {
-  control: Control<ItemSchema>;
-  update: UseFieldArrayUpdate<ItemSchema, "modifiers">;
+  control: Control<ItemFormSchema>;
+  update: UseFieldArrayUpdate<ItemFormSchema, "modifiers">;
   onDuplicate(): void;
-  field: { config: OneOfSchema };
+  field: { readonly config: OneOfSchema };
   index: number;
 };
 
 export const OneOfForm = (props: Props) => {
   const { index, update, field, onDuplicate } = props;
-  const { register, reset, control, watch, handleSubmit, formState } = useZodForm({
-    schema: OneOfSchema,
+  const { register, reset, control, watch, handleSubmit, formState } = useForm({
+    resolver: schemaResolver(OneOfSchema),
     defaultValues: field.config,
   });
   useEffect(() => {
@@ -54,7 +54,7 @@ export const OneOfForm = (props: Props) => {
                 searchable
                 data={pipe(
                   controlledFields,
-                  A.mapWithIndex((i, f) => ({ label: f.identifier, value: String(i) })),
+                  A.map((f, i) => ({ label: f.identifier, value: String(i) })),
                 )}
               />
             )}
@@ -73,7 +73,7 @@ export const OneOfForm = (props: Props) => {
       <div className="space-y-2 mt-4">
         {pipe(
           fields,
-          A.mapWithIndex((i, f) => (
+          A.map((f, i) => (
             <div
               key={f.id}
               className="relative border border-gray-300 bg-white p-4 shadow-md rounded-md"

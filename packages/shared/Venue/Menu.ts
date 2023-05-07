@@ -103,11 +103,7 @@ export const fromVenue = Schema.transformResult(
   ParseResult.success,
 );
 
-export const MenuModifierItem = pipe(
-  IM.Modifier,
-  Schema.pick("id", "position", "config"),
-);
-export interface MenuModifierItem extends Schema.To<typeof MenuModifierItem> {}
+export type MenuModifierItem = Schema.To<typeof IM.Modifier> 
 
 export const MenuItem = pipe(
   I.Item,
@@ -123,7 +119,7 @@ export const MenuItem = pipe(
   Schema.extend(Schema.struct({
     content: Schema.array(Common.Content),
     modifiers: pipe(
-      MenuModifierItem,
+      IM.Modifier,
       Schema.array,
     ),
   })),

@@ -1,4 +1,4 @@
 import { FieldArrayWithId } from "react-hook-form";
-import { ItemSchema } from "../validations";
+import { ItemFormSchema } from "src/admin/validations/item-form";
 
-export type ModifierField = FieldArrayWithId<ItemSchema, "modifiers", "id">;
+export type ModifierField = FieldArrayWithId<ItemFormSchema, "modifiers", "id">;

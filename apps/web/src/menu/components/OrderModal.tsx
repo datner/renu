@@ -18,11 +18,11 @@ import { usePrevious } from "src/core/hooks/usePrevious";
 import * as OrderState from "src/menu/hooks/useOrder";
 import confirmGamaTransaction from "../mutations/confirmGamaTransaction";
 import sendOrder from "../mutations/sendOrder";
+import { ErrorModal } from "./ErrorModal";
 import { FeedbackModal } from "./FeedbackModal";
 import { Modal } from "./Modal";
 import { useOrderContext } from "./OrderContext";
 import { OrderModalItem } from "./OrderModalItem";
-import { ErrorModal } from "./ErrorModal";
 
 type Props = {
   open?: boolean;
@@ -42,7 +42,7 @@ export function OrderModal(props: Props) {
   const { onClose, open, venueId } = props;
   const t = useTranslations("menu.Components.OrderModal");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const [errorOpen, setErrorOpen] = useState(false)
+  const [errorOpen, setErrorOpen] = useState(false);
   const locale = useLocale();
   const [{ order }, dispatch] = useOrderContext();
   const [ref, { height }] = useMeasure();
@@ -55,8 +55,8 @@ export function OrderModal(props: Props) {
       gamapayInit(_, undefined, ({ confirmation }) => invoke(confirmGamaTransaction, { jwt: confirmation }));
     },
     onError: () => {
-      setErrorOpen(true)
-    }
+      setErrorOpen(true);
+    },
   });
 
   const handleOrder = () => {
@@ -116,7 +116,8 @@ export function OrderModal(props: Props) {
   return (
     <>
       <Modal open={open} onClose={onClose}>
-        <Script src="https://gpapidemo.gamaf.co.il/dist/gamapay-bundle-demo.js" />
+        {/* <Script src="https://gpapidemo.gamaf.co.il/dist/gamapay-bundle-demo.js" /> */}
+        <Script src="https://gpapi.gamaf.co.il/dist/gamapay-bundle.js" />
         <div className="p-3 pb-16 bg-white rounded-t-xl overflow-auto">
           <h3 className="text-2xl rtl:mt-9">{t("yourOrder")}</h3>
           <hr className="w-1/2 mt-1 mb-2" />

@@ -116,8 +116,7 @@ export function OrderModal(props: Props) {
   return (
     <>
       <Modal open={open} onClose={onClose}>
-        {/* <Script src="https://gpapidemo.gamaf.co.il/dist/gamapay-bundle-demo.js" /> */}
-        <Script src="https://gpapi.gamaf.co.il/dist/gamapay-bundle.js" />
+        <Script src="https://gpapidemo.gamaf.co.il/dist/gamapay-bundle-demo.js" />
         <div className="p-3 pb-16 bg-white rounded-t-xl overflow-auto">
           <h3 className="text-2xl rtl:mt-9">{t("yourOrder")}</h3>
           <hr className="w-1/2 mt-1 mb-2" />

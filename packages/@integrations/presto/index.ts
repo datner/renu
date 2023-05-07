@@ -25,7 +25,7 @@ export interface PrestoService {
 export const Presto = Context.Tag<Presto, PrestoService>("Presto");
 
 const toPrestoOrder = (o: FullOrder) =>
-  Schema.decodeEffect(PrestoOrder)({
+  Schema.encodeEffect(PrestoOrder)({
     id: o.id,
     contact: {
       firstName: O.getOrElse(o.customerName, () => "Anonymous"),
@@ -154,26 +154,28 @@ export const layer = Layer.effect(
 
             const prestoOrder = yield* _(toPrestoOrder(o));
 
-            yield* _(
-              Effect.acquireUseRelease(
-                Effect.flatMap(FTPClient, client =>
-                  Effect.zipRight(
-                    Effect.promise(() => client.access(mgmt.vendorData)),
-                    Effect.sync(() => client),
-                  )),
-                client => {
-                  const s = new Readable();
-                  s.push(JSON.stringify(prestoOrder));
-                  s.push(null);
-                  return Effect.promise(() => client.uploadFrom(s, `renu-${Date.now()}.BOK`));
-                },
-                client =>
-                  Effect.zipRight(
-                    sem.release(1),
-                    Effect.sync(() => client.close()),
-                  ),
-              ),
-            );
+            if (process.env.NODE_ENV === "production") {
+              yield* _(
+                Effect.acquireUseRelease(
+                  Effect.flatMap(FTPClient, client =>
+                    Effect.zipRight(
+                      Effect.promise(() => client.access(mgmt.vendorData)),
+                      Effect.sync(() => client),
+                    )),
+                  client => {
+                    const s = new Readable();
+                    s.push(JSON.stringify(prestoOrder));
+                    s.push(null);
+                    return Effect.promise(() => client.uploadFrom(s, `renu-${Date.now()}.BOK`));
+                  },
+                  client =>
+                    Effect.zipRight(
+                      sem.release(1),
+                      Effect.sync(() => client.close()),
+                    ),
+                ),
+              );
+            }
             return prestoOrder;
           }),
           Effect.provideService(Database.Database, db),
@@ -244,106 +246,3 @@ const PrestoOrder = Schema.struct({
   ),
   delivery_fee: Schema.number,
 });
-
-const order = {
-  "id": 1010445,
-  "contact": { "firstName": "", "lastName": "", "phone": "0523245471" },
-  "delivery": {
-    "type": "delivery",
-    "address": {
-      "formatted": ",   3 \/ ",
-      "city": "",
-      "street": " ",
-      "number": "3",
-      "entrance": "",
-      "floor": "1",
-      "apt": "",
-      "comment": "",
-    },
-    "charge": 20,
-    "numppl": 2,
-    "workercode": 1,
-  },
-  "orderItems": [{
-    "type": "item",
-    "id": 55,
-    "price": 49,
-    "comment": " ",
-    "children": [],
-    "itemcount": 1,
-    "name": " '",
-    "childrencount": 0,
-  }, {
-    "type": "item",
-    "id": 90,
-    "price": 42,
-    "comment": " ",
-    "children": [],
-    "itemcount": 1,
-    "name": " ",
-    "childrencount": 0,
-  }, {
-    "type": "item",
-    "id": 20,
-    "price": 53,
-    "comment": " ",
-    "children": [],
-    "itemcount": 1,
-    "name": "",
-    "childrencount": 0,
-  }, {
-    "type": "item",
-    "id": 520,
-    "price": 54,
-    "comment": "",
-    "children": [],
-    "itemcount": 1,
-    "name": "  ",
-    "childrencount": 0,
-  }, {
-    "type": "item",
-    "id": 60,
-    "price": 0,
-    "comment": "",
-    "itemcount": 3,
-    "children": [],
-    "name": "",
-    "childrencount": 0,
-  }, {
-    "type": "item",
-    "id": 88,
-    "price": 0,
-    "comment": "",
-    "itemcount": 3,
-    "children": [],
-    "name": "  ",
-    "childrencount": 0,
-  }, {
-    "type": "item",
-    "id": 487,
-    "price": 0,
-    "comment": "",
-    "children": [],
-    "itemcount": 1,
-    "name": "hiyashi oshi salad",
-    "childrencount": 0,
-  }],
-  "comment": "",
-  "takeoutPacks": 2,
-  "orderCharges": [{ "amount": 0 }],
-  "price": 218,
-  "payments": [{
-    "type": "costtiket",
-    "amount": 117,
-    "card": { "number": "5", "expireMonth": 1, "expireYear": 1, "holderId": "", "holderName": "" },
-  }, {
-    "type": "costtiket",
-    "amount": 101,
-    "card": { "number": "5", "expireMonth": 1, "expireYear": 1, "holderId": "", "holderName": "" },
-  }, {
-    "type": "cash",
-    "amount": 1,
-    "card": { "number": "", "expireMonth": 1, "expireYear": 1, "holderId": "", "holderName": "" },
-  }],
-  "delivery_fee": 20,
-};

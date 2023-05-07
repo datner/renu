@@ -20,16 +20,10 @@ const PayPlusData = Schema.struct({
 
 const NoData = Schema.struct({});
 
-export const GamaEnv = {
-  test: "test",
-  demo: "demo",
-  prod: "production",
-} as const;
-
 export const GamaData = Schema.struct({
   id: Schema.number,
   secret_key: Schema.string,
-  env: Schema.enums(GamaEnv),
+  env: Schema.literal("test", "demo", "production"),
 });
 export interface GamaData extends Schema.To<typeof GamaData> {}
 

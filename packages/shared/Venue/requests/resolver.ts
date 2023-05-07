@@ -31,7 +31,7 @@ export const VenueResolver = pipe(
     Effect.allPar(
       Effect.sync(() => console.log(inspect(requests.map(r => r._tag), false, null, true))),
       resolveBatch(
-        filterRequestsByTag(requests,"GetVenueCategories"),
+        filterRequestsByTag(requests, "GetVenueCategories"),
         (reqs, db) =>
           db.category.findMany({
             where: { venueId: { in: reqs.map(req => req.id) }, deleted: null },

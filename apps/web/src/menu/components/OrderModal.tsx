@@ -1,14 +1,15 @@
 import { invoke, useMutation } from "@blitzjs/rpc";
 import { Branded } from "@effect/data/Brand";
+import * as Data from "@effect/data/Data";
 import { absurd, pipe } from "@effect/data/Function";
 import * as HashMap from "@effect/data/HashMap";
 import * as A from "@effect/data/ReadonlyArray";
-import * as Exit from "@effect/io/Exit";
+import { LoadingOverlay } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { a, useSpring } from "@react-spring/web";
 import { useTranslations } from "next-intl";
 import Script from "next/script";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import useMeasure from "react-use-measure";
 import { Order, Venue } from "shared";
 import { Number } from "shared/schema";
@@ -38,10 +39,15 @@ declare global {
   ): void;
 }
 
+class NoPayment extends Data.TaggedClass("NoPayment")<{}> { }
+class PaymentClosed extends Data.TaggedClass("PaymentClosed")<{ session: Branded<string, "GamaSession"> }> { }
+class PaymentOpen extends Data.TaggedClass("PaymentOpen")<{ session: Branded<string, "GamaSession"> }> { }
+
+type Payment = NoPayment | PaymentClosed | PaymentOpen;
+
 export function OrderModal(props: Props) {
   const { onClose, open, venueId } = props;
   const t = useTranslations("menu.Components.OrderModal");
-  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [errorOpen, setErrorOpen] = useState(false);
   const locale = useLocale();
   const [{ order }, dispatch] = useOrderContext();
@@ -49,17 +55,43 @@ export function OrderModal(props: Props) {
   const isNoHeight = usePrevious(height) === 0;
   const { h } = useSpring({ h: height, immediate: isNoHeight });
   const [phoneNumber] = useLocalStorage({ key: "phone-number" });
+  const [confirmTx, tx] = useMutation(confirmGamaTransaction);
+  const [payment, setPayment] = useState<Payment>(new NoPayment());
   const [sendOrderMutation, { isLoading, isSuccess, reset }] = useMutation(sendOrder, {
     onSuccess: (_) => {
+      setPayment(new PaymentOpen({ session: _ }));
       reset();
-      gamapayInit(_, undefined, ({ confirmation }) => invoke(confirmGamaTransaction, { jwt: confirmation }));
     },
     onError: () => {
       setErrorOpen(true);
     },
   });
 
+  useEffect(() => {
+    const handlePayload = ({ data }: any) => {
+      if (data.action === "_gamapay_success") {
+        console.log("data:", data);
+        confirmTx({ jwt: data.payload.confirmation });
+        setPayment(new NoPayment());
+      }
+    };
+    
+    window.addEventListener("message", handlePayload);
+
+    if (payment._tag === "PaymentOpen") {
+      console.log("making session");
+      gamapayInit(payment.session, "payment");
+    }
+
+    return () => {
+      window.removeEventListener("message", handlePayload);
+    };
+  }, [payment, confirmTx]);
+
   const handleOrder = () => {
+    if (payment._tag !== "NoPayment") {
+      setPayment(new PaymentOpen(payment));
+    }
     if (OrderState.isEmptyOrder(order)) return;
 
     sendOrderMutation({
@@ -141,14 +173,30 @@ export function OrderModal(props: Props) {
           </div>
         </div>
       </Modal>
-      <FeedbackModal
-        show={feedbackOpen}
+      <Modal
+        open={payment._tag === "PaymentOpen"}
         onClose={() => {
-          setFeedbackOpen(false);
+          if (payment._tag === "NoPayment") {
+            return;
+          }
+          setPayment(new PaymentClosed(payment));
+        }}
+      >
+        <Script src="https://gpapidemo.gamaf.co.il/dist/gamapay-bundle-demo.js" />
+        <div
+          id="payment"
+          className="pb-16 bg-white rounded-t-xl overflow-auto [&_iframe]:h-[600px] [&_iframe]:w-screen"
+        >
+        </div>
+      </Modal>
+      <FeedbackModal
+        show={tx.isSuccess}
+        onClose={() => {
           window.location.reload();
         }}
       />
       <ErrorModal show={errorOpen} onClose={() => setErrorOpen(false)} />
+      <LoadingOverlay visible={tx.isLoading} />
     </>
   );
 }

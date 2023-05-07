@@ -67,7 +67,7 @@ export const VenueResolver = pipe(
         filterRequestsByTag(requests, "GetVenueManagementIntegration"),
         (reqs, db) =>
           db.managementIntegration.findMany({
-            where: idIn(reqs),
+            where: { venueId: { in: reqs.map(_ => _.id) } },
           }),
         (req, integs) =>
           Option.match(

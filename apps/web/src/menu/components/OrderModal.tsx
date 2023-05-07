@@ -2,8 +2,8 @@ import { invoke, useMutation } from "@blitzjs/rpc";
 import { Branded } from "@effect/data/Brand";
 import { absurd, pipe } from "@effect/data/Function";
 import * as HashMap from "@effect/data/HashMap";
-import * as Exit from "@effect/io/Exit";
 import * as A from "@effect/data/ReadonlyArray";
+import * as Exit from "@effect/io/Exit";
 import { useLocalStorage } from "@mantine/hooks";
 import { a, useSpring } from "@react-spring/web";
 import { useTranslations } from "next-intl";
@@ -22,6 +22,7 @@ import { FeedbackModal } from "./FeedbackModal";
 import { Modal } from "./Modal";
 import { useOrderContext } from "./OrderContext";
 import { OrderModalItem } from "./OrderModalItem";
+import { ErrorModal } from "./ErrorModal";
 
 type Props = {
   open?: boolean;
@@ -41,6 +42,7 @@ export function OrderModal(props: Props) {
   const { onClose, open, venueId } = props;
   const t = useTranslations("menu.Components.OrderModal");
   const [feedbackOpen, setFeedbackOpen] = useState(false);
+  const [errorOpen, setErrorOpen] = useState(false)
   const locale = useLocale();
   const [{ order }, dispatch] = useOrderContext();
   const [ref, { height }] = useMeasure();
@@ -52,6 +54,9 @@ export function OrderModal(props: Props) {
       reset();
       gamapayInit(_, undefined, ({ confirmation }) => invoke(confirmGamaTransaction, { jwt: confirmation }));
     },
+    onError: () => {
+      setErrorOpen(true)
+    }
   });
 
   const handleOrder = () => {
@@ -109,31 +114,33 @@ export function OrderModal(props: Props) {
   );
 
   return (
-    <Modal open={open} onClose={onClose}>
-      <Script src="https://gpapidemo.gamaf.co.il/dist/gamapay-bundle-demo.js" />
-      <div className="p-3 pb-16 bg-white rounded-t-xl overflow-auto">
-        <h3 className="text-2xl rtl:mt-9">{t("yourOrder")}</h3>
-        <hr className="w-1/2 mt-1 mb-2" />
-        <div>
-          <a.div style={{ height: h }}>
-            <ul ref={ref} className="divide-y divide-emerald-400">
-              {HashMap.values(listItems)}
-            </ul>
-          </a.div>
-          <div className="h-8" />
-          <button
-            onClick={handleOrder}
-            disabled={isLoading || amount === 0 || isSuccess}
-            className="btn w-full btn-primary"
-          >
-            <span className="badge badge-outline badge-ghost">{amount}</span>
-            <span className="inline-block flex-grow px-3 text-left rtl:text-right">
-              {isLoading ? t("loading") : t("order")}
-            </span>
-            <span className="tracking-wider font-light">{toShekel(cost)}</span>
-          </button>
+    <>
+      <Modal open={open} onClose={onClose}>
+        <Script src="https://gpapidemo.gamaf.co.il/dist/gamapay-bundle-demo.js" />
+        <div className="p-3 pb-16 bg-white rounded-t-xl overflow-auto">
+          <h3 className="text-2xl rtl:mt-9">{t("yourOrder")}</h3>
+          <hr className="w-1/2 mt-1 mb-2" />
+          <div>
+            <a.div style={{ height: h }}>
+              <ul ref={ref} className="divide-y divide-emerald-400">
+                {HashMap.values(listItems)}
+              </ul>
+            </a.div>
+            <div className="h-8" />
+            <button
+              onClick={handleOrder}
+              disabled={isLoading || amount === 0 || isSuccess}
+              className="btn w-full btn-primary"
+            >
+              <span className="badge badge-outline badge-ghost">{amount}</span>
+              <span className="inline-block flex-grow px-3 text-left rtl:text-right">
+                {isLoading ? t("loading") : t("order")}
+              </span>
+              <span className="tracking-wider font-light">{toShekel(cost)}</span>
+            </button>
+          </div>
         </div>
-      </div>
+      </Modal>
       <FeedbackModal
         show={feedbackOpen}
         onClose={() => {
@@ -141,7 +148,8 @@ export function OrderModal(props: Props) {
           window.location.reload();
         }}
       />
-    </Modal>
+      <ErrorModal show={errorOpen} onClose={() => setErrorOpen(false)} />
+    </>
   );
 }
 

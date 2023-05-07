@@ -105,6 +105,11 @@
         "title": "Before we continue...",
         "please give phone number": "Please tell us your phone number, we promise not to send anything 💚",
         "phone label": "Sure, heres my number:"
+      },
+      "ErrorModal": {
+        "title": "Oops! It seems we have a problem",
+        "sorry please try again": "We couldn't reach one of our partners, we apologize for that. Please try again later.",
+        "refresh": "refresh"
       }
     }
   }

@@ -12,10 +12,10 @@ importers:
     dependencies:
       '@effect/io':
         specifier: latest
-        version: 0.25.8
+        version: 0.25.9
       '@effect/match':
-        specifier: 0.19.1
-        version: 0.19.1
+        specifier: 0.20.1
+        version: 0.20.1
       '@fp-ts/core':
         specifier: 0.2.1
         version: 0.2.1
@@ -162,7 +162,7 @@ importers:
         version: 0.12.2
       '@effect/io':
         specifier: latest
-        version: 0.25.8
+        version: 0.25.9
       '@effect/schema':
         specifier: latest
         version: 0.17.4
@@ -421,10 +421,10 @@ importers:
         version: 0.12.2
       '@effect/io':
         specifier: latest
-        version: 0.25.8
+        version: 0.25.9
       '@effect/match':
-        specifier: 0.19.1
-        version: 0.19.1
+        specifier: 0.20.1
+        version: 0.20.1
       '@effect/schema':
         specifier: latest
         version: 0.17.4
@@ -467,10 +467,10 @@ importers:
         version: 0.12.2
       '@effect/io':
         specifier: latest
-        version: 0.25.8
+        version: 0.25.9
       '@effect/match':
-        specifier: 0.19.1
-        version: 0.19.1
+        specifier: 0.20.1
+        version: 0.20.1
       '@effect/schema':
         specifier: latest
         version: 0.17.4
@@ -495,10 +495,10 @@ importers:
         version: 0.12.2
       '@effect/io':
         specifier: latest
-        version: 0.25.8
+        version: 0.25.9
       '@effect/match':
-        specifier: 0.19.1
-        version: 0.19.1
+        specifier: 0.20.1
+        version: 0.20.1
       '@effect/schema':
         specifier: latest
         version: 0.17.4
@@ -538,10 +538,10 @@ importers:
         version: 0.12.2
       '@effect/io':
         specifier: latest
-        version: 0.25.8
+        version: 0.25.9
       '@effect/match':
-        specifier: 0.19.1
-        version: 0.19.1
+        specifier: 0.20.1
+        version: 0.20.1
       '@effect/schema':
         specifier: latest
         version: 0.17.4
@@ -575,10 +575,10 @@ importers:
         version: 0.12.2
       '@effect/io':
         specifier: latest
-        version: 0.25.8
+        version: 0.25.9
       '@effect/match':
-        specifier: 0.19.1
-        version: 0.19.1
+        specifier: 0.20.1
+        version: 0.20.1
       '@effect/schema':
         specifier: latest
         version: 0.17.4
@@ -612,10 +612,10 @@ importers:
         version: 0.12.2
       '@effect/io':
         specifier: latest
-        version: 0.25.8
+        version: 0.25.9
       '@effect/match':
-        specifier: 0.19.1
-        version: 0.19.1
+        specifier: 0.20.1
+        version: 0.20.1
       '@effect/schema':
         specifier: latest
         version: 0.17.4
@@ -655,10 +655,10 @@ importers:
         version: 0.12.2
       '@effect/io':
         specifier: latest
-        version: 0.25.8
+        version: 0.25.9
       '@effect/match':
-        specifier: 0.19.1
-        version: 0.19.1
+        specifier: 0.20.1
+        version: 0.20.1
       '@effect/schema':
         specifier: latest
         version: 0.17.4
@@ -674,6 +674,9 @@ importers:
       '@integrations/core':
         specifier: workspace:*
         version: link:../core
+      basic-ftp:
+        specifier: 5.0.3
+        version: 5.0.3
       database:
         specifier: workspace:*
         version: link:../../database
@@ -698,10 +701,10 @@ importers:
         version: 0.12.2
       '@effect/io':
         specifier: latest
-        version: 0.25.8
+        version: 0.25.9
       '@effect/match':
-        specifier: 0.19.1
-        version: 0.19.1
+        specifier: 0.20.1
+        version: 0.20.1
       '@effect/schema':
         specifier: latest
         version: 0.17.4
@@ -807,7 +810,7 @@ importers:
         version: 0.12.2
       '@effect/io':
         specifier: latest
-        version: 0.25.8
+        version: 0.25.9
       '@effect/schema':
         specifier: latest
         version: 0.17.4
@@ -3165,14 +3168,14 @@ packages:
     resolution: {integrity: sha512-bmWRTcsSRG1FlBswT+D8SxW6r3c4B3pKJrjYfitCD03tXHnup5gLHaWqbFgIjiyYITS+UsJRRjVrNxvyGG4ZNQ==}
     dev: false
 
-  /@effect/io@0.25.8:
-    resolution: {integrity: sha512-fFSf7CdKyqqRyRKIFKoWx63sO1tGDjDIs26Ce+UevD3V/HbT0sKmG2MBThWoO5D2/tWEqwmq8+a/og6gq8KX4w==}
+  /@effect/io@0.25.9:
+    resolution: {integrity: sha512-RvW3l7A7PpPb74xwegxVKL5S+Zt+oA73fimSI7GunwaRk/OpI942BKdMczW1xN2sV5EME6jernAVAhKdncxM9Q==}
     dependencies:
       '@effect/data': 0.12.2
     dev: false
 
-  /@effect/match@0.19.1:
-    resolution: {integrity: sha512-al+I99+mdcoRL8MigD390mNvBc+Xqx4YR7IpWqFDnK8yaCLlIao+hHAsFJWP/wzYNepGUUJeBPBeUdoelhX1Sg==}
+  /@effect/match@0.20.1:
+    resolution: {integrity: sha512-wfF1RPw4W2wx+50HFPiouM+pyU8Y8R+3UQMDylJB37bXKrEar+QzbZoMSu0GR87SfMGVyIVOt/3mNHpjJJ26cg==}
     dependencies:
       '@effect/data': 0.12.2
       '@effect/schema': 0.17.4
@@ -3182,7 +3185,7 @@ packages:
     resolution: {integrity: sha512-cLYx06yxOIkx/OSvSweNF5Ge6lPfKhA90hjJFBsrOCLXArxqBpPH1OqB9+JACXQilZa7ocvMP1n9BsLZU8r1tQ==}
     dependencies:
       '@effect/data': 0.12.2
-      '@effect/io': 0.25.8
+      '@effect/io': 0.25.9
       fast-check: 3.8.1
     dev: false
 
@@ -5232,6 +5235,11 @@ packages:
       isobject: 3.0.1
       mixin-deep: 1.3.2
       pascalcase: 0.1.1
+    dev: false
+
+  /basic-ftp@5.0.3:
+    resolution: {integrity: sha512-QHX8HLlncOLpy54mh+k/sWIFd0ThmRqwe9ZjELybGZK+tZ8rUb9VO0saKJUROTbE+KhzDUT7xziGpGrW8Kmd+g==}
+    engines: {node: '>=10.0.0'}
     dev: false
 
   /big-integer@1.6.51:

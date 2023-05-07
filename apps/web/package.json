@@ -19,7 +19,7 @@
     "@dnd-kit/sortable": "7.0.2",
     "@ebay/nice-modal-react": "1.2.10",
     "@effect/data": "0.12.2",
-    "@effect/io": "0.25.8",
+    "@effect/io": "0.25.9",
     "@effect/schema": "0.17.4",
     "@emotion/react": "11.11.0",
     "@emotion/server": "11.11.0",

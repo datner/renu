@@ -1,4 +1,4 @@
-import { invoke, useMutation } from "@blitzjs/rpc";
+import { useMutation } from "@blitzjs/rpc";
 import { Branded } from "@effect/data/Brand";
 import * as Data from "@effect/data/Data";
 import { absurd, pipe } from "@effect/data/Function";
@@ -9,7 +9,7 @@ import { useLocalStorage } from "@mantine/hooks";
 import { a, useSpring } from "@react-spring/web";
 import { useTranslations } from "next-intl";
 import Script from "next/script";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { Order, Venue } from "shared";
 import { Number } from "shared/schema";
@@ -70,19 +70,16 @@ export function OrderModal(props: Props) {
   useEffect(() => {
     const handlePayload = ({ data }: any) => {
       if (data.action === "_gamapay_success") {
-        console.log("data:", data);
         confirmTx({ jwt: data.payload.confirmation });
         setPayment(new NoPayment());
       }
     };
-    
-    window.addEventListener("message", handlePayload);
 
     if (payment._tag === "PaymentOpen") {
-      console.log("making session");
       gamapayInit(payment.session, "payment");
     }
 
+    window.addEventListener("message", handlePayload);
     return () => {
       window.removeEventListener("message", handlePayload);
     };
@@ -182,7 +179,6 @@ export function OrderModal(props: Props) {
           setPayment(new PaymentClosed(payment));
         }}
       >
-        <Script src="https://gpapidemo.gamaf.co.il/dist/gamapay-bundle-demo.js" />
         <div
           id="payment"
           className="pb-16 bg-white rounded-t-xl overflow-auto [&_iframe]:h-[600px] [&_iframe]:w-screen"

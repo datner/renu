@@ -4,6 +4,7 @@ import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as Effect from "@effect/io/Effect";
 import * as Layer from "@effect/io/Layer";
+import * as Ref from "@effect/io/Ref";
 import * as Match from "@effect/match";
 import * as Schema from "@effect/schema/Schema";
 import * as FTP from "basic-ftp";
@@ -23,10 +24,123 @@ export interface PrestoService {
 }
 export const Presto = Context.Tag<Presto, PrestoService>("Presto");
 
+const toPrestoOrder = (o: FullOrder) =>
+  Schema.decodeEffect(PrestoOrder)({
+    id: o.id,
+    contact: {
+      firstName: O.getOrElse(o.customerName, () => "Anonymous"),
+      lastName: "",
+      phone: pipe(
+        O.map(o.managementExtra, _ => _.phoneNumber),
+        O.getOrElse(() => "0505555555"),
+      ),
+    },
+    orderItems: o.items.map(i => ({
+      type: "item" as const,
+      // TODO: disallow no representation
+      id: i.item.managementRepresentation._tag === "Presto" ? i.item.managementRepresentation.id : -1,
+      childrencount: 0,
+      children: pipe(
+        i.modifiers,
+        A.map(i =>
+          pipe(
+            Match.value(i.modifier.config),
+            Match.tag("oneOf", o =>
+              pipe(
+                o.options,
+                A.findFirst(_ => _.identifier === i.choice),
+                O.map(_ => _.managementRepresentation),
+                O.filterMap(refineTag("Presto")),
+                O.map(_ => _.id),
+                O.map(id => ({
+                  type: "option" as const,
+                  id,
+                  price: i.price,
+                  comment: "",
+                  name: i.choice,
+                  itemcount: i.amount,
+                })),
+              )),
+            Match.tag("extras", o =>
+              pipe(
+                o.options,
+                A.findFirst(_ => _.identifier === i.choice),
+                O.map(_ => _.managementRepresentation),
+                O.filterMap(refineTag("Presto")),
+                O.map(_ => _.id),
+                O.map(id => ({
+                  type: "option" as const,
+                  id,
+                  price: i.price,
+                  comment: "",
+                  name: i.choice,
+                  itemcount: i.amount,
+                })),
+              )),
+            Match.tag("Slider", o =>
+              pipe(
+                o.options,
+                A.findFirst(_ => _.identifier === i.choice),
+                O.map(_ => _.managementRepresentation),
+                O.filterMap(refineTag("Presto")),
+                O.map(_ => _.id),
+                O.map(id => ({
+                  type: "option" as const,
+                  id,
+                  price: i.price,
+                  comment: "",
+                  name: i.choice,
+                  itemcount: i.amount,
+                })),
+              )),
+            Match.exhaustive,
+          )
+        ),
+        A.compact,
+      ),
+      name: i.name,
+      itemcount: i.quantity,
+      price: i.price / 100,
+      comment: i.comment,
+    })),
+    comment: "Sent from Renu",
+    price: o.totalCost / 100,
+    delivery_fee: 0,
+    orderCharges: [{ amount: 0 }],
+    payments: [
+      {
+        type: "costtiket",
+        amount: o.totalCost / 100,
+        card: { number: "", expireMonth: 1, expireYear: 1, holderId: "", holderName: "" },
+      },
+    ],
+    takeoutPacks: 1,
+    delivery: {
+      type: "delivery",
+      address: {
+        formatted: "",
+        city: "",
+        street: " ",
+        number: "3",
+        entrance: "",
+        floor: "1",
+        apt: "",
+        comment: "",
+      },
+      charge: 0,
+      numppl: 1,
+      workercode: 1,
+    },
+  });
+
 export const layer = Layer.effect(
   Presto,
   Effect.gen(function*(_) {
     const db = yield* _(Database.Database);
+    const sem = yield* _(Effect.makeSemaphore(1));
+    const client = yield* _(Ref.make(new FTP.Client()));
+
+    const FTPClient = Effect.zipRight(sem.take(1), Ref.get(client));
 
     return {
       postOrder: (orderId: Order.Id) =>
@@ -37,137 +151,29 @@ export const layer = Layer.effect(
             if (mgmt.provider !== "PRESTO") {
               throw yield* _(Effect.dieMessage("Wrong integration"));
             }
-            const prestoOrder = yield* _(
-              Schema.decodeEffect(PrestoOrder)({
-                id: o.id,
-                contact: {
-                  firstName: O.getOrElse(o.customerName, () => "Anonymous"),
-                  lastName: "",
-                  phone: pipe(
-                    O.map(o.managementExtra, _ => _.phoneNumber),
-                    O.getOrElse(() => "0505555555"),
-                  ),
-                },
-                orderItems: o.items.map(i => ({
-                  type: "item" as const,
-                  // TODO: disallow no representation
-                  id: i.item.managementRepresentation._tag === "Presto" ? i.item.managementRepresentation.id : -1,
-                  childrencount: 0,
-                  children: pipe(
-                    i.modifiers,
-                    A.map(i =>
-                      pipe(
-                        Match.value(i.modifier.config),
-                        Match.tag("oneOf", o =>
-                          pipe(
-                            o.options,
-                            A.findFirst(_ => _.identifier === i.choice),
-                            O.map(_ => _.managementRepresentation),
-                            O.filterMap(refineTag("Presto")),
-                            O.map(_ => _.id),
-                            O.map(id => ({
-                              type: "option" as const,
-                              id,
-                              price: i.price,
-                              comment: "",
-                              name: i.choice,
-                              itemcount: i.amount,
-                            })),
-                          )),
-                        Match.tag("extras", o =>
-                          pipe(
-                            o.options,
-                            A.findFirst(_ => _.identifier === i.choice),
-                            O.map(_ => _.managementRepresentation),
-                            O.filterMap(refineTag("Presto")),
-                            O.map(_ => _.id),
-                            O.map(id => ({
-                              type: "option" as const,
-                              id,
-                              price: i.price,
-                              comment: "",
-                              name: i.choice,
-                              itemcount: i.amount,
-                            })),
-                          )),
-                        Match.tag("Slider", o =>
-                          pipe(
-                            o.options,
-                            A.findFirst(_ => _.identifier === i.choice),
-                            O.map(_ => _.managementRepresentation),
-                            O.filterMap(refineTag("Presto")),
-                            O.map(_ => _.id),
-                            O.map(id => ({
-                              type: "option" as const,
-                              id,
-                              price: i.price,
-                              comment: "",
-                              name: i.choice,
-                              itemcount: i.amount,
-                            })),
-                          )),
-                        Match.exhaustive,
-                      )
-                    ),
-                    A.compact,
-                  ),
-                  name: i.name,
-                  itemcount: i.quantity,
-                  price: i.price / 100,
-                  comment: i.comment,
-                })),
-                comment: "Sent from Renu",
-                price: o.totalCost / 100,
-                delivery_fee: 0,
-                orderCharges: [{ amount: 0 }],
-                payments: [
-                  {
-                    type: "costtiket",
-                    amount: o.totalCost / 100,
-                    card: { number: "", expireMonth: 1, expireYear: 1, holderId: "", holderName: "" },
-                  },
-                ],
-                takeoutPacks: 1,
-                delivery: {
-                  type: "delivery",
-                  address: {
-                    formatted: "",
-                    city: "",
-                    street: " ",
-                    number: "3",
-                    entrance: "",
-                    floor: "1",
-                    apt: "",
-                    comment: "",
-                  },
-                  charge: 0,
-                  numppl: 1,
-                  workercode: 1,
-                },
-              }),
-            );
+
+            const prestoOrder = yield* _(toPrestoOrder(o));
 
             yield* _(
               Effect.acquireUseRelease(
-                Effect.promise(async () => {
-                  const client = new FTP.Client();
-                  if (mgmt.provider !== "PRESTO") throw "fuck";
-
-                  await client.access({
-                    ...mgmt.vendorData,
-                  });
-                  return client;
-                }),
+                Effect.flatMap(FTPClient, client =>
+                  Effect.zipRight(
+                    Effect.promise(() => client.access(mgmt.vendorData)),
+                    Effect.sync(() => client),
+                  )),
                 client => {
                   const s = new Readable();
                   s.push(JSON.stringify(prestoOrder));
                   s.push(null);
-                  return Effect.promise(() => client.uploadFrom(s, `${Date.now()}.BOK`));
+                  return Effect.promise(() => client.uploadFrom(s, `renu-${Date.now()}.BOK`));
                 },
-                a => Effect.sync(() => a.close()),
+                client =>
+                  Effect.zipRight(
+                    sem.release(1),
+                    Effect.sync(() => client.close()),
+                  ),
               ),
             );
-
             return prestoOrder;
           }),
           Effect.provideService(Database.Database, db),

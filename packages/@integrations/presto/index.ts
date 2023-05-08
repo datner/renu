@@ -111,7 +111,7 @@ const toPrestoOrder = (o: FullOrder) =>
       {
         type: "costtiket",
         amount: o.totalCost / 100,
-        card: { number: "", expireMonth: 1, expireYear: 1, holderId: "", holderName: "" },
+        card: { number: "10", expireMonth: 1, expireYear: 1, holderId: "", holderName: "" },
       },
     ],
     takeoutPacks: 1,

@@ -21,7 +21,7 @@
           "maxInstances": 4,
           "buildCommand": "pnpm build --filter web",
           "startCommand": "pnpm start --filter web",
-          "watchPaths": ["apps/web/**", "packages/database/**", "packages/ui/**"],
+          "watchPaths": ["apps/web/**", "packages/database/**", "packages/shared/**", "packages/@integrations/**"],
           "enableCloudfrontSwr": true,
           "healthCheckPath": "/api/healthcheck",
           "envVariables": {

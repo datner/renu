@@ -2,6 +2,7 @@ import { resolver } from "@blitzjs/rpc";
 import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
+import * as RR from "@effect/data/ReadonlyRecord";
 import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
 import db, { Prisma } from "db";
@@ -69,18 +70,19 @@ export default resolver.pipe(
           update: pipe(
             input.modifiers,
             A.filter((m) => m.modifierId != null),
-            A.map(({ config, modifierId, managementId }, p) => ({
+            A.map(({ config, modifierId }, p) => ({
               where: { id: modifierId! },
               data: {
-                managementRepresentation: { id: managementId },
                 position: p,
                 config: {
                   ...config,
+                  content: RR.collect(config.content, (locale, _) => ({ locale, ..._ })),
                   options: pipe(
-                    // @ts-expect-error what do they want
+                    // @ts-expect-error
                     config.options,
                     A.map((o, i) => ({
                       ...o,
+                      content: RR.collect(o.content, (locale, _) => ({ locale, ..._ })),
                       position: i,
                     })),
                     A.map((o, i) =>
@@ -100,7 +102,7 @@ export default resolver.pipe(
             input.modifiers,
             A.filter((m) => m.modifierId == null),
             A.map(
-              (m, p) => ({
+              ({ managementId, ...m }, p) => ({
                 position: p,
                 config: {
                   ...m.config,
@@ -111,15 +113,17 @@ export default resolver.pipe(
                         m.config._tag === "oneOf"
                           ? {
                             ...o,
+                            content: RR.collect(o.content, (locale, _) => ({ locale, ..._ })),
                             position: i,
                             default: m.config.defaultOption === o.identifier,
                           }
                           : {
                             ...o,
+                            content: RR.collect(o.content, (locale, _) => ({ locale, ..._ })),
                             position: i,
                           }
                       )),
-                  ) as unknown as Prisma.JsonValue,
+                  ) as unknown as Prisma.InputJsonValue,
                 },
               } satisfies Prisma.ItemModifierCreateWithoutItemInput),
             ),
@@ -141,7 +145,6 @@ export default resolver.pipe(
           () =>
             db.item.update({
               where: { id },
-              include: { content: true, modifiers: { where: { deleted: null } } },
               data,
             }),
           prismaError("Item"),

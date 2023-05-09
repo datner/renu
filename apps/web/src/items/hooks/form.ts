@@ -4,11 +4,11 @@ import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
-import { Common } from "database-helpers";
 import { nanoid } from "nanoid";
 import { useRouter } from "next/router";
 import { useCallback } from "react";
 import { Item } from "shared";
+import { Common } from "shared/schema";
 import getUploadUrl from "src/admin/mutations/getUploadUrl";
 import { ItemFormSchema } from "src/admin/validations/item-form";
 import getCurrentVenueCategories from "src/categories/queries/getCurrentVenueCategories";
@@ -71,8 +71,8 @@ const useCreate = (redirect = false) => {
         Effect.tap((item) => Effect.sync(() => setQueryData(getItem, { identifier: item.identifier }, item))),
         Effect.tap(() => invalidateQueries),
         Effect.tap(({ identifier }) =>
-          Effect.ifEffect(
-            Effect.succeed(redirect),
+          Effect.if(
+            redirect,
             Effect.sync(() => router.push(Routes.AdminItemsItem({ identifier }))),
             Effect.unit(),
           )
@@ -88,6 +88,7 @@ const useCreate = (redirect = false) => {
 
 const useUpdate = (identifier: string) => {
   const router = useRouter();
+
   const [item, { setQueryData }] = useQuery(getItemNew, identifier, { select: Schema.decode(FullItem) });
 
   const onSubmit = (data: Schema.To<typeof ItemFormSchema>) =>

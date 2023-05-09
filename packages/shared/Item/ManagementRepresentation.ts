@@ -18,7 +18,7 @@ export const Representation = {
 export const ModifierRepresentation = {
   Presto: Schema.struct({
     _tag: Schema.literal("Presto"),
-    id: Schema.string,
+    id: Schema.number,
   }),
   Unknown: Schema.struct({}),
 }

@@ -1,13 +1,18 @@
 import * as Option from "@effect/data/Option";
 import * as Effect from "@effect/io/Effect";
+import * as ModifierConfig from "../../modifier-config";
+import { Common } from "../../schema";
+import * as Item from "../item";
+import * as Modifier from "../modifier";
 import { GetItemById } from "./getById";
+import { GetItemByIdentifier } from "./getByIdentifier";
 import { GetItemsByVenue } from "./getByVenue";
 import { GetItemContent } from "./getContent";
 import { GetItemModifierById } from "./getModifierById";
 import { GetItemModifiers } from "./getModifiers";
 import { ItemResolver } from "./resolver";
-import { Common } from "../../schema";
-import { GetItemByIdentifier } from "./getByIdentifier";
+import { SetModifierConfig } from "./setModifierConfig";
+import { SetPrestoId } from "./setPrestoId";
 
 export const getById = (id: number, venueId?: number) =>
   Effect.withRequestCaching("on")(Effect.request(
@@ -34,13 +39,25 @@ export const getModifiers = (id: number) =>
   ));
 
 export const getModifierById = (id: number) =>
-  Effect.withRequestCaching("on")(Effect.request(
+  Effect.request(
     GetItemModifierById({ id }),
     ItemResolver,
-  ));
+  );
 
 export const getByVenue = (venueId: number, orgId: number) =>
   Effect.withRequestCaching("on")(Effect.request(
     GetItemsByVenue({ venueId, orgId }),
     ItemResolver,
   ));
+
+export const setPrestoId = (id: Item.Id, prestoId: number) =>
+  Effect.request(
+    SetPrestoId({ id, prestoId }),
+    ItemResolver,
+  );
+
+export const setModifierConfig = (id: Modifier.Id, config: ModifierConfig.Schema) =>
+  Effect.request(
+    SetModifierConfig({ id, config }),
+    ItemResolver,
+  );

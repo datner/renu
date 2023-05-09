@@ -24,6 +24,7 @@ import { FormCategoryCombobox } from "./FormCategoryCombobox";
 import { FormDropzone } from "./FormDropzone";
 import { IntegrationsPanel } from "./IntegrationsPanel";
 import { ModifierPanel } from "./ModifierPanel";
+import { PrestoIntegrationPanel } from "./PrestoIntegrationPanel";
 
 type Props = {
   item: O.Option<FullItem>;
@@ -105,7 +106,7 @@ const toDefault = (item: O.Option<FullItem>): F =>
         })),
         content: RR.fromIterable(
           _.content,
-          _ => [_.locale, { name: _.name, description: _.description }],
+          _ => [_.locale, { name: _.name, description: O.getOrElse(_.description,() => "") }],
         ) as any,
       }),
     ),
@@ -203,7 +204,7 @@ export function ItemForm(props: Props) {
                 Modifiers
               </Tabs.Tab>
               <Tabs.Tab
-                disabled
+                disabled={O.isNone(item)}
                 value="integrations"
                 icon={<PuzzlePieceIcon className="h-5 w-5" />}
               >
@@ -269,7 +270,7 @@ export function ItemForm(props: Props) {
               <ModifierPanel />
             </Tabs.Panel>
             <Tabs.Panel value="integrations">
-              <IntegrationsPanel />
+              <PrestoIntegrationPanel />
             </Tabs.Panel>
             <div className="p-3">
               <Button type="submit" disabled={!isDirty} loading={isSubmitting}>

@@ -33,6 +33,24 @@ export const Modifier = S.union(
   ),
 );
 
+export const Update = S.union(
+  pipe(
+    S.struct({ ...shape, config: Common.fromPrisma(ModifierConfig.OneOf.Modifier) }),
+    S.partial,
+    S.attachPropertySignature("_tag", "OneOf"),
+  ),
+  pipe(
+    S.struct({ ...shape, config: Common.fromPrisma(ModifierConfig.Extras.Modifier) }),
+    S.partial,
+    S.attachPropertySignature("_tag", "Extras"),
+  ),
+  pipe(
+    S.struct({ ...shape, config: Common.fromPrisma(ModifierConfig.Slider.Modifier) }),
+    S.partial,
+    S.attachPropertySignature("_tag", "Slider"),
+  ),
+);
+
 export type Modifier = S.To<typeof Modifier>
 
 // export interface Modifier<Config extends ModifierConfig.Schema = ModifierConfig.Schema>

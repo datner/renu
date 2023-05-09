@@ -1,20 +1,27 @@
 import { pipe } from "@effect/data/Function";
+import * as Num from "@effect/data/Number";
 import * as Option from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
+import * as Order from "@effect/data/typeclass/Order";
 import * as Effect from "@effect/io/Effect";
 import * as Exit from "@effect/io/Exit";
+import * as Request from "@effect/io/Request";
 import * as RequestResolver from "@effect/io/RequestResolver";
 import * as Match from "@effect/match";
+import * as Schema from "@effect/schema/Schema";
 import { Item } from "database";
 import { inspect } from "util";
 import { Database } from "../../Database";
 import { filterRequestsByTag, resolveBatch, resolveSingle } from "../../effect/Request";
+import * as ModifierConfig from "../../modifier-config";
 import { GetItemById, GetItemByIdError } from "./getById";
 import { GetItemByIdentifier, GetItemByIdentifierError } from "./getByIdentifier";
 import { GetItemsByVenue } from "./getByVenue";
 import { GetItemContent } from "./getContent";
 import { GetItemModifierById, GetItemModifierByIdError } from "./getModifierById";
 import { GetItemModifiers } from "./getModifiers";
+import { SetModifierConfig, SetModifierConfigError } from "./setModifierConfig";
+import { SetPrestoId, SetPrestoIdError } from "./setPrestoId";
 
 type ItemRequest =
   | GetItemById
@@ -22,7 +29,9 @@ type ItemRequest =
   | GetItemContent
   | GetItemModifiers
   | GetItemModifierById
-  | GetItemsByVenue;
+  | GetItemsByVenue
+  | SetModifierConfig
+  | SetPrestoId;
 
 export const ItemResolver = pipe(
   RequestResolver.makeBatched((
@@ -44,14 +53,14 @@ export const ItemResolver = pipe(
         filterRequestsByTag(requests, "GetItemsByVenue"),
         (reqs, db) =>
           db.item.findMany({
-            where: { venueId: { in: reqs.map(req => req.venueId) } },
+            where: { venueId: { in: reqs.map(req => req.venueId) }, deleted: null },
             orderBy: { venueId: "asc" },
           }),
         r => String(`${r.venueId}-${r.orgId}`),
         d => String(`${d.venueId}-${d.organizationId}`),
       ),
       resolveBatch(
-        A.filter(requests, (_): _ is GetItemContent => _._tag === "GetItemContent"),
+        filterRequestsByTag(requests, "GetItemContent"),
         (reqs, db) =>
           db.itemI18L.findMany({
             where: { itemId: { in: reqs.map(req => req.id) } },
@@ -59,25 +68,6 @@ export const ItemResolver = pipe(
           }),
         r => String(r.id),
         d => String(d.itemId),
-      ),
-      resolveSingle(
-        getByIds(requests),
-        (reqs, db) =>
-          db.item.findMany({
-            where: { id: { in: reqs.map(_ => _.id) } },
-          }),
-        (req, items) =>
-          Option.match(
-            A.findFirst(items, _ => {
-              if (Option.isSome(req.venueId)) {
-                return _.id === req.id && _.venueId === req.venueId.value;
-              }
-
-              return _.id === req.id;
-            }),
-            () => Exit.fail(new GetItemByIdError()),
-            Exit.succeed,
-          ),
       ),
       resolveSingle(
         A.appendAll(
@@ -135,11 +125,52 @@ export const ItemResolver = pipe(
             Exit.succeed,
           ),
       ),
+      pipe(
+        filterRequestsByTag(requests, "SetPrestoId"),
+        Effect.forEachPar(req =>
+          Request.completeEffect(
+            req,
+            pipe(
+              Database,
+              Effect.flatMap(db =>
+                Effect.tryCatchPromise(() =>
+                  db.item.update({
+                    where: { id: req.id },
+                    data: {
+                      managementRepresentation: {
+                        _tag: "Presto",
+                        id: req.prestoId,
+                      },
+                    },
+                  }), () => new SetPrestoIdError())
+              ),
+            ),
+          )
+        ),
+      ),
+      pipe(
+        // FIX: if 2 requests to the same modifier arrive, unexpected results will happen
+        filterRequestsByTag(requests, "SetModifierConfig"),
+        Effect.forEachPar(req =>
+          Request.completeEffect(
+            req,
+            pipe(
+              Schema.encodeEffect(ModifierConfig.Schema)(req.config),
+              Effect.zip(Database),
+              Effect.flatMap(([config, db]) =>
+                Effect.tryPromise(() =>
+                  db.itemModifier.update({
+                    where: { id: req.id },
+                    data: { config },
+                  })
+                )
+              ),
+              Effect.catchAll(() => Effect.fail(new SetModifierConfigError())),
+            ),
+          )
+        ),
+      ),
     )
   ),
   RequestResolver.contextFromServices(Database),
-);
-
-const getByIds = A.filterMap(
-  (_: ItemRequest) => _._tag === "GetItemById" ? Option.some(_) : Option.none(),
 );

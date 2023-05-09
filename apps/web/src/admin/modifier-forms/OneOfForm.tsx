@@ -13,12 +13,13 @@ type Props = {
   control: Control<ItemFormSchema>;
   update: UseFieldArrayUpdate<ItemFormSchema, "modifiers">;
   onDuplicate(): void;
+  onDelete(): void;
   field: { readonly config: OneOfSchema };
   index: number;
 };
 
 export const OneOfForm = (props: Props) => {
-  const { index, update, field, onDuplicate } = props;
+  const { index, update, field, onDuplicate, onDelete } = props;
   const { register, reset, control, watch, handleSubmit, formState } = useForm({
     resolver: schemaResolver(OneOfSchema),
     defaultValues: field.config,
@@ -61,9 +62,14 @@ export const OneOfForm = (props: Props) => {
           />
         )}
         <div className="flex grow justify-end">
-          <Button type="button" onClick={onDuplicate} className="justify-self-end">
-            Duplicate
-          </Button>
+          <div className="flex flex-col gap-1">
+            <Button type="button" color="red" onClick={onDelete} className="justify-self-end">
+              Delete
+            </Button>
+            <Button type="button" onClick={onDuplicate} className="justify-self-end">
+              Duplicate
+            </Button>
+          </div>
         </div>
       </div>
       <div className="flex gap-4 [&>*]:flex-1 mt-2">

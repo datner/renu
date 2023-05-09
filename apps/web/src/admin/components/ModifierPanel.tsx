@@ -29,8 +29,7 @@ const getInitialModifierValues = (mod: {
           en: { description: "", name: "" },
           he: { name: "", description: "" },
         },
-        // @ts-expect-error
-        options: NA.of({
+        options: A.of({
           managementId: null,
           content: {
             en: { description: "", name: "" },
@@ -48,8 +47,7 @@ const getInitialModifierValues = (mod: {
           en: { description: "", name: "" },
           he: { name: "", description: "" },
         },
-        // @ts-expect-error
-        options: NA.of({
+        options: A.of({
           managementId: null,
           content: {
             en: { locale: "en", description: "", name: "" },
@@ -75,7 +73,7 @@ const addCopy = pipe(
 export function ModifierPanel() {
   const modal = useModal(NewModifierModal);
   const { control, getValues } = useFormContext<ItemFormSchema>();
-  const { fields, move, append, update } = useFieldArray({ control, name: "modifiers" });
+  const { fields, move, append, update, remove } = useFieldArray({ control, name: "modifiers" });
   const [fieldIndex, setFieldIndex] = useState<O.Option<number>>(O.none());
 
   const updateConfig: typeof update = (i, m) => {
@@ -111,6 +109,10 @@ export function ModifierPanel() {
           "onDuplicate",
           ({ field: { id, ...rest } }) => () => pipe(rest, addCopy, append),
         ),
+        O.let("onDelete", ({ index }) => () => {
+          console.log("deleting ",index)
+          return remove(index);
+        }),
         O.match(
           () => <PickAction />,
           (props) =>

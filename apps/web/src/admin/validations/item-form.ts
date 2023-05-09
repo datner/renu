@@ -1,7 +1,11 @@
 import { pipe } from "@effect/data/Function";
+import * as A from "@effect/data/ReadonlyArray";
+import * as RR from "@effect/data/ReadonlyRecord";
 import * as Schema from "@effect/schema/Schema";
+import { Locale } from "database";
 import { Category } from "shared";
 import { Common, Number } from "shared/schema";
+import { FullItem } from "src/items/queries/getItemNew";
 
 const Content_ = Schema.struct({ name: Schema.string, description: Schema.string });
 const Content = Schema.struct({
@@ -63,9 +67,9 @@ export const ItemFormSchema = Schema.struct({
   image: pipe(
     Schema.struct({
       src: Schema.string,
-      blur: Schema.optional(Schema.string),
+      blur: Schema.union(Schema.string, Schema.undefined),
     }),
-    Schema.transform(Schema.string, _ => _.src, _ => ({ src: _ })),
+    Schema.transform(Schema.string, _ => _.src, _ => ({ src: _, blur: undefined })),
     Schema.optional,
   ),
   modifiers: Schema.array(ModifierSchema),

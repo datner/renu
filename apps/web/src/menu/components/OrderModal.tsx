@@ -192,7 +192,7 @@ export function OrderModal(props: Props) {
         }}
       />
       <ErrorModal show={errorOpen} onClose={() => setErrorOpen(false)} />
-      <LoadingOverlay visible={tx.isLoading} />
+      <LoadingOverlay visible={tx.isLoading || isLoading} />
     </>
   );
 }

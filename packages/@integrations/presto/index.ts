@@ -39,6 +39,10 @@ const toPrestoOrder = (o: FullOrder) =>
       type: "item" as const,
       // TODO: disallow no representation
       id: i.item.managementRepresentation._tag === "Presto" ? i.item.managementRepresentation.id : -1,
+      name: i.name,
+      itemcount: i.quantity,
+      price: i.price / 100,
+      comment: i.comment,
       childrencount: 0,
       children: pipe(
         i.modifiers,
@@ -55,7 +59,7 @@ const toPrestoOrder = (o: FullOrder) =>
                 O.map(id => ({
                   type: "option" as const,
                   id,
-                  price: i.price,
+                  price: i.price / 100,
                   comment: "",
                   name: i.choice,
                   itemcount: i.amount,
@@ -71,7 +75,7 @@ const toPrestoOrder = (o: FullOrder) =>
                 O.map(id => ({
                   type: "option" as const,
                   id,
-                  price: i.price,
+                  price: i.price / 100,
                   comment: "",
                   name: i.choice,
                   itemcount: i.amount,
@@ -87,7 +91,7 @@ const toPrestoOrder = (o: FullOrder) =>
                 O.map(id => ({
                   type: "option" as const,
                   id,
-                  price: i.price,
+                  price: i.price / 100,
                   comment: "",
                   name: i.choice,
                   itemcount: i.amount,
@@ -98,10 +102,9 @@ const toPrestoOrder = (o: FullOrder) =>
         ),
         A.compact,
       ),
-      name: i.name,
-      itemcount: i.quantity,
-      price: i.price / 100,
-      comment: i.comment,
+    })).map(i => ({
+      ...i,
+      childrencount: i.children.length
     })),
     comment: "Sent from Renu",
     price: o.totalCost / 100,

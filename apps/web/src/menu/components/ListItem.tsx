@@ -10,12 +10,12 @@ import { clsx } from "clsx";
 import Image from "next/image";
 import { memo, useMemo } from "react";
 import { Blurhash } from "react-blurhash";
-import { useIsRtl } from "src/core/hooks/useIsRtl";
 import { useLocale } from "src/core/hooks/useLocale";
 import * as Order from "../hooks/useOrder";
 import * as _Menu from "../schema";
 import { ItemData } from "./ItemData";
 import { useOrderDispatch } from "./OrderContext";
+import { useIsRtl } from "src/core/hooks/useIsRtl";
 
 type Props = {
   item: Order.ActiveItem;
@@ -25,7 +25,7 @@ const PlusCircle = a(PlusCircleIcon);
 const MinusCircle = a(MinusCircleIcon);
 const XCircle = a(XCircleIcon);
 
-const isNegative = N.lessThan(0);
+const isPositive = N.greaterThan(0);
 
 export const ListItem = memo(
   function ListItem(props: Props) {
@@ -35,7 +35,7 @@ export const ListItem = memo(
     const amount = Order.getActiveAmount(_);
     const cost = Order.getActiveCost(_);
     const locale = useLocale();
-    const isRtl = useIsRtl();
+    const isRtl = useIsRtl()
     const content = item.content.find((it) => it.locale === locale);
     const isInOrder = Order.isExistingActiveItem(_);
     const hideIndicator = isRtl ? 40 : -40;
@@ -52,7 +52,7 @@ export const ListItem = memo(
           immediate: (name) => active && name === "x",
         });
 
-        const isIncrement = B.not(B.xor(isNegative(offset), isRtl));
+        const isIncrement = isPositive(offset)
 
         // not active, last event, outside of -69 -- 69
         const isRelevant = B.every([B.not(active), last, B.not(N.between(offset, -69, 69))]);
@@ -83,24 +83,24 @@ export const ListItem = memo(
       const output = [isInOrder ? 1 : 0.1, 0.1, 0.1, 1];
       return x.to({
         range: [-70, -60, 60, 70],
-        output: isRtl ? output.reverse() : output,
+        output,
       });
-    }, [isInOrder, isRtl, x]);
+    }, [isInOrder, x]);
 
     const overOne = amount > 1;
 
     const bg = useMemo(
       () => (
         <a.div
-          className={`absolute rtl:bg-gradient-to-r bg-gradient-to-l ${
+          className={`absolute bg-gradient-to-l ${
             isInOrder ? "from-red-300" : "from-gray-300"
-          } to-green-200 flex items-center h-36 inset-x-2 sm:inset-x-6 transition-all rounded-lg`}
+          } to-green-200 flex rtl:flex-row-reverse items-center h-36 inset-x-2 sm:inset-x-6 transition-all rounded-lg`}
         >
-          <div className="flex-1 flex text-green-800">
+          <div className="flex-1 flex rtl:flex-row-reverse text-green-800">
             <PlusCircle style={{ opacity }} className="w-10 h-10 mx-3" />
           </div>
           <div
-            className={`flex-1 flex flex-row-reverse ${isInOrder ? "text-red-700" : "text-gray-700"}`}
+            className={`flex-1 flex ltr:flex-row-reverse ${isInOrder ? "text-red-700" : "text-gray-700"}`}
           >
             {overOne
               ? <MinusCircle style={{ opacity }} className="w-10 h-10 mx-3" />

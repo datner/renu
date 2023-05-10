@@ -28,13 +28,13 @@ export const Item = memo<ItemProps>(({ item }) => {
     orderItem,
     () => [
       <ListItem
-        key={`${item.item.identifier}-${item.position}`}
+        key={`${item.item.identifier}-0`}
         item={Order.NewActiveItem({ item: Data.struct(item.item) })}
       />,
     ],
-    A.map(([key, item]) => (
+    A.map(([key, item], i) => (
       <ListItem
-        key={key}
+        key={`${item.item.identifier}-${i}`}
         item={Order.ExistingActiveItem({ item, key })}
       />
     )),

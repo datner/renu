@@ -226,7 +226,7 @@ export function ItemModalForm(props: ItemModalFormProps) {
       <FormProvider {...form}>
         <ModifiersBlock modifiers={item.modifiers} />
         <div className="mt-4">
-          <LabeledTextArea label={t("comment")} name="comment" rows={4} />
+          <LabeledTextArea registerOptions={{maxLength: 250}} label={t("comment")} name="comment" rows={4} />
         </div>
         {containerEl
           && createPortal(

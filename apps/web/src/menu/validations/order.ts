@@ -114,7 +114,7 @@ const _SendOrderItem = S.struct({
   item: Item.fromId,
   amount: Number.Amount,
   cost: Number.Cost,
-  comment: S.optional(S.string),
+  comment: pipe(S.string, S.maxLength(250), S.optional),
   modifiers: S.array(SendOrderModifiers),
 });
 

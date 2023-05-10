@@ -26,21 +26,21 @@ export function OrderModalItem(props: Props) {
   const title = titleFor(locale);
   return (
     <li className="pt-8 pb-6">
-      <div className="h-14 flex items-center">
+      <div className="h-16 flex items-center">
         <div
-          className="flex-grow bg-white mr-px"
+          className="flex-grow bg-white mr-px truncate"
           onClick={() => {
             dispatch(Order.setExistingActiveItem(key));
           }}
         >
           <div className="flex">
-            <div className="h-16 w-24 relative rounded-md overflow-hidden mx-2">
-              {pipe(item.blurHash, O.map(hash => <Blurhash hash={hash} width={96} height={64} />), O.getOrNull)}
+            <div className="relative rounded-md mx-2 shrink-0">
+              {pipe(item.blurHash, O.map(hash => <Blurhash className="rounded-md overflow-hidden" hash={hash} width={96} height={64} />), O.getOrNull)}
               {item.image && (
                 <Image
                   priority
                   src={item.image}
-                  className="object-cover"
+                  className="object-cover overflow-hidden rounded-md h-16 w-24"
                   fill
                   sizes="(min-width: 370px) 12rem,
               8rem"
@@ -51,18 +51,18 @@ export function OrderModalItem(props: Props) {
                 />
               )}
             </div>
-            <p className="text-sm whitespace-pre-line">
+            <p className="text-sm whitespace-pre-line truncate">
               <span>{title(item.content)}</span>
               <br />
               <span className="rounded-full mx-1 text-xs font-medium text-emerald-800">
                 {toShekel(orderItem.cost)}
               </span>
               <br />
-              <span className="text-gray-500">{comment}</span>
+              <span className="text-gray-500 truncate">{comment}</span>
             </p>
           </div>
         </div>
-        <div className="basis-32">
+        <div className="basis-32 shrink-0">
           <Thing
             minimum={0}
             amount={amount}

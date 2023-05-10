@@ -77,7 +77,7 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
           ))}
         </div>
         {O.getOrNull(O.map(restaurant.simpleContactInfo, content => <div className="mt-4 text-center">{content}</div>))}
-        <div className="mt-4 text-center">
+        <div className="mt-4 mb-24 text-center">
           ביטול עסקה בהתאם לתקנות הגנת הצרכן (ביטול עסקה), התשע״א-2010 וחוק הגנת הצרכן, התשמ״א-1981
         </div>
       </Navigation.Root>

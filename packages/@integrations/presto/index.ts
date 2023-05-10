@@ -38,7 +38,7 @@ const toPrestoOrder = (o: FullOrder) =>
     orderItems: o.items.map(i => ({
       type: "item" as const,
       // TODO: disallow no representation
-      id: i.item.managementRepresentation._tag === "Presto" ? i.item.managementRepresentation.id : -1,
+      id: i.item.managementRepresentation._tag === "Presto" ? i.item.managementRepresentation.id : -10,
       name: i.name,
       itemcount: i.quantity,
       price: i.price / 100,
@@ -102,10 +102,24 @@ const toPrestoOrder = (o: FullOrder) =>
         ),
         A.compact,
       ),
-    })).map(i => ({
-      ...i,
-      childrencount: i.children.length
-    })),
+    }))
+      .flatMap(i => (i.id === -1
+        ? i.children.map(c => ({
+          type: "item" as const,
+          id: c.id,
+          name: c.name,
+          itemcount: c.itemcount,
+          price: c.price,
+          comment: c.comment,
+          childrencount: 0,
+          children: [],
+        }))
+        : [i])
+      )
+      .map(i => ({
+        ...i,
+        childrencount: i.children.length,
+      })),
     comment: "Sent from Renu",
     price: o.totalCost / 100,
     delivery_fee: 0,

@@ -40,13 +40,13 @@ export const AmountCounter = memo((props: Props) => {
         ref={ref}
         style={{ opacity, scale, rotate }}
         className={clsx(
-          "font-semibold overflow-visible inline-block ltr:pr-1.5 px-1 rtl:pl-1.5 pointer-events-none touch-none",
+          "font-semibold overflow-visible inline-block pointer-events-none touch-none",
           className,
         )}
       >
         x{amount || prevAmount}
       </animated.span>
-      <span className="block truncate">{label}</span>
+      <span className="block truncate rtl:pr-1.5 px-1 ltr:pl-1.5 ">{label}</span>
     </animated.div>
   );
 });

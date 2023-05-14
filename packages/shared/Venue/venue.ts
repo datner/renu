@@ -28,5 +28,4 @@ export const Venue = Schema.struct({
   createdAt: Schema.DateFromSelf,
   deleted: Schema.optionFromNullable(Schema.DateFromSelf),
 });
-export const shape = Schema.getPropertySignatures(Venue);
 export interface Venue extends Schema.To<typeof Venue> {}

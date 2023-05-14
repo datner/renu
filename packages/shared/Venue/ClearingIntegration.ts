@@ -25,7 +25,7 @@ export const GamaData = Schema.struct({
   secret_key: Schema.string,
   env: Schema.literal("test", "demo", "production"),
 });
-export interface GamaData extends Schema.To<typeof GamaData> {}
+export interface GamaData extends Schema.To<typeof GamaData> { }
 
 export const VendorData = Schema.union(
   pipe(PayPlusData, Schema.attachPropertySignature("_tag", "PayPlusData")),
@@ -34,30 +34,32 @@ export const VendorData = Schema.union(
 );
 export type VendorData = Schema.To<typeof VendorData>;
 
+const Provider = Schema.enums(ClearingProvider);
+
 export const GeneralClearingIntegration = Schema.struct({
   id: Id,
-  provider: Schema.enums(ClearingProvider),
+  provider: Provider,
   terminal: Schema.string,
   venueId: Venue.Id,
   vendorData: Common.fromPrisma(VendorData),
 });
-export interface ClearingIntegration extends Schema.To<typeof GeneralClearingIntegration> {}
+export interface ClearingIntegration extends Schema.To<typeof GeneralClearingIntegration> { }
 
-export const clearingOf = <I1, A1, T extends ClearingProvider>(s: Schema.Schema<I1, A1>, p: T) => {
-  const shape = Schema.getPropertySignatures(GeneralClearingIntegration);
-  return Schema.struct({
-    ...shape,
-    provider: pipe(shape.provider, Schema.filter((_): _ is T => _ === p)),
+export const clearingOf = <I1, A1, T extends ClearingProvider>(s: Schema.Schema<I1, A1>, p: T) =>
+  Schema.struct({
+    id: Id,
+    terminal: Schema.string,
+    venueId: Venue.Id,
+    provider: pipe(Provider, Schema.filter((_): _ is T => _ === p)),
     vendorData: Common.fromPrisma(s),
   });
-};
 
 export const PayPlusIntegration = clearingOf(PayPlusData, "PAY_PLUS");
-export interface PayPlusIntegration extends Schema.To<typeof PayPlusIntegration> {}
+export interface PayPlusIntegration extends Schema.To<typeof PayPlusIntegration> { }
 export const GamaIntegration = clearingOf(GamaData, "GAMA");
-export interface GamaIntegration extends Schema.To<typeof GamaIntegration> {}
+export interface GamaIntegration extends Schema.To<typeof GamaIntegration> { }
 export const CreditGuardIntegration = clearingOf(NoData, "CREDIT_GUARD");
-export interface CreditGuardIntegration extends Schema.To<typeof CreditGuardIntegration> {}
+export interface CreditGuardIntegration extends Schema.To<typeof CreditGuardIntegration> { }
 
 export const ClearingIntegration = Schema.transform(
   Schema.from(GeneralClearingIntegration),

@@ -26,19 +26,22 @@ const VendorMap = {
   NoData: Schema.object,
 };
 
+const Provider = Schema.enums(ManagementProvider)
+
 export const managementOf = <I1, A1, T extends ManagementProvider>(s: Schema.Schema<I1, A1>, p: T) => {
-  const shape = Schema.getPropertySignatures(GeneralManagementIntegration);
   return Schema.struct({
-    ...shape,
-    provider: pipe(shape.provider, Schema.filter((_): _ is T => _ === p)),
+    id: Id,
+    venueId: Venue.Id,
+    provider: pipe(Provider, Schema.filter((_): _ is T => _ === p)),
     vendorData: Common.fromPrisma(s),
   });
 };
+
 export const GeneralManagementIntegration = Schema.struct({
   id: Id,
-  provider: Schema.enums(ManagementProvider),
+  provider: Provider,
   venueId: Venue.Id,
-  vendorData: Common.PrismaJson
+  vendorData: Common.PrismaJson,
 });
 export interface ManagementIntegration extends Schema.To<typeof GeneralManagementIntegration> { }
 

@@ -104,14 +104,16 @@
       "PhoneModal": {
         "title": "לפני שאנחנו ממשיכים...",
         "please give phone number": "בבקשה תן לנו את את מספר הפלאפון שלך, אנחנו מבטיחים לא לשלוח כלום 💚",
-        "phone label": "יאללה נו, הנה המספר שלי:"
+        "phone label": "יאללה נו, הנה המספר שלי:",
+        "required": "בבקשה מלא את מספר הפלאפון!",
+        "pattern": "בבקשה מלא מספר פלאפון חוקי 🙏",
+        "maxLength": "זה נראה מעט ארוך.. 🤔"
       },
       "ErrorModal": {
         "title": "אופס! נראה שיש לנו בעיה",
         "sorry please try again": "לא הצלחנו ליצור קשר עם השותפים שלנו, מתנצלים על אי הנוחות, בבקשה נסו שוב מאוחר יותר..",
         "refresh": "רענן עמוד"
       }
-
     }
   }
 }

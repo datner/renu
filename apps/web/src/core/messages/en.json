@@ -104,7 +104,10 @@
       "PhoneModal": {
         "title": "Before we continue...",
         "please give phone number": "Please tell us your phone number, we promise not to send anything 💚",
-        "phone label": "Sure, heres my number:"
+        "phone label": "Sure, heres my number:",
+        "required": "Please input a phone number!",
+        "pattern": "Please input a valid phone number 🙏",
+        "maxLength": "That seems a bit long 🤔"
       },
       "ErrorModal": {
         "title": "Oops! It seems we have a problem",

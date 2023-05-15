@@ -77,13 +77,13 @@ export function FeedbackModal() {
                     </label>
                     <input
                       {...form.register("phone", {
-                        required: "Please input a phone number!",
+                        required: t("required"),
                         pattern: {
-                          message: "Please input a valid phone number 🙏",
+                          message: t("pattern"),
                           value: PHONE_REGEX,
                         },
                         maxLength: {
-                          message: "That seems a bit long 🤔",
+                          message: t("maxLength"),
                           value: 10,
                         },
                       })}

@@ -25,8 +25,6 @@ export function FeedbackModal() {
     return () => clearTimeout(timoutId)
   }, [phone]);
 
-  console.log(form.formState.errors);
-
   return (
     <>
       <Transition appear show={show} as={Fragment}>

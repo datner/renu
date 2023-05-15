@@ -6,6 +6,7 @@ import { GetOrderById } from "./getById";
 import { GetOrderItems } from "./getItems";
 import { OrderResolver } from "./resolver";
 import { SetOrderTransactionId } from "./setTransactionId";
+export { setOrderState } from "./setOrderState";
 
 export const getItems = (id: number) =>
   Effect.withRequestCaching("on")(Effect.request(
@@ -14,10 +15,10 @@ export const getItems = (id: number) =>
   ));
 
 export const getById = (id: number) =>
-  Effect.withRequestCaching("on")(Effect.request(
+  Effect.request(
     GetOrderById({ id }),
     OrderResolver,
-  ));
+  );
 
 export const createDeepOrder = (order: Prisma.OrderCreateInput) =>
   Effect.request(

@@ -1,11 +1,7 @@
 import { pipe } from "@effect/data/Function";
-import * as A from "@effect/data/ReadonlyArray";
-import * as RR from "@effect/data/ReadonlyRecord";
 import * as Schema from "@effect/schema/Schema";
-import { Locale } from "database";
-import { Category } from "shared";
+import { Category, ModifierConfig } from "shared";
 import { Common, Number } from "shared/schema";
-import { FullItem } from "src/items/queries/getItemNew";
 
 const Content_ = Schema.struct({ name: Schema.string, description: Schema.string });
 const Content = Schema.struct({
@@ -18,6 +14,7 @@ export const ExtrasOption = Schema.struct({
   price: Number.Price,
   multi: Schema.boolean,
   content: Content,
+  managementRepresentation: Schema.optional(ModifierConfig.Base.ManagementRepresentationSchema),
 });
 
 export const ExtrasSchema = Schema.struct({
@@ -34,6 +31,7 @@ export const OneOfOption = Schema.struct({
   identifier: Common.Slug,
   price: Number.Price,
   content: Content,
+  managementRepresentation: Schema.optional(ModifierConfig.Base.ManagementRepresentationSchema),
 });
 
 export const OneOfSchema = Schema.struct({
@@ -64,7 +62,7 @@ export const ItemFormSchema = Schema.struct({
   image: pipe(
     Schema.struct({
       src: Schema.string,
-      blur: Schema.optional(Schema.string),
+      blur: Schema.optional(Schema.union(Schema.string, Schema.undefined)),
     }),
     Schema.transform(Schema.string, _ => _.src, _ => ({ src: _, blur: undefined })),
   ),

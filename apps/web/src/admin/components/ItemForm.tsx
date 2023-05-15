@@ -1,4 +1,3 @@
-import { invoke } from "@blitzjs/rpc";
 import { constNull, pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
@@ -8,12 +7,11 @@ import * as Schema from "@effect/schema/Schema";
 import { AdjustmentsVerticalIcon, DocumentTextIcon } from "@heroicons/react/20/solid";
 import { PuzzlePieceIcon } from "@heroicons/react/24/solid";
 import { Button, NumberInput, Paper, Tabs, Textarea, TextInput } from "@mantine/core";
-import { nanoid } from "nanoid";
 import { useTranslations } from "next-intl";
 import { useReducer } from "react";
 import { FormProvider, useController, useForm, UseFormHandleSubmit } from "react-hook-form";
 import { toast } from "react-toastify";
-import { Item } from "shared";
+import { Item, ModifierConfig } from "shared";
 import { Schema as SchemaUtils } from "shared/effect";
 import { shekelFormatter, shekelParser } from "src/core/helpers/form";
 import { FullItem } from "src/items/hooks/form";
@@ -22,7 +20,6 @@ import { ExtrasSchema, ItemFormSchema, ModifierSchema, OneOfSchema } from "../va
 import { DeleteButton } from "./DeleteButton";
 import { FormCategoryCombobox } from "./FormCategoryCombobox";
 import { FormDropzone } from "./FormDropzone";
-import { IntegrationsPanel } from "./IntegrationsPanel";
 import { ModifierPanel } from "./ModifierPanel";
 import { PrestoIntegrationPanel } from "./PrestoIntegrationPanel";
 
@@ -48,7 +45,9 @@ const toDefaultModifier = pipe(
         _.content,
         _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
       ) as any,
-      managementId: null,
+      managementRepresentation: Schema.encode(ModifierConfig.Base.ManagementRepresentationSchema)(
+        _.managementRepresentation,
+      ),
       price: _.price,
     })),
   })),
@@ -67,7 +66,9 @@ const toDefaultModifier = pipe(
         _.content,
         _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
       ) as any,
-      managementId: null,
+      managementRepresentation: Schema.encode(ModifierConfig.Base.ManagementRepresentationSchema)(
+        _.managementRepresentation,
+      ),
       price: _.price,
       multi: _.multi,
     })),

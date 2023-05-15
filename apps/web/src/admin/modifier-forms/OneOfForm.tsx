@@ -120,7 +120,6 @@ export const OneOfForm = (props: Props) => {
         mt={16}
         onClick={() =>
           append({
-            managementId: null,
             identifier: "",
             content: {
               en: { name: "", description: "" },

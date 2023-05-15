@@ -45,6 +45,7 @@ const uploadImage = (identifier: string) => (file: File) =>
         new Request(_.url, {
           method: "POST",
           headers: {
+            ..._.headers,
             "Content-Length": `${file.size + 5000}`,
           },
           body: await file.arrayBuffer(),

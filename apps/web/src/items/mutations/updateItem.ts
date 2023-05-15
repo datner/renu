@@ -102,7 +102,7 @@ export default resolver.pipe(
             input.modifiers,
             A.filter((m) => m.modifierId == null),
             A.map(
-              ({ managementId, ...m }, p) => ({
+              (m, p) => ({
                 position: p,
                 config: {
                   ...m.config,

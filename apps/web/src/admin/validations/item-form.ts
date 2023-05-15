@@ -15,7 +15,6 @@ const Content = Schema.struct({
 
 export const ExtrasOption = Schema.struct({
   identifier: Common.Slug,
-  managementId: Schema.nullable(Schema.string),
   price: Number.Price,
   multi: Schema.boolean,
   content: Content,
@@ -33,7 +32,6 @@ export interface ExtrasSchema extends Schema.From<typeof ExtrasSchema> { }
 
 export const OneOfOption = Schema.struct({
   identifier: Common.Slug,
-  managementId: Schema.nullable(Schema.string),
   price: Number.Price,
   content: Content,
 });
@@ -49,7 +47,6 @@ export interface OneOfSchema extends Schema.From<typeof OneOfSchema> { }
 
 export const ModifierSchema = Schema.struct({
   modifierId: Schema.optional(Schema.number),
-  managementId: Schema.optional(Schema.number),
   config: Schema.union(
     OneOfSchema,
     ExtrasSchema,
@@ -67,10 +64,9 @@ export const ItemFormSchema = Schema.struct({
   image: pipe(
     Schema.struct({
       src: Schema.string,
-      blur: Schema.union(Schema.string, Schema.undefined),
+      blur: Schema.optional(Schema.string),
     }),
     Schema.transform(Schema.string, _ => _.src, _ => ({ src: _, blur: undefined })),
-    Schema.optional,
   ),
   modifiers: Schema.array(ModifierSchema),
 });

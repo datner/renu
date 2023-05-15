@@ -87,6 +87,9 @@ const toDefault = (item: O.Option<FullItem>): F =>
         identifier: "",
         categoryId: -1,
         modifiers: [],
+        image: {
+          src: "",
+        },
         content: {
           en: { name: "", description: "" },
           he: { name: "", description: "" },
@@ -106,7 +109,7 @@ const toDefault = (item: O.Option<FullItem>): F =>
         })),
         content: RR.fromIterable(
           _.content,
-          _ => [_.locale, { name: _.name, description: O.getOrElse(_.description,() => "") }],
+          _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
         ) as any,
       }),
     ),
@@ -124,14 +127,14 @@ export function ItemForm(props: Props) {
   });
   const [isRemoving, remove] = useReducer(() => true, false);
 
-  const { formState, control } = form;
+  const { formState, control, getValues } = form;
   const { isSubmitting, isDirty, errors } = formState;
 
   // patches a react-hook-form type limitation
-  const handleSubmit = form.handleSubmit as UseFormHandleSubmit<Schema.To<typeof ItemFormSchema>>;
+  const handleSubmit = form.handleSubmit as any as UseFormHandleSubmit<Schema.To<typeof ItemFormSchema>>;
   const onSubmit = handleSubmit(
     async (data) => {
-      console.log(data)
+      console.log(data);
       const isCreate = O.isNone(item);
       await toast.promise(onSubmit_(data), {
         pending: `${isCreate ? "Creating" : "Updating"} in progress...`,
@@ -139,7 +142,7 @@ export function ItemForm(props: Props) {
         error: `Oops! Couldn't ${isCreate ? "create" : "update"} ${data.identifier}`,
       });
     },
-    (e) => console.log(e),
+    (e) => console.log(e, getValues()),
   );
 
   const result = {

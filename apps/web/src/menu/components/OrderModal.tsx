@@ -1,3 +1,4 @@
+import { Routes } from "@blitzjs/next";
 import { useMutation } from "@blitzjs/rpc";
 import { Branded } from "@effect/data/Brand";
 import * as Data from "@effect/data/Data";
@@ -8,6 +9,7 @@ import { LoadingOverlay } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { a, useSpring } from "@react-spring/web";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
 import Script from "next/script";
 import { useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
@@ -20,7 +22,6 @@ import * as OrderState from "src/menu/hooks/useOrder";
 import confirmGamaTransaction from "../mutations/confirmGamaTransaction";
 import sendOrder from "../mutations/sendOrder";
 import { ErrorModal } from "./ErrorModal";
-import { FeedbackModal } from "./FeedbackModal";
 import { Modal } from "./Modal";
 import { useOrderContext } from "./OrderContext";
 import { OrderModalItem } from "./OrderModalItem";
@@ -55,7 +56,12 @@ export function OrderModal(props: Props) {
   const isNoHeight = usePrevious(height) === 0;
   const { h } = useSpring({ h: height, immediate: isNoHeight });
   const [phoneNumber] = useLocalStorage({ key: "phone-number" });
-  const [confirmTx, tx] = useMutation(confirmGamaTransaction);
+  const router = useRouter();
+  const [confirmTx, tx] = useMutation(confirmGamaTransaction, {
+    onSuccess() {
+      router.push(Routes.OrderSuccess());
+    },
+  });
   const [payment, setPayment] = useState<Payment>(new NoPayment());
   const [sendOrderMutation, { isLoading, isSuccess, reset }] = useMutation(sendOrder, {
     onSuccess: (_) => {
@@ -145,7 +151,7 @@ export function OrderModal(props: Props) {
   return (
     <>
       <Modal open={open} onClose={onClose}>
-        <Script src="https://gpapidemo.gamaf.co.il/dist/gamapay-bundle-demo.js" />
+        <Script src="https://gpapi.gamaf.co.il/dist/gamapay-bundle.js" />
         <div className="p-3 pb-16 bg-white rounded-t-xl overflow-auto">
           <h3 className="text-2xl rtl:mt-9">{t("yourOrder")}</h3>
           <hr className="w-1/2 mt-1 mb-2" />
@@ -185,14 +191,8 @@ export function OrderModal(props: Props) {
         >
         </div>
       </Modal>
-      <FeedbackModal
-        show={tx.isSuccess}
-        onClose={() => {
-          window.location.reload();
-        }}
-      />
       <ErrorModal show={errorOpen} onClose={() => setErrorOpen(false)} />
-      <LoadingOverlay visible={tx.isLoading || isLoading} />
+      <LoadingOverlay pos="fixed" visible={isLoading || tx.isLoading} />
     </>
   );
 }

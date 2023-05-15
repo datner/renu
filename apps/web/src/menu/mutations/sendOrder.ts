@@ -140,14 +140,19 @@ ${A.join(
     pipe(
       Match.value(clearing),
       matchProvider("GAMA", (_) =>
-        Effect.flatMap(Gama.Gama, gama =>
-          gama.createSession({
+        Effect.flatMap(Gama.Gama, gama => {
+          if (o.clearingExtra._tag !== "Some") {
+            return Effect.dieMessage("Could not find phone number");
+          }
+          const phone = o.clearingExtra.value.phoneNumber;
+          return gama.createSession({
             orderId: o.id,
-            payerName: Gama.Schema.Name("datner"),
+            payerName: Gama.Schema.Name("לקוח רניו"),
             venueName: Gama.Schema.Name("Papa"),
             paymentAmount: o.totalCost,
-            payerPhoneNumber: Gama.Schema.PhoneNumber("0502060633"),
-          }, _))),
+            payerPhoneNumber: Gama.Schema.PhoneNumber(phone),
+          }, _);
+        })),
       Match.orElse(() => Effect.dieMessage("No support yet, sorry")),
     )
   ),
@@ -162,4 +167,3 @@ ${Format.pre("logs")(Cause.pretty(cause))}
   ),
   Renu.runPromise$,
 );
-

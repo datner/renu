@@ -4,26 +4,33 @@ import { useTranslations } from "next-intl";
 import { Fragment, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 
+const PHONE_REGEX = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
+
 export function FeedbackModal() {
   const [show, setShow] = useState(false);
   const t = useTranslations("menu.Components.PhoneModal");
   const [phone, setPhoneNumber] = useLocalStorage({ key: "phone-number" });
   const form = useForm({
     defaultValues: { phone },
+    mode: "all",
+    delayError: 800,
   });
   const onSubmit = form.handleSubmit(({ phone }) => {
     setPhoneNumber(phone);
     setShow(false);
   });
+  const { reset, trigger } = form;
 
   useEffect(() => {
-    const timoutId = setTimeout(() => {
-      if (!phone) {
+    reset({ phone });
+    const timoutId = setTimeout(async () => {
+      const valid = await trigger("phone");
+      if (!valid) {
         setShow(true);
       }
     }, 1_000);
-    return () => clearTimeout(timoutId)
-  }, [phone]);
+    return () => clearTimeout(timoutId);
+  }, [phone, reset, trigger]);
 
   return (
     <>
@@ -73,7 +80,11 @@ export function FeedbackModal() {
                         required: "Please input a phone number!",
                         pattern: {
                           message: "Please input a valid phone number 🙏",
-                          value: /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/,
+                          value: PHONE_REGEX,
+                        },
+                        maxLength: {
+                          message: "That seems a bit long 🤔",
+                          value: 10,
                         },
                       })}
                       aria-invalid={Boolean(form.formState.errors.phone)}

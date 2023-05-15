@@ -48,7 +48,7 @@ export function Modal(props: Props) {
             >
               <button
                 onClick={onClose}
-                className="absolute top-2 right-2 z-50 h-10 w-10 p-1.5 text-gray-700 rounded-full bg-gray-400/50"
+                className="absolute top-2 right-2 z-50 h-10 w-10 p-1.5 text-gray-600 border border-gray-300 rounded-full bg-gray-200/90"
               >
                 <XMarkIcon />
               </button>

@@ -10,6 +10,7 @@ declare module "@blitzjs/auth" {
   export interface Session {
     isAuthorized: SimpleRolesIsAuthorized<Role>;
     PublicData: {
+      orderId?: number;
       userId: User["id"];
       roles: Role[];
       venue?: Venue;

@@ -1,5 +1,8 @@
 import { BlitzPage } from "@blitzjs/auth";
 import * as O from "@effect/data/Option";
+import * as A from "@effect/data/ReadonlyArray";
+import * as Str from "@effect/data/String";
+import * as Order from "@effect/data/typeclass/Order";
 import * as Parser from "@effect/schema/Parser";
 import { NotFoundError } from "blitz";
 import db, { Locale } from "db";
@@ -35,10 +38,15 @@ const LazyPhoneModal = dynamic(() => import("src/menu/components/PhoneModal").th
   loading: () => <Fragment />,
 });
 
+const CategoryOrder = Order.contramap(Str.Order, (b: Venue.Menu.Category) => b.identifier);
+
 export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) => {
   const { menu } = props;
   const restaurant = useMemo(() => Parser.decode(Venue.Menu.Menu)(menu), [menu]);
   const { categories } = restaurant;
+  const orderedCategories = useMemo(() => A.sort(categories as Array<Venue.Menu.Category>, CategoryOrder), [
+    categories,
+  ]);
   // add the item modal state to the dispatch as well, just for laughs
   const locale = useLocale();
   const [reviewOrder, setReviewOrder] = useState(false);
@@ -66,9 +74,9 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
       </Head>
       <PostHogScript />
       <Navigation.Root>
-        <Navigation.NavList categories={categories} />
+        <Navigation.NavList categories={orderedCategories} />
         <div>
-          {categories?.map((category) => (
+          {orderedCategories.map((category) => (
             <Category.Section key={category.id} category={category}>
               <Category.Items>
                 {category.categoryItems.map((ci) => <Category.Item key={ci.item.id} item={ci} />)}

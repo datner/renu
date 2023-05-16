@@ -14,7 +14,7 @@ export const ExtrasOption = Schema.struct({
   price: Number.Price,
   multi: Schema.boolean,
   content: Content,
-  managementRepresentation: Schema.optional(ModifierConfig.Base.ManagementRepresentationSchema),
+  managementRepresentation: ModifierConfig.Base.ManagementRepresentationSchema,
 });
 
 export const ExtrasSchema = Schema.struct({
@@ -31,7 +31,7 @@ export const OneOfOption = Schema.struct({
   identifier: Common.Slug,
   price: Number.Price,
   content: Content,
-  managementRepresentation: Schema.optional(ModifierConfig.Base.ManagementRepresentationSchema),
+  managementRepresentation: ModifierConfig.Base.ManagementRepresentationSchema,
 });
 
 export const OneOfSchema = Schema.struct({

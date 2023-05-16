@@ -6,6 +6,7 @@ import * as RR from "@effect/data/ReadonlyRecord";
 import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
 import db, { Prisma } from "db";
+import { ModifierConfig } from "shared";
 import { UpdateItemPayload } from "src/admin/validations/item-form";
 import { Session } from "src/auth";
 import * as Renu from "src/core/effect/runtime";
@@ -33,6 +34,8 @@ const getItem = (id: number) =>
           resource: "Item",
         }),
     ));
+
+const encodeRep = Schema.encode(ModifierConfig.Base.ManagementRepresentationSchema);
 
 export default resolver.pipe(
   (i: Schema.From<typeof UpdateItemPayload>) => Schema.decodeEffect(UpdateItemPayload)(i),
@@ -84,6 +87,7 @@ export default resolver.pipe(
                       ...o,
                       content: RR.collect(o.content, (locale, _) => ({ locale, ..._ })),
                       position: i,
+                      managementRepresentation: encodeRep(o.managementRepresentation),
                     })),
                     A.map((o, i) =>
                       config._tag === "oneOf"
@@ -116,11 +120,13 @@ export default resolver.pipe(
                             content: RR.collect(o.content, (locale, _) => ({ locale, ..._ })),
                             position: i,
                             default: m.config.defaultOption === o.identifier,
+                            managementRepresentation: encodeRep(o.managementRepresentation),
                           }
                           : {
                             ...o,
                             content: RR.collect(o.content, (locale, _) => ({ locale, ..._ })),
                             position: i,
+                            managementRepresentation: encodeRep(o.managementRepresentation),
                           }
                       )),
                   ) as unknown as Prisma.InputJsonValue,

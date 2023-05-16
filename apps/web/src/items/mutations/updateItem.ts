@@ -25,6 +25,7 @@ const getItem = (id: number) =>
             image: true,
             blurHash: true,
             categoryId: true,
+            content: true,
             categoryItems: { select: { id: true, categoryId: true } },
           },
         }),
@@ -49,6 +50,18 @@ export default resolver.pipe(
         identifier: input.identifier,
         price: input.price,
         category: { connect: { id: input.categoryId } },
+        content: {
+          update: [
+            {
+              where: { id: item.content.find(_ => _.locale === "en")!.id },
+              data: { locale: "en", ...input.content.en },
+            },
+            {
+              where: { id: item.content.find(_ => _.locale === "he")!.id },
+              data: { locale: "he", ...input.content.he },
+            },
+          ],
+        },
         categoryItems: pipe(
           A.findFirst(
             item.categoryItems,
@@ -135,7 +148,7 @@ export default resolver.pipe(
             ),
           ),
         } satisfies Prisma.ItemModifierUncheckedUpdateManyWithoutItemNestedInput,
-      })),
+      } satisfies Prisma.ItemUpdateInput & { id: any })),
       Effect.zipWith(
         Effect.if(
           item.image === input.image,

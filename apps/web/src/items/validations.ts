@@ -11,13 +11,13 @@ import * as N from "fp-ts/number";
 import * as O from "fp-ts/Option";
 import * as Ord from "fp-ts/Ord";
 import { DefaultValues } from "react-hook-form";
+import { Order } from "shared";
 import { Slug } from "src/auth/validations";
 import { ensureType, Id } from "src/core/helpers/zod";
 import getVenueManagementIntegration from "src/venues/queries/current/getVenueManagementIntegration";
 import { match } from "ts-pattern";
 import { z } from "zod";
 import getItem from "./queries/getItem";
-import { Order } from "shared";
 
 export const Content = z.object({
   name: z.string().min(1),
@@ -46,6 +46,7 @@ const BaseModifierOptionSchema = z.object({
   managementId: z.string().nullable(),
   price: z.number(),
   content: ContentSchema,
+  managementRepresentation: z.null(),
 });
 
 export const OneOfOptionSchema = z.object({}).extend(BaseModifierOptionSchema.shape);
@@ -289,8 +290,8 @@ export interface CreateItemSchema extends S.To<typeof CreateItemSchema> {}
 
 export const UpdateItemSchema = pipe(
   CreateItemSchema,
-  S.extend(S.struct({id: Order.Item.Id}))
-)
+  S.extend(S.struct({ id: Order.Item.Id })),
+);
 export interface UpdateItemSchema extends S.To<typeof UpdateItemSchema> {}
 
 export const toCreateItem = ({

@@ -37,6 +37,7 @@ const getInitialModifierValues = (mod: {
           },
           identifier: "",
           price: 0,
+          managementRepresentation: null,
         }),
       };
     case ModifierEnum.enum.extras:
@@ -56,6 +57,7 @@ const getInitialModifierValues = (mod: {
           identifier: "",
           multi: false,
           price: 0,
+          managementRepresentation: null,
         }),
         min: 0,
         max: 0,
@@ -110,7 +112,7 @@ export function ModifierPanel() {
           ({ field: { id, ...rest } }) => () => pipe(rest, addCopy, append),
         ),
         O.let("onDelete", ({ index }) => () => {
-          console.log("deleting ",index)
+          console.log("deleting ", index);
           return remove(index);
         }),
         O.match(

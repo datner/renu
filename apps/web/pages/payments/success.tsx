@@ -19,8 +19,8 @@ export function SuccessPage() {
   const [response] = useQuery(
     validateStatus,
     {
-      orderId: searchParams.get("more_info"),
-      txId: searchParams.get("transaction_uid"),
+      orderId: searchParams!.get("more_info"),
+      txId: searchParams!.get("transaction_uid"),
     },
     {
       retryDelay: (amount) => 2 ** amount,

@@ -126,6 +126,7 @@ export const OneOfForm = (props: Props) => {
               he: { name: "", description: "" },
             },
             price: 0,
+            managementRepresentation: null,
           })}
         type="button"
         variant="outline"

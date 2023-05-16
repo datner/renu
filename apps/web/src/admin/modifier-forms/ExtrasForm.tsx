@@ -123,6 +123,7 @@ export const ExtrasForm = (props: Props) => {
             },
             price: 0,
             multi: false,
+            managementRepresentation: null,
           })}
         type="button"
         variant="outline"

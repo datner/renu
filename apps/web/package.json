@@ -96,7 +96,7 @@
     "@babel/preset-env": "7.21.5",
     "@faker-js/faker": "8.0.1",
     "@testing-library/react": "14.0.0",
-    "@types/node": "20.1.4",
+    "@types/node": "20.1.5",
     "@vitejs/plugin-react": "4.0.0",
     "eslint-config-next": "13.4.2",
     "preview-email": "3.0.10",

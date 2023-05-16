@@ -10,13 +10,15 @@ const AdminMenus: BlitzPage = () => {
   return (
     <Content
       main={
-        <div className="bg-white py-8 px-4 m-6 mx-8 shadow sm:rounded-lg sm:px-10">
-          pick an item :)
-        </div>
+        <Suspense fallback={<LoadingOverlay visible />}>
+          <div className="bg-white py-8 px-4 m-6 mx-8 shadow sm:rounded-lg sm:px-10">
+            pick an item :)
+          </div>
+        </Suspense>
       }
       aside={
         <Suspense fallback={<LoadingOverlay visible />}>
-          <Aside.Categories />
+          <Aside.Menus />
         </Suspense>
       }
     />

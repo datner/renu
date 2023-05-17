@@ -1,23 +1,79 @@
+import { useAuthenticatedSession } from "@blitzjs/auth";
 import { Routes } from "@blitzjs/next";
 import { Menu } from "@headlessui/react";
-import { Transition } from "@headlessui/react";
+import { Dialog, Transition } from "@headlessui/react";
 import { ChevronDownIcon, GlobeAltIcon, MagnifyingGlassIcon, PlusSmallIcon } from "@heroicons/react/24/solid";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Fragment, Suspense } from "react";
+import { Fragment, Suspense, useState } from "react";
 import { ChangeVenueMenu } from "src/admin/components/ChangeVenueMenu";
 import { LogoutButton } from "src/admin/components/LogoutButton";
 import { useLocale } from "src/core/hooks/useLocale";
 
+interface PhoneModalProps {
+  show: boolean;
+  onClose(): void;
+}
+
+export default function PhoneModal(props: PhoneModalProps) {
+  const { show, onClose } = props;
+  const session = useAuthenticatedSession();
+
+  return (
+    <>
+      <Transition appear show={show} as={Fragment}>
+        <Dialog as="div" className="relative z-20" onClose={onClose}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-25" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="mockup-phone transition-all">
+                  <div className="camera"></div>
+                  <div className="display bg-white pt-7">
+                    <iframe className="artboard phone-1" src={`https://renu.menu/kiosk/${session.venue.identifier}`} />
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+    </>
+  );
+}
 export function Header() {
   const router = useRouter();
   const locale = useLocale();
+  const [show, setShow] = useState(false);
   return (
     <header className="w-full">
       <div className="relative z-20 flex-shrink-0 h-16 bg-white border-b border-gray-200 shadow-sm flex">
         <div className="flex-1 flex justify-between px-4 sm:px-6">
-          <div className="flex-1 flex">
+          <div className="flex items-center justify-center">
+            <button onClick={() => setShow(true)} className="btn btn-primary btn-sm">view</button>
+            <PhoneModal show={show} onClose={() => setShow(false)} />
+          </div>
+          <div className="flex-1 flex ml-6">
             <form className="w-full flex md:ml-0" action="#" method="GET">
               <label htmlFor="search-field" className="sr-only">
                 Search all files

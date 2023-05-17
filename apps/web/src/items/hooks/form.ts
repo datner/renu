@@ -1,3 +1,4 @@
+import { getAntiCSRFToken } from "@blitzjs/auth";
 import { Routes } from "@blitzjs/next";
 import { invalidateQuery, invoke, setQueryData, useQuery } from "@blitzjs/rpc";
 import { pipe } from "@effect/data/Function";
@@ -29,9 +30,12 @@ export const FullItem = Schema.extend(
     modifiers: Schema.array(Item.Modifier.fromPrisma),
   }),
 )(Item.Item);
-export interface FullItem extends Schema.To<typeof FullItem> { }
+export interface FullItem extends Schema.To<typeof FullItem> {}
 
-const revalidate = Effect.sync(() => navigator.sendBeacon("/api/revalidate-current"));
+const revalidate = Effect.sync(() => {
+  const antiCSRFToken = getAntiCSRFToken();
+  return fetch("/api/revalidate-current", { headers: { "anti-csrf": antiCSRFToken } });
+});
 
 const uploadImage = (identifier: string) => (file: File) =>
   pipe(

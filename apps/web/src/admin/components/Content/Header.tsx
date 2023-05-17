@@ -71,7 +71,9 @@ export function Header() {
         <div className="flex-1 flex justify-between px-4 sm:px-6">
           <div className="flex items-center justify-center">
             <button onClick={() => setShow(true)} className="btn btn-primary btn-sm">view</button>
-            <PhoneModal show={show} onClose={() => setShow(false)} />
+            <Suspense fallback={<Fragment />}>
+              <PhoneModal show={show} onClose={() => setShow(false)} />
+            </Suspense>
           </div>
           <div className="flex-1 flex ml-6">
             <form className="w-full flex md:ml-0" action="#" method="GET">

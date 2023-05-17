@@ -45,6 +45,7 @@ export const CategoryResolver = pipe(
         (reqs, db) =>
           db.category.findMany({
             where: idIn(reqs),
+            orderBy: {identifier: "asc"}
           }),
         (req, items) =>
           Option.match(

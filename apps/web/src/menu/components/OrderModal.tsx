@@ -156,7 +156,7 @@ export function OrderModal(props: Props) {
         <div className="pb-16 pt-3 bg-white rounded-t-xl overflow-auto">
           <h3 className="px-3 text-2xl rtl:mt-9">{t("yourOrder")}</h3>
           <div className="divider w-1/2 mt-1 mb-2" />
-          <div>
+          <div className="flex flex-col">
             <a.div style={{ height: h }}>
               <ul ref={ref}>
                 {HashMap.values(listItems)}
@@ -166,7 +166,7 @@ export function OrderModal(props: Props) {
             <button
               onClick={handleOrder}
               disabled={isLoading || amount === 0 || isSuccess || !valid}
-              className="btn w-full btn-primary px-3"
+              className="btn btn-primary grow px-3 mx-3"
             >
               <span className="badge badge-outline badge-ghost">{amount}</span>
               <span className="inline-block flex-grow px-3 text-left rtl:text-right">

@@ -33,13 +33,14 @@ export const getBlurHash = (image: string) =>
     }),
   );
 
-export async function getBlurDataUrl(image?: string) {
-  if (!image) return undefined;
-
-  console.log("Creating new plaiceholder");
-  const url = new URL(`https://renu.imgix.net/${image}`);
-  url.searchParams.append("fm", "blurhash"); // quality = 5
-  url.searchParams.append("auto", "compress");
-  const { base64: blurDataUrl } = await getPlaiceholder(url.toString(), { size: 10 });
-  return blurDataUrl;
-}
+// TODO: remove or restore. Just don't keep
+// export async function getBlurDataUrl(image?: string) {
+//   if (!image) return undefined;
+//
+//   console.log("Creating new plaiceholder");
+//   const url = new URL(`https://renu.imgix.net/${image}`);
+//   url.searchParams.append("fm", "blurhash"); // quality = 5
+//   url.searchParams.append("auto", "compress");
+//   const { base64: blurDataUrl } = await getPlaiceholder(url.toString(), { size: 10 });
+//   return blurDataUrl;
+// }

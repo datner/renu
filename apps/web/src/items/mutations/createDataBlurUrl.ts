@@ -8,7 +8,7 @@ const getBlurDataUrl = async (img: string) => {
   url.searchParams.append("q", "5");
   url.searchParams.append("auto", "compress");
   console.log(url.toString());
-  const { base64 } = await getPlaiceholder(url.toString(), { size: 10 });
+  const { base64 } = await getPlaiceholder(Buffer.from(url.toString()), { size: 10 });
   return base64;
 };
 

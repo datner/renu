@@ -17,7 +17,7 @@ export const NavList = (props: NavListProps) => {
     <div
       role="tablist"
       aria-label="Categories"
-      className="fixed top-0 z-20 flex min-h-0 shrink-0 inset-x-0 overflow-x-auto bg-white shadow snap-x snap-mandatory scroll-smooth gap-2 p-2 scroll-m-2"
+      className="fixed bottom-0 z-20 flex border-t min-h-0 shrink-0 inset-x-0 overflow-x-auto bg-white shadow snap-x snap-mandatory scroll-smooth gap-2 p-2 scroll-m-2"
     >
       {categories.map((it) => (
         <button

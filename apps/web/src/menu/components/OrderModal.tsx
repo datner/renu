@@ -142,6 +142,7 @@ export function OrderModal(props: Props) {
   const amount = OrderState.getOrderAmount(order);
   const cost = OrderState.getOrderCost(order);
   const items = OrderState.getOrderItems(order);
+  const valid = OrderState.getOrderValidity(order)
 
   const listItems = HashMap.mapWithIndex(
     items,
@@ -152,20 +153,20 @@ export function OrderModal(props: Props) {
     <>
       <Modal open={open} onClose={onClose}>
         <Script src="https://gpapi.gamaf.co.il/dist/gamapay-bundle.js" />
-        <div className="p-3 pb-16 bg-white rounded-t-xl overflow-auto">
-          <h3 className="text-2xl rtl:mt-9">{t("yourOrder")}</h3>
-          <hr className="w-1/2 mt-1 mb-2" />
+        <div className="pb-16 pt-3 bg-white rounded-t-xl overflow-auto">
+          <h3 className="px-3 text-2xl rtl:mt-9">{t("yourOrder")}</h3>
+          <div className="divider w-1/2 mt-1 mb-2" />
           <div>
             <a.div style={{ height: h }}>
-              <ul ref={ref} className="divide-y divide-emerald-400">
+              <ul ref={ref}>
                 {HashMap.values(listItems)}
               </ul>
             </a.div>
             <div className="h-8" />
             <button
               onClick={handleOrder}
-              disabled={isLoading || amount === 0 || isSuccess}
-              className="btn w-full btn-primary"
+              disabled={isLoading || amount === 0 || isSuccess || !valid}
+              className="btn w-full btn-primary px-3"
             >
               <span className="badge badge-outline badge-ghost">{amount}</span>
               <span className="inline-block flex-grow px-3 text-left rtl:text-right">

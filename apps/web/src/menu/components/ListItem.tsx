@@ -10,12 +10,12 @@ import { clsx } from "clsx";
 import Image from "next/image";
 import { memo, useMemo } from "react";
 import { Blurhash } from "react-blurhash";
+import { useIsRtl } from "src/core/hooks/useIsRtl";
 import { useLocale } from "src/core/hooks/useLocale";
 import * as Order from "../hooks/useOrder";
 import * as _Menu from "../schema";
 import { ItemData } from "./ItemData";
 import { useOrderDispatch } from "./OrderContext";
-import { useIsRtl } from "src/core/hooks/useIsRtl";
 
 type Props = {
   item: Order.ActiveItem;
@@ -34,8 +34,9 @@ export const ListItem = memo(
     const item = Order.getActiveMenuItem(_);
     const amount = Order.getActiveAmount(_);
     const cost = Order.getActiveCost(_);
+    const valid = Order.getActiveValidity(_);
     const locale = useLocale();
-    const isRtl = useIsRtl()
+    const isRtl = useIsRtl();
     const content = item.content.find((it) => it.locale === locale);
     const isInOrder = Order.isExistingActiveItem(_);
     const hideIndicator = isRtl ? 40 : -40;
@@ -52,7 +53,7 @@ export const ListItem = memo(
           immediate: (name) => active && name === "x",
         });
 
-        const isIncrement = isPositive(offset)
+        const isIncrement = isPositive(offset);
 
         // not active, last event, outside of -69 -- 69
         const isRelevant = B.every([B.not(active), last, B.not(N.between(offset, -69, 69))]);
@@ -122,7 +123,8 @@ export const ListItem = memo(
         {bg}
         <a.div
           style={{ x, scale }}
-          className="relative flex flex-1 pointer-events-none h-36 overflow-hidden rounded-lg bg-white shadow"
+          aria-invalid={!valid}
+          className="relative flex flex-1 pointer-events-none h-36 overflow-hidden rounded-lg bg-white shadow error:bg-red-200 error:ring-2 error:ring-red-500"
         >
           <a.div style={styles} className="inset-y-0 absolute ltr:left-0 rtl:right-0">
             <div

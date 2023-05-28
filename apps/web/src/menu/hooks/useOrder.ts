@@ -7,12 +7,14 @@ import * as HashMap from "@effect/data/HashMap";
 import * as N from "@effect/data/Number";
 import * as O from "@effect/data/Option";
 import * as P from "@effect/data/Predicate";
+import * as A from "@effect/data/ReadonlyArray";
 import * as RA from "@effect/data/ReadonlyArray";
 import * as Match from "@effect/match";
 import { nanoid } from "nanoid";
 import { Dispatch, useReducer } from "react";
-import { Item, Venue, ModifierConfig } from "shared";
+import { Item, ModifierConfig, Venue } from "shared";
 import { Refinement } from "shared/effect";
+import { refineTag } from "shared/effect/Refinement";
 import { Number } from "shared/schema";
 
 export type OrderItemKey = string & Brand.Brand<"OrderItemKey">;
@@ -27,6 +29,7 @@ export interface SingleOrderItem extends Data.Case {
   readonly modifiers: OrderItemModifierHashMap;
   readonly item: Data.Data<Venue.Menu.MenuItem>;
   readonly cost: Number.Cost;
+  readonly valid: boolean;
 }
 export const SingleOrderItem = Data.tagged<SingleOrderItem>("SingleOrderItem");
 
@@ -37,6 +40,7 @@ export interface MultiOrderItem extends Data.Case {
   readonly modifiers: OrderItemModifierHashMap;
   readonly item: Data.Data<Venue.Menu.MenuItem>;
   readonly cost: Number.Cost;
+  readonly valid: boolean;
 }
 export const MultiOrderItem = Data.tagged<MultiOrderItem>("MultiOrderItem");
 
@@ -65,6 +69,7 @@ export interface ActiveOrder extends Data.Case {
   readonly items: HashMap.HashMap<OrderItemKey, OrderItem>;
   readonly totalAmount: Number.Amount;
   readonly totalCost: Number.Cost;
+  readonly valid: boolean;
   // readonly currentItems: Chunk.Chunk<readonly [string, OrderItem]>
 }
 export const ActiveOrder = Data.tagged<ActiveOrder>("ActiveOrder");
@@ -136,6 +141,7 @@ export const getAmount = pipe(
 export const getOrderAmount = (order: Order) => (isActiveOrder(order) ? order.totalAmount : 0);
 export const getOrderCost = (order: Order) => (isActiveOrder(order) ? order.totalCost : 0);
 export const getOrderItems = (order: Order) => isActiveOrder(order) ? order.items : HashMap.empty();
+export const getOrderValidity = (order: Order) => isActiveOrder(order) ? order.valid : false;
 export const getActiveMenuItem = (activeItem: ActiveItem) =>
   isExistingActiveItem(activeItem) ? activeItem.item.item : activeItem.item;
 
@@ -144,6 +150,9 @@ export const getActiveAmount = (activeItem: ActiveItem) =>
 
 export const getActiveCost = (activeItem: ActiveItem) =>
   isExistingActiveItem(activeItem) ? activeItem.item.cost : activeItem.item.price;
+
+export const getActiveValidity = (activeItem: ActiveItem) =>
+  isExistingActiveItem(activeItem) ? activeItem.item.valid : true;
 
 export const getSumAmount = HashMap.reduce(0, (s, c: OrderItem) => s + getAmount(c));
 
@@ -159,20 +168,43 @@ export const getSumCost = HashMap.reduce(0, (accumulated, item: OrderItem) => N.
 
 export const addEmptyItem = (item: Venue.Menu.MenuItem): Action => (state) => {
   const key = OrderItemKey(nanoid());
+  const mods = pipe(
+    A.filterMap(item.modifiers, refineTag("OneOf")),
+    A.map(
+      _ =>
+        OneOf({
+          id: _.id,
+          config: Data.struct(_.config),
+          amount: Number.Amount(1),
+          // TODO: due to some fuckup, this is an index instead of an identifier
+          choice: _.config.options[parseInt(_.config.defaultOption, 10)]!.identifier,
+        }),
+    ),
+    A.map(_ => [_.id, _] as const),
+  );
+
+  const valid = pipe(
+    A.filterMap(item.modifiers, refineTag("Extras")),
+    A.every(_ => O.isNone(_.config.min)),
+  );
+
   const orderItem = SingleOrderItem({
     item: Data.struct(item),
-    modifiers: HashMap.empty(),
+    modifiers: HashMap.fromIterable(mods),
     comment: "",
     cost: Number.Cost(item.price),
+    valid,
   });
   return State({
     ...state,
-    activeItem: pipe(
-      O.filter(state.activeItem, isNewActiveItem),
-      O.filter((active) => active.item.id === item.id),
-      O.map(() => ExistingActiveItem({ item: orderItem, key })),
-      O.orElse(() => state.activeItem),
-    ),
+    activeItem: valid
+      ? pipe(
+        O.filter(state.activeItem, isNewActiveItem),
+        O.filter((active) => active.item.id === item.id),
+        O.map(() => ExistingActiveItem({ item: orderItem, key })),
+        O.orElse(() => state.activeItem),
+      )
+      : O.some(ExistingActiveItem({ item: orderItem, key })),
     order: pipe(
       Match.value(state.order),
       Match.tag("EmptyOrder", (_) =>
@@ -180,12 +212,14 @@ export const addEmptyItem = (item: Venue.Menu.MenuItem): Action => (state) => {
           items: HashMap.make([key, orderItem]),
           totalAmount: Number.Amount(1),
           totalCost: orderItem.cost,
+          valid,
         })),
       Match.tag("ActiveOrder", (o) =>
         ActiveOrder({
           items: HashMap.set(o.items, key, orderItem),
           totalAmount: Number.Amount(o.totalAmount + 1),
           totalCost: Number.Cost(o.totalCost + orderItem.cost),
+          valid: o.valid && valid,
         })),
       Match.exhaustive,
     ),
@@ -204,12 +238,14 @@ export const addItem = (item: OrderItem): Action => (state) => {
           items: HashMap.make([key, item]),
           totalAmount: Number.Amount(getAmount(item)),
           totalCost: item.cost,
+          valid: item.valid,
         })),
       Match.tag("ActiveOrder", (o) =>
         ActiveOrder({
           items: HashMap.set(o.items, key, item),
           totalAmount: Number.Amount(o.totalAmount + getAmount(item)),
           totalCost: Number.Cost(o.totalCost + item.cost),
+          valid: o.valid && item.valid,
         })),
       Match.exhaustive,
     ),
@@ -242,6 +278,7 @@ export const incrementItem = (key: OrderItemKey): Action => (state) =>
             modifiers: it.modifiers,
             amount,
             cost: Number.Cost(getItemCost(it) * amount),
+            valid: it.valid,
           });
         }),
         O.map((multiItem) => {
@@ -403,6 +440,8 @@ export const updateItem = (hash: OrderItemKey, update: (v: OrderItem) => OrderIt
             items,
             totalAmount: Number.Amount(getSumAmount(items)),
             totalCost: Number.Cost(getSumCost(items)),
+            // PERF: need a 'some' operand
+            valid: HashMap.reduce(items, true, (acc, _) => acc && _.valid),
           }),
         }),
     ),

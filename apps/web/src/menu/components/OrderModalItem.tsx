@@ -1,5 +1,6 @@
 import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
+import { ExclamationCircleIcon } from "@heroicons/react/20/solid";
 import { ResizeObserver } from "@juggle/resize-observer";
 import { a, useChain, useSpring, useSpringRef } from "@react-spring/web";
 import Image from "next/image";
@@ -19,23 +20,28 @@ type Props = {
 
 export function OrderModalItem(props: Props) {
   const { dispatch, orderItem, hash: key } = props;
-  const { item, comment } = orderItem;
+  const { item, comment, valid } = orderItem;
   const amount = Order.isMultiOrderItem(orderItem) ? orderItem.amount : 1;
   const locale = useLocale();
 
   const title = titleFor(locale);
   return (
-    <li className="pt-8 pb-6">
-      <div className="h-16 flex items-center">
+    <li className="group">
+      <div className="group-first-of-type:hidden divider mx-3" />
+      <div data-error={!valid} className="flex py-8 px-3 items-center data-[error=true]:bg-gradient-to-l from-red-200">
         <div
-          className="flex-grow bg-white mr-px truncate"
+          className="flex-grow mr-px"
           onClick={() => {
             dispatch(Order.setExistingActiveItem(key));
           }}
         >
           <div className="flex">
             <div className="relative rounded-md mx-2 shrink-0">
-              {pipe(item.blurHash, O.map(hash => <Blurhash className="rounded-md overflow-hidden" hash={hash} width={96} height={64} />), O.getOrNull)}
+              {pipe(
+                item.blurHash,
+                O.map(hash => <Blurhash className="rounded-md overflow-hidden" hash={hash} width={96} height={64} />),
+                O.getOrNull,
+              )}
               {item.image && (
                 <Image
                   priority
@@ -51,7 +57,12 @@ export function OrderModalItem(props: Props) {
                 />
               )}
             </div>
-            <p className="text-sm whitespace-pre-line truncate">
+            <p className="text-sm whitespace-pre-linetruncate">
+              {!valid && (
+                <span className="text-red-700">
+                  <ExclamationCircleIcon className="h-5 w-5" />
+                </span>
+              )}
               <span>{title(item.content)}</span>
               <br />
               <span className="rounded-full mx-1 text-xs font-medium text-emerald-800">
@@ -81,7 +92,7 @@ function Thing(props: AmountButtonsProps) {
   const firstApi = useSpringRef();
   const { width } = useSpring({
     ref: firstApi,
-    width: show ? containerWidth : 40,
+    width: show ? containerWidth : 48,
   });
 
   const secondApi = useSpringRef();
@@ -106,7 +117,7 @@ function Thing(props: AmountButtonsProps) {
       >
         <a.div
           style={{ width }}
-          className="h-10 rounded-md text-sm sm:text-base text-emerald-500 border-gray-300 flex items-center justify-center bg-emerald-50 border"
+          className="btn btn-square"
         >
           {props.amount}
         </a.div>

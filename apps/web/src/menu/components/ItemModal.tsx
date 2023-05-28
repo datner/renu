@@ -16,7 +16,7 @@ import { clamp } from "src/core/helpers/number";
 import { useLocale } from "src/core/hooks/useLocale";
 import * as Order from "../hooks/useOrder";
 import * as _Menu from "../schema";
-import { ItemFieldValues, ItemModalForm, getModifiers } from "./ItemModalForm";
+import { getModifiers, ItemFieldValues, ItemModalForm } from "./ItemModalForm";
 import { Modal } from "./Modal";
 import { useOrderContext } from "./OrderContext";
 
@@ -141,6 +141,7 @@ function _ItemModal(props: Props2) {
       const single = Order.SingleOrderItem({
         item,
         comment,
+        valid: true,
         cost: Number.Cost(N.sumAll([item.price, oneOfCost, extrasCost]) * amount),
         modifiers: HashMap.make(
           ...pipe(
@@ -262,7 +263,8 @@ function _ItemModal(props: Props2) {
         style={{
           y,
           boxShadow: shadow.to(
-            (s) => `0 20px 25px -5px rgb(0 0 0 / ${s * 0.1}),
+            (s) =>
+              `0 20px 25px -5px rgb(0 0 0 / ${s * 0.1}),
               0 8px 10px -6px rgb(0 0 0 / ${s * 0.1})`,
           ),
         }}

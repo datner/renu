@@ -17,6 +17,7 @@ import { useLocale } from "src/core/hooks/useLocale";
 import MenuLayout from "src/core/layouts/MenuLayout";
 import * as Category from "src/menu/components/Category";
 import { Closed } from "src/menu/components/Closed";
+import { ModalProvider } from "src/menu/components/ModalContext";
 import * as Navigation from "src/menu/components/Navigation";
 import { OrderContext } from "src/menu/components/OrderContext";
 import { PostHogScript } from "src/menu/components/PostHogScript";
@@ -66,38 +67,44 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
   }
 
   return (
-    <OrderContext>
-      <Head>
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>{getTitle(restaurant.content) + " | Renu"}</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-      <PostHogScript />
-      <Navigation.Root>
-        <Navigation.NavList categories={orderedCategories} />
-        <div>
-          {orderedCategories.map((category) => (
-            <Category.Section key={category.id} category={category}>
-              <Category.Items>
-                {category.categoryItems.map((ci) => <Category.Item key={ci.item.id} item={ci} />)}
-              </Category.Items>
-            </Category.Section>
-          ))}
-        </div>
-        {O.getOrNull(O.map(restaurant.simpleContactInfo, content => <div className="mt-4 text-center">{content}</div>))}
-        <div className="mt-4 mb-24 text-center">
-          ביטול עסקה בהתאם לתקנות הגנת הצרכן (ביטול עסקה), התשע״א-2010 וחוק הגנת הצרכן, התשמ״א-1981
-        </div>
-      </Navigation.Root>
-      <LazyViewOrderButton onClick={() => setReviewOrder(true)} />
-      <LazyOrderModal
-        venueId={restaurant.id}
-        open={reviewOrder}
-        onClose={() => setReviewOrder(false)}
-      />
-      <LazyItemModal />
-      <LazyPhoneModal />
-    </OrderContext>
+    <ModalProvider>
+      <OrderContext>
+        <Head>
+          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+          <title>{getTitle(restaurant.content) + " | Renu"}</title>
+          <link rel="icon" href="/favicon.ico" />
+        </Head>
+        <PostHogScript />
+        <Navigation.Root>
+          <Navigation.NavList categories={orderedCategories} />
+          <div>
+            {orderedCategories.map((category) => (
+              <Category.Section key={category.id} category={category}>
+                <Category.Items>
+                  {category.categoryItems.map((ci) => <Category.Item key={ci.item.id} item={ci} />)}
+                </Category.Items>
+              </Category.Section>
+            ))}
+          </div>
+          {O.getOrNull(
+            O.map(restaurant.simpleContactInfo, content => <div className="mt-4 text-center">{content}</div>),
+          )}
+          <div className="mt-4 mb-36 text-center">
+            ביטול עסקה בהתאם לתקנות הגנת הצרכן (ביטול עסקה), התשע״א-2010 וחוק הגנת הצרכן, התשמ״א-1981
+          </div>
+        </Navigation.Root>
+        <LazyViewOrderButton
+          onClick={() => setReviewOrder(true)}
+        />
+        <LazyOrderModal
+          venueId={restaurant.id}
+          open={reviewOrder}
+          onClose={() => setReviewOrder(false)}
+        />
+        <LazyItemModal />
+        <LazyPhoneModal />
+      </OrderContext>
+    </ModalProvider>
   );
 };
 

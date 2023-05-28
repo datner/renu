@@ -1,6 +1,7 @@
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { a, config, useTransition } from "@react-spring/web";
 import { PropsWithChildren } from "react";
+import { useRegisterModal } from "./ModalContext";
 
 type Props = PropsWithChildren<{
   readonly open?: boolean;
@@ -9,14 +10,15 @@ type Props = PropsWithChildren<{
 }>;
 
 export function Modal(props: Props) {
-  const { open, onClose, onDestroyed, children } = props;
+  const { open = false, onClose, onDestroyed, children } = props;
+  useRegisterModal(open);
 
   const transition = useTransition(open, {
     from: { y: 200, opacity: 0 },
     enter: { y: 0, opacity: 1 },
     leave: { y: 200, opacity: 0 },
-    onRest: () => {
-      document.body.style.overflowY = open ? "hidden" : "unset";
+    onDestroyed: () => {
+      // BUG: onDestroyed runs on creation, and on destruction. Why?
       if (!open) onDestroyed?.();
     },
     config: config.stiff,

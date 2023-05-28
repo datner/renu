@@ -5,7 +5,7 @@ import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as RR from "@effect/data/ReadonlyRecord";
 import { useTranslations } from "next-intl";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
 import {
   DefaultValues,
@@ -170,6 +170,7 @@ export interface ItemFieldValues {
 export function ItemModalForm(props: ItemModalFormProps) {
   const { order, item, onSubmit, containerEl } = props;
   const t = useTranslations("menu.Components.ItemModal");
+  const isEdit = O.isSome(order);
 
   const defaultValues = useMemo<DefaultValues<ItemFieldValues>>(
     () =>
@@ -191,11 +192,22 @@ export function ItemModalForm(props: ItemModalFormProps) {
 
   const form = useForm<ItemFieldValues>({
     defaultValues,
+    reValidateMode: "onChange",
   });
 
-  const { handleSubmit, control, formState } = form;
+  const { handleSubmit, control, formState, trigger, clearErrors } = form;
 
   const { isDirty } = formState;
+
+  useEffect(() => {
+    if (isEdit) {
+      trigger();
+    }
+
+    return () => {
+      clearErrors();
+    };
+  }, [isEdit, trigger, clearErrors]);
 
   const { field } = useController({ control, name: "amount" });
   const amount = field.value;
@@ -221,12 +233,18 @@ export function ItemModalForm(props: ItemModalFormProps) {
     [item],
   );
 
+  const handleRemove = () => {
+    onSubmit(
+      { amount: 0, comment: "", modifiers: { oneOf: {}, extras: {} } },
+    );
+  };
+
   return (
     <form id="item-form" onSubmit={submitOrRemove}>
       <FormProvider {...form}>
         <ModifiersBlock modifiers={item.modifiers} />
         <div className="mt-4">
-          <LabeledTextArea registerOptions={{maxLength: 250}} label={t("comment")} name="comment" rows={4} />
+          <LabeledTextArea registerOptions={{ maxLength: 250 }} label={t("comment")} name="comment" rows={4} />
         </div>
         {containerEl
           && createPortal(
@@ -240,7 +258,12 @@ export function ItemModalForm(props: ItemModalFormProps) {
                   onDecrement={() => field.onChange(amount - 1)}
                 />
               </div>
-              <SubmitButton isCreate={O.isNone(order)} price={item.price} modifierMap={modifiers} />
+              <SubmitButton
+                isCreate={O.isNone(order)}
+                onRemove={handleRemove}
+                price={item.price}
+                modifierMap={modifiers}
+              />
             </div>,
             containerEl,
           )}
@@ -250,16 +273,17 @@ export function ItemModalForm(props: ItemModalFormProps) {
 }
 
 interface SubmitButtonProps {
-  price: number;
-  isCreate?: boolean;
-  modifierMap: HashMap.HashMap<Item.Modifier.Id, Venue.Menu.MenuModifierItem>;
+  readonly price: number;
+  readonly isCreate?: boolean;
+  readonly modifierMap: HashMap.HashMap<Item.Modifier.Id, Venue.Menu.MenuModifierItem>;
+  readonly onRemove: () => void;
 }
 
 function SubmitButton(props: SubmitButtonProps) {
-  const { price, isCreate, modifierMap } = props;
+  const { price, isCreate, modifierMap, onRemove } = props;
   const t = useTranslations("menu.Components.CallToActionText");
   const { control } = useFormContext<ItemForm>();
-  const { isDirty } = useFormState({ control });
+  const { isDirty, errors, isValid } = useFormState({ control });
 
   const [amount, oneOfs, extrases] = useWatch({
     control,
@@ -305,7 +329,7 @@ function SubmitButton(props: SubmitButtonProps) {
   switch (orderState) {
     case OrderState.NEW:
       return (
-        <button form="item-form" type="submit" className="btn grow px-2 btn-primary">
+        <button disabled={RR.isEmptyRecord(errors) ? false : !isValid} form="item-form" type="submit" className="btn grow px-2 btn-primary">
           <span className="inline-block text-left rtl:text-right grow xs:grow-0 xs:mx-1.5">
             {t("add")}
           </span>{" "}
@@ -318,7 +342,7 @@ function SubmitButton(props: SubmitButtonProps) {
 
     case OrderState.UPDATE:
       return (
-        <button form="item-form" type="submit" className="btn grow px-2 btn-primary">
+        <button disabled={!isValid} form="item-form" type="submit" className="btn grow px-2 btn-primary">
           <span className="inline-block rtl:text-right flex-grow">{t("update")}</span>
           <span className="tracking-wider font-light">{toShekel(total)}</span>
         </button>
@@ -326,7 +350,7 @@ function SubmitButton(props: SubmitButtonProps) {
 
     case OrderState.REMOVE:
       return (
-        <button form="item-form" type="submit" className="btn grow px-2 btn-error">
+        <button form="item-form" type="button" onClick={onRemove} className="btn grow px-2 btn-error">
           <span className="inline-block text-center font-medium flex-grow">
             {t("remove._")} {multi && t("remove.all")}
           </span>

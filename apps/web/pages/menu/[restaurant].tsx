@@ -91,6 +91,8 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
           )}
           <div className="mt-4 mb-36 text-center">
             ביטול עסקה בהתאם לתקנות הגנת הצרכן (ביטול עסקה), התשע״א-2010 וחוק הגנת הצרכן, התשמ״א-1981
+            <br />
+            פרטי הלקוחות לא מועברים לצד ג למעט עבור ביצוע העסקה
           </div>
         </Navigation.Root>
         <LazyViewOrderButton

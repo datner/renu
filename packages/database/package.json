@@ -11,12 +11,12 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@effect/data": "0.12.3",
-    "@effect/schema": "0.19.3",
-    "@prisma/client": "4.14.1"
+    "@effect/data": "0.12.10",
+    "@effect/schema": "0.21.1",
+    "@prisma/client": "4.16.2"
   },
   "devDependencies": {
-    "prisma": "4.14.1",
+    "prisma": "4.16.2",
     "tsconfig": "workspace:*"
   }
 }

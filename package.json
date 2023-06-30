@@ -16,29 +16,36 @@
     "check:everything": "pnpm run typecheck lint test"
   },
   "devDependencies": {
-    "@commitlint/cli": "17.6.3",
-    "@commitlint/config-conventional": "17.6.3",
-    "@types/node": "20.2.5",
-    "dprint": "0.36.1",
-    "eslint": "8.41.0",
+    "@commitlint/cli": "17.6.6",
+    "@commitlint/config-conventional": "17.6.6",
+    "@types/node": "20.3.2",
+    "dprint": "0.37.1",
+    "eslint": "8.43.0",
     "eslint-config-custom": "workspace:*",
     "husky": "8.0.3",
-    "lint-staged": "13.2.2",
-    "turbo": "1.9.9",
-    "typescript": "5.0.4"
+    "libpg-query": "15.0.2",
+    "lint-staged": "13.2.3",
+    "next": "13.4.7",
+    "turbo": "1.10.6",
+    "typescript": "5.1.6"
   },
-  "packageManager": "pnpm@8.6.0",
+  "packageManager": "pnpm@8.6.1",
   "dependencies": {
-    "@effect/io": "0.25.13",
-    "@effect/match": "0.23.4",
-    "@fp-ts/core": "0.2.1"
+    "@effect/data": "0.12.10",
+    "@effect/io": "0.28.0",
+    "@effect/match": "0.24.5",
+    "@effect/schema": "0.21.1",
+    "@fp-ts/core": "0.2.1",
+    "@sqlfx/pg": "0.4.4",
+    "effect-schema-class": "0.4.0"
   },
   "pnpm": {
     "overrides": {
       "@fp-ts/data": "npm:@effect/data",
-      "@effect/data": "latest",
-      "@effect/io": "latest",
-      "@effect/schema": "latest"
+      "@effect/data": "$@effect/data",
+      "@effect/io": "$@effect/io",
+      "@effect/match": "$@effect/match",
+      "@effect/schema": "$@effect/schema"
     }
   }
 }

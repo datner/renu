@@ -1,9 +1,0 @@
-diff --git a/internal/HashMap/node.d.ts b/internal/HashMap/node.d.ts
-index 772463a41576e6e3a0dd63b544a9d3418a6809d2..bbb9a3b6e6c6c7fc8fa8904a89cadff753621a94 100644
---- a/internal/HashMap/node.d.ts
-+++ b/internal/HashMap/node.d.ts
-@@ -1,2 +1,4 @@
-+import type { Option } from "@effect/data/Option";
-+export type UpdateFn<V> = (prev: Option<V>) => Option<V>;
- export {};
- //# sourceMappingURL=node.d.ts.map

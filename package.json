@@ -23,7 +23,6 @@
     "eslint": "8.43.0",
     "eslint-config-custom": "workspace:*",
     "husky": "8.0.3",
-    "libpg-query": "15.0.2",
     "lint-staged": "13.2.3",
     "next": "13.4.7",
     "turbo": "1.10.6",

@@ -14,11 +14,11 @@ export const category = {
         pipe(
           Effect.promise(() => create(data)),
           Effect.tap((c) =>
-            Effect.allPar(
-              Effect.sync(() => setQueryData(getCategory, { identifier: c.identifier }, c)),
-              Effect.sync(() => setQueryData(getCategory, { id: c.id }, c)),
-              Effect.sync(() => invalidateQuery(getCurrentVenueCategories)),
-              Effect.sync(() => navigator.sendBeacon("/api/revalidate-current")),
+            Effect.allParDiscard(
+              Effect.promise(() => setQueryData(getCategory, { identifier: c.identifier }, c)),
+              Effect.promise(() => setQueryData(getCategory, { id: c.id }, c)),
+              Effect.promise(() => invalidateQuery(getCurrentVenueCategories)),
+              Effect.promise(() => fetch("/api/revalidate-current")),
             )
           ),
           Effect.runPromise,

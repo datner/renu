@@ -1,38 +1,32 @@
-import { Ctx } from "@blitzjs/next";
-import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
+import { resolver } from "@blitzjs/rpc";
 import * as Effect from "@effect/io/Effect";
-import * as P from "@effect/schema/Parser";
 import { Prisma } from "database";
-import db from "db";
-import { Session } from "src/auth";
+import { Database } from "shared/Database";
+import { Resolver } from "src/auth";
 import { Renu } from "src/core/effect";
 import { prismaError } from "src/core/helpers/prisma";
-import { CategoryForm, CreateCategory } from "../validations";
+import { CreateCategory } from "../validations";
 
-export const handler = (input: CategoryForm, ctx: Ctx) =>
-  pipe(
-    P.decodeEffect(CreateCategory)(input),
-    Effect.map(
-      ({ identifier, en, he }) => ({
-        identifier,
-        content: {
-          createMany: {
-            data: [
-              { ...he, description: O.getOrUndefined(he.description) },
-              { ...en, description: O.getOrUndefined(en.description) },
-            ],
-          },
+export const handler = resolver.pipe(
+  Resolver.schema(CreateCategory),
+  Resolver.authorize(),
+  Effect.map(
+    ({ identifier, en, he }) => ({
+      identifier,
+      content: {
+        createMany: {
+          data: [he, en],
         },
-      } satisfies Prisma.CategoryCreateInput),
-    ),
-    Effect.zip(Session.Session),
-    Effect.flatMap(([input, session]) =>
+      },
+    } satisfies Prisma.CategoryCreateInput),
+  ),
+  Resolver.flatMapAuthorized((data, { session }) =>
+    Effect.flatMap(Database, db =>
       Effect.tryCatchPromise(
         () =>
           db.category.create({
             data: {
-              ...input,
+              ...data,
               Venue: { connect: { id: session.venue.id } },
               organizationId: session.organization.id,
             },
@@ -41,10 +35,9 @@ export const handler = (input: CategoryForm, ctx: Ctx) =>
             },
           }),
         prismaError("Category"),
-      )
-    ),
-    Session.authorize(ctx),
-    Renu.runPromise$,
-  );
+      ))
+  ),
+  Renu.runPromise$,
+);
 
 export default handler;

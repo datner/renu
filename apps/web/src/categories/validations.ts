@@ -1,10 +1,20 @@
 import * as S from "@effect/schema/Schema";
 import { Common } from "shared/schema";
 
+const ContentField = S.struct({
+  name: Common.Name,
+});
+
 export const CreateCategory = S.struct({
   identifier: Common.Slug,
-  en: Common.Content,
-  he: Common.Content,
+  en: S.attachPropertySignature("locale", "en")(ContentField),
+  he: S.attachPropertySignature("locale", "he")(ContentField),
+});
+
+const CategoryForm = S.struct({
+  identifier: Common.Slug,
+  en: ContentField,
+  he: ContentField,
 });
 
 export const CreateCategoryResult = S.struct({

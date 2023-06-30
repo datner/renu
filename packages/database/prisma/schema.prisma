@@ -111,6 +111,18 @@ model Venue {
   open                  Boolean                @default(true)
   Affiliation           Affiliation[]
   orders                Order[]
+  paymentConfig         PaymentConfig?         @relation(fields: [paymentConfigId], references: [id])
+  paymentConfigId       Int?
+}
+
+model PaymentConfig {
+  id             Int      @id @default(autoincrement())
+  secretApiKey   String
+  publicApiKey   String
+  appId          String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @default(now()) @updatedAt
+  includedVenues Venue[]
 }
 
 model ClearingIntegration {

@@ -1,13 +1,18 @@
 import * as E from "@effect/data/Either";
-import { pipe } from "@effect/data/Function";
+import { apply, pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
+import * as Predicate from "@effect/data/Predicate";
 import * as A from "@effect/data/ReadonlyArray";
 import * as RR from "@effect/data/ReadonlyRecord";
 import * as Match from "@effect/match";
+import * as AST from "@effect/schema/AST";
 import * as ParseResult from "@effect/schema/ParseResult";
 import * as Schema from "@effect/schema/Schema";
 
 type Entry = [string, { readonly message: string }];
+
+const getMessage = AST.getAnnotation<AST.MessageAnnotation<unknown>>(AST.MessageAnnotationId);
+const getExamples = AST.getAnnotation<AST.ExamplesAnnotation>(AST.MessageAnnotationId);
 
 const buildError = (error: ParseResult.ParseErrors, path = [] as string[]): Array<Entry> =>
   pipe(
@@ -17,12 +22,17 @@ const buildError = (error: ParseResult.ParseErrors, path = [] as string[]): Arra
     Match.tag("UnionMember", (e) => A.flatMap(e.errors, _ => buildError(_, path))),
     Match.tag("Type", (_) => [
       [A.join(path, "."), {
-        message: O.getOrElse(_.message, () => `expected: ${_.expected._tag} actual: ${_.actual}`),
+        message: pipe(
+          _.message,
+          O.orElse(() => O.map(getMessage(_.expected), apply(_.actual))),
+          O.orElse(() => pipe(getExamples(_.expected), O.filter(A.every(Predicate.isString)), O.map(A.join(", ")))),
+          O.getOrElse(() => `Unexpected value: ${_.actual}`),
+        ),
       }] as Entry,
     ]),
     Match.tag("Missing", (_) => [[A.join(path, "."), { message: "Missing" }] as Entry]),
     Match.tag("Forbidden", (_) => [[A.join(path, "."), { message: "Forbidden" }] as Entry]),
-    Match.tag("Unexpected", (_) => [[A.join(path, "."), { message: `Unexpected: ${_.actual}` }] as Entry]),
+    Match.tag("Unexpected", (_) => [[A.join(path, "."), { message: `Unexpected value: ${_.actual}` }] as Entry]),
     Match.exhaustive,
   );
 
@@ -36,4 +46,3 @@ export const schemaResolver = <I, A>(schema: Schema.Schema<I, A>) => (data: I, _
       });
     }, values => ({ values, errors: {} })),
   );
-

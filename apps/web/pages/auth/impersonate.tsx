@@ -131,6 +131,7 @@ function ImpersonateUserForm() {
             <SegmentedControl
               fullWidth
               {...groupBy}
+              onChange={_ => groupBy.onChange(_ as "venue" | "organization")}
               data={[
                 { label: "Venue", value: "venue" },
                 { label: "Organization", value: "organization" },

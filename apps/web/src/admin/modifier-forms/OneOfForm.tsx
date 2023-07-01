@@ -49,6 +49,7 @@ export const OneOfForm = (props: Props) => {
             render={({ field }) => (
               <Select
                 {...field}
+                onChange={_ => field.onChange(_ ?? "")}
                 label="Default Selection"
                 placeholder="Pick one"
                 nothingFound="No options"
@@ -101,6 +102,7 @@ export const OneOfForm = (props: Props) => {
                   render={({ field }) => (
                     <NumberInput
                       {...field}
+                      onChange={_ => field.onChange(_ || 0)}
                       label="Price"
                       parser={shekelParser}
                       formatter={shekelFormatter}

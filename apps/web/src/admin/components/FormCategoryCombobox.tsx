@@ -53,7 +53,7 @@ export function FormCategoryCombobox() {
       getCreateLabel={(query) => `+ Create ${query}`}
       onCreate={(query) => {
         modal.show({ name: query }).then((category) => {
-          return field.onChange(String((category as Category).id));
+          return field.onChange((category as Category).id);
         });
         return { value: "-1", label: query };
       }}

@@ -55,12 +55,26 @@ export const ExtrasForm = (props: Props) => {
         <Controller
           control={control}
           name="min"
-          render={({ field }) => <NumberInput {...field} min={0} label="Minimum Selection" />}
+          render={({ field }) => (
+            <NumberInput
+              {...field}
+              onChange={_ => field.onChange(_ || 0)}
+              min={0}
+              label="Minimum Selection"
+            />
+          )}
         />
         <Controller
           control={control}
           name="max"
-          render={({ field }) => <NumberInput {...field} min={0} label="Maximum Selection" />}
+          render={({ field }) => (
+            <NumberInput
+              {...field}
+              onChange={_ => field.onChange(_ || 0)}
+              min={0}
+              label="Maximum Selection"
+            />
+          )}
         />
       </div>
       <div className="space-y-2 mt-4">
@@ -88,6 +102,7 @@ export const ExtrasForm = (props: Props) => {
                   render={({ field }) => (
                     <NumberInput
                       {...field}
+                      onChange={_ => field.onChange(_ || 0)}
                       label="Price"
                       parser={shekelParser}
                       formatter={shekelFormatter}

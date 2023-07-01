@@ -229,6 +229,7 @@ export function ItemForm(props: Props) {
                   </div>
                   <NumberInput
                     {...priceProps}
+                    onChange={_ => priceProps.onChange(_ || 0)}
                     label={t("price")}
                     step={50}
                     min={0}

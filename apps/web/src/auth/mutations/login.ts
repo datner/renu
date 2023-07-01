@@ -1,92 +1,79 @@
 import { PublicData } from "@blitzjs/auth";
 import { SecurePassword } from "@blitzjs/auth/secure-password";
 import { resolver } from "@blitzjs/rpc";
-import { AuthenticationError } from "blitz";
-import { GlobalRole, Prisma } from "db";
-import * as E from "fp-ts/Either";
-import { pipe } from "fp-ts/function";
-import * as TE from "fp-ts/TaskEither";
-import { findFirstUser, updateUser } from "src/users/helpers/prisma";
-import { hashPassword, verifyPassword } from "../helpers/fp/securePassword";
-import { getMembership } from "../helpers/getMembership";
-import { Login } from "../validations";
+import * as A from "@effect/data/ReadonlyArray";
+import * as Effect from "@effect/io/Effect";
+import * as Schema from "@effect/schema/Schema";
+import { AuthenticationError, NotFoundError } from "blitz";
+import { Prisma } from "database";
+import { Database } from "shared/Database";
+import { Renu } from "src/core/effect";
+import { Resolver } from "..";
 
-type AuthError = {
-  tag: "AuthenticationError";
-  error: AuthenticationError;
-};
-
-export const authenticateUser =
-  (password: string) =>
-  <A extends Prisma.UserInclude, B extends Prisma.UserWhereUniqueInput>(args: {
-    include: A;
-    where: B;
-  }) =>
-    pipe(
-      findFirstUser(args),
-      TE.mapLeft((e) =>
-        e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2025"
-          ? ({
-            tag: "AuthenticationError" as const,
-            error: new AuthenticationError(),
-          } as AuthError)
-          : e
-      ),
-      TE.chainW((user) =>
-        pipe(
-          verifyPassword(user.hashedPassword, password),
-          TE.fromTask,
-          TE.chain(
-            TE.fromPredicate(
-              (r) => r === SecurePassword.VALID_NEEDS_REHASH,
-              () => hashPassword,
-            ),
-          ),
-          TE.orLeft((hash) => hash(password)),
-          TE.orElseW((hashedPassword) => updateUser({ where: { id: user.id }, data: { hashedPassword } })),
-          TE.map(() => user),
-        )
-      ),
-      TE.map(({ hashedPassword, ...user }) => user),
-    );
+export const Login = Schema.struct({
+  email: Schema.string,
+  password: Schema.string,
+});
 
 const withMembership = {
   membership: { include: { affiliations: { include: { Venue: true } }, organization: true } },
 } satisfies Prisma.UserInclude;
 
-type UserWithMembership = Prisma.UserGetPayload<{ include: typeof withMembership }>;
+const verify = (hashedPassword: string | null, password: string) =>
+  Effect.promise(() => SecurePassword.verify(hashedPassword, password));
 
-const getPublicData = (user: Omit<UserWithMembership, "hashedPassword">) =>
-  pipe(
-    getMembership(user),
-    E.map(
-      (m): PublicData => ({
-        userId: user.id,
-        organization: m.organization,
-        venue: m.affiliation.Venue,
-        roles: [user.role, m.role],
-        orgId: m.organizationId,
-      }),
-    ),
-    E.orElse((e) =>
-      user.role === GlobalRole.SUPER
-        ? E.right({
-          userId: user.id,
-          roles: [user.role],
-          orgId: -1,
-        } as PublicData)
-        : E.throwError(e)
-    ),
-  );
+const isValidNeedsRehash = (symb: symbol): symb is typeof SecurePassword.VALID_NEEDS_REHASH =>
+  symb === SecurePassword.VALID_NEEDS_REHASH;
 
-export default resolver.pipe(resolver.zod(Login), ({ email, password }, ctx) =>
-  pipe(
-    authenticateUser(password)({ include: withMembership, where: { email } }),
-    TE.chainFirstW((user) =>
-      pipe(
-        getPublicData(user),
-        TE.fromEither,
-        TE.chainTaskK((s) => () => ctx.session.$create(s)),
-      )
+const rehashPassword = Effect.serviceFunctionEffect(
+  Database,
+  db => ({ password, email }: Schema.To<typeof Login>) =>
+    Effect.flatMap(
+      Effect.promise(() => SecurePassword.hash(password)),
+      hashedPassword => Effect.promise(() => db.user.update({ where: { email }, data: { hashedPassword } })),
     ),
-  )());
+);
+
+const getUser = Effect.serviceFunctionEffect(Database, db => (email: string) =>
+  Effect.tryCatchPromise(
+    () => db.user.findFirstOrThrow({ where: { email }, include: withMembership }),
+    () => new AuthenticationError(),
+  ));
+
+export default resolver.pipe(
+  Resolver.schema(Login),
+  Effect.flatMap((_) =>
+    Effect.tap(getUser(_.email), user =>
+      Effect.filterOrElse(
+        verify(user.hashedPassword, _.password),
+        isValidNeedsRehash,
+        () => rehashPassword(_),
+      ))
+  ),
+  Effect.bindTo("user"),
+  Effect.bind(
+    "membership",
+    _ =>
+      Effect.orElseFail(
+        A.head(_.user.membership),
+        () => new NotFoundError(`User is not associated with any organizations`),
+      ),
+  ),
+  Effect.bind(
+    "affiliation",
+    _ =>
+      Effect.orElseFail(
+        A.head(_.membership.affiliations),
+        () => new NotFoundError(`User is not affiliated with any venues`),
+      ),
+  ),
+  Effect.map((_): PublicData => ({
+    userId: _.user.id,
+    organization: _.membership.organization,
+    venue: _.affiliation.Venue,
+    roles: [_.user.role, _.membership.role],
+    orgId: _.membership.organizationId,
+  })),
+  Resolver.flatMap((_, ctx) => Effect.promise(() => ctx.session.$create(_))),
+  Renu.runPromise$,
+);

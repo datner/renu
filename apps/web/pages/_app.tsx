@@ -3,7 +3,7 @@ import { useQueryErrorResetBoundary } from "@blitzjs/rpc";
 import { AuthenticationError, AuthorizationError } from "blitz";
 import clsx from "clsx";
 import { Locale } from "database";
-import { NextIntlProvider } from "next-intl";
+import { NextIntlClientProvider } from "next-intl";
 import { Noto_Sans, Secular_One } from "next/font/google";
 import { LoginForm } from "src/auth/components/LoginForm";
 import { withBlitz } from "src/blitz-client";
@@ -42,7 +42,7 @@ export default withBlitz(function App({
   }, [locale, dir]);
 
   return (
-    <NextIntlProvider messages={messages}>
+    <NextIntlClientProvider messages={messages}>
       {/* This MantineProvider is a local component */}
       <MantineProvider>
         <ErrorBoundary
@@ -54,7 +54,7 @@ export default withBlitz(function App({
           </div>
         </ErrorBoundary>
       </MantineProvider>
-    </NextIntlProvider>
+    </NextIntlClientProvider>
   );
 });
 

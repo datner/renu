@@ -42,7 +42,14 @@ export const authorize =
   };
 
 export const flatMap =
-  <A, R1, E1, B, C>(f: (a: A, ctx: C) => Effect.Effect<R1, E1, B>) => <R, E>(self: Effect.Effect<R, E, A>, ctx: C) => ({
+  <A, R1, E1, B, C extends Ctx>(f: (a: A, ctx: C) => Effect.Effect<R1, E1, B>) => <R, E>(self: Effect.Effect<R, E, A>, ctx: C) => ({
+    __blitz: true,
+    value: Effect.flatMap(self, _ => f(_, ctx)),
+    ctx,
+  } as const);
+
+export const flatMapAuthorized =
+  <A, R1, E1, B, C extends AuthenticatedMiddlewareCtx>(f: (a: A, ctx: C) => Effect.Effect<R1, E1, B>) => <R, E>(self: Effect.Effect<R, E, A>, ctx: C) => ({
     __blitz: true,
     value: Effect.flatMap(self, _ => f(_, ctx)),
     ctx,

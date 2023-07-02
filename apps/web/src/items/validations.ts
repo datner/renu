@@ -283,8 +283,10 @@ export const CreateItemSchema = S.struct({
   identifier: Slug_,
   categoryId: Id_,
   modifiers: S.array(Modifier),
-  en: Content_,
-  he: Content_,
+  content: S.struct({
+    en: Content_,
+    he: Content_,
+  }),
 });
 export interface CreateItemSchema extends S.To<typeof CreateItemSchema> {}
 
@@ -295,8 +297,7 @@ export const UpdateItemSchema = pipe(
 export interface UpdateItemSchema extends S.To<typeof UpdateItemSchema> {}
 
 export const toCreateItem = ({
-  en,
-  he,
+  content: { en, he },
   categoryId,
   modifiers,
   managementId,

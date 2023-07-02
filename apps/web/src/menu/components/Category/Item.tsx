@@ -11,9 +11,10 @@ import { Venue } from "shared";
 
 interface ItemProps {
   item: Venue.Menu.MenuCategoryItem
+  priority: boolean
 }
 
-export const Item = memo<ItemProps>(({ item }) => {
+export const Item = memo<ItemProps>(({ item, priority }) => {
   const state = useOrderState();
   const orderItems = Order.getOrderItems(state.order);
 
@@ -28,12 +29,14 @@ export const Item = memo<ItemProps>(({ item }) => {
     orderItem,
     () => [
       <ListItem
+        priority={priority}
         key={`${item.item.identifier}-0`}
         item={Order.NewActiveItem({ item: Data.struct(item.item) })}
       />,
     ],
     A.map(([key, item], i) => (
       <ListItem
+        priority={priority}
         key={`${item.item.identifier}-${i}`}
         item={Order.ExistingActiveItem({ item, key })}
       />

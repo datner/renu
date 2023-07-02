@@ -138,6 +138,33 @@ export const getAmount = pipe(
   Match.exhaustive,
 );
 
+const isOnlyItem = (key: OrderItemKey) =>
+  P.every([
+    (o: ActiveOrder) => HashMap.has(o.items, key),
+    (o: ActiveOrder) => HashMap.size(o.items) === 1,
+  ]);
+
+const isLastItem = (key: OrderItemKey) => P.and(isOnlyItem(key), (o: ActiveOrder) => o.totalAmount === 1);
+
+export const isOneOf: P.Refinement<OrderItemModifier, OneOf> = Refinement.isTagged("OneOf");
+
+export const isExtras: P.Refinement<OrderItemModifier, Extras> = Refinement.isTagged("Extras");
+
+export const isActiveOrder: P.Refinement<Order, ActiveOrder> = Refinement.isTagged("ActiveOrder");
+
+export const isEmptyOrder: P.Refinement<Order, EmptyOrder> = Refinement.isTagged("EmptyOrder");
+
+export const isNewActiveItem: P.Refinement<ActiveItem, NewActiveItem> = Refinement.isTagged("NewActiveItem");
+
+export const isExistingActiveItem: P.Refinement<ActiveItem, ExistingActiveItem> = Refinement.isTagged(
+  "ExistingActiveItem",
+);
+
+export const isMultiOrderItem: P.Refinement<OrderItem, MultiOrderItem> = Refinement.isTagged("MultiOrderItem");
+
+export const getOrderItemAmount = (orderItem: OrderItem) =>
+  isMultiOrderItem(orderItem) ? orderItem.amount : Number.Amount(1);
+
 export const getOrderAmount = (order: Order) => (isActiveOrder(order) ? order.totalAmount : 0);
 export const getOrderCost = (order: Order) => (isActiveOrder(order) ? order.totalCost : 0);
 export const getOrderItems = (order: Order) => isActiveOrder(order) ? order.items : HashMap.empty();
@@ -258,76 +285,56 @@ export const addItem = (item: OrderItem): Action => (state) => {
   });
 };
 
+const MatchOrder = Match.typeTags<Order>();
+const MatchOrderItem = Match.typeTags<OrderItem>();
+
+const incrementOrderItem = MatchOrderItem({
+  SingleOrderItem: (_) =>
+    MultiOrderItem({
+      ..._,
+      amount: Number.Multiple(2),
+      cost: Number.Cost(_.cost * 2),
+    }),
+  MultiOrderItem: (_) =>
+    MultiOrderItem({
+      ..._,
+      amount: Number.Multiple(_.amount + 1),
+      cost: Number.Cost(_.cost / _.amount * (_.amount + 1)),
+    }),
+});
+
 export const incrementItem = (key: OrderItemKey): Action => (state) =>
   pipe(
-    Match.value(state.order),
-    Match.tag("EmptyOrder", () => state),
-    Match.tag("ActiveOrder", (o) =>
-      pipe(
-        HashMap.get(o.items, key),
-        O.map((it) => {
-          const amount = pipe(
-            Match.value(it),
-            Match.tag("SingleOrderItem", () => Number.Multiple(2)),
-            Match.tag("MultiOrderItem", (oi) => Number.Multiple(oi.amount + 1)),
-            Match.exhaustive,
-          );
-          return MultiOrderItem({
-            comment: it.comment,
-            item: it.item,
-            modifiers: it.modifiers,
-            amount,
-            cost: Number.Cost(getItemCost(it) * amount),
-            valid: it.valid,
-          });
-        }),
-        O.map((multiItem) => {
-          const items = HashMap.set(o.items, key, multiItem);
-          return State({
-            ...state,
-            order: ActiveOrder({
-              ...o,
-              items,
-              totalAmount: Number.Amount(o.totalAmount + 1),
-              totalCost: Number.Cost(getSumCost(items)),
-            }),
-            activeItem: O.zipWith(state.activeItem, O.some(multiItem), (active, item) => {
-              if (isExistingActiveItem(active) && Equal.equals(active.key, key)) {
-                return ExistingActiveItem({ key, item });
-              }
+    state.order,
+    MatchOrder({
+      EmptyOrder: () => state,
+      ActiveOrder: _ =>
+        pipe(
+          HashMap.get(_.items, key),
+          O.map(incrementOrderItem),
+          O.map((multiItem) => {
+            const items = HashMap.set(_.items, key, multiItem);
+            return State({
+              ...state,
+              order: ActiveOrder({
+                ..._,
+                items,
+                totalAmount: Number.Amount(_.totalAmount + 1),
+                totalCost: Number.Cost(getSumCost(items)),
+              }),
+              activeItem: O.zipWith(state.activeItem, O.some(multiItem), (active, item) => {
+                if (isExistingActiveItem(active) && Equal.equals(active.key, key)) {
+                  return ExistingActiveItem({ key, item });
+                }
 
-              return active;
-            }),
-          });
-        }),
-        O.getOrElse(() => state),
-      )),
-    Match.exhaustive,
+                return active;
+              }),
+            });
+          }),
+          O.getOrElse(() => state),
+        ),
+    }),
   );
-
-const isOnlyItem = (key: OrderItemKey) =>
-  P.every([
-    (o: ActiveOrder) => HashMap.has(o.items, key),
-    (o: ActiveOrder) => HashMap.size(o.items) === 1,
-  ]);
-
-const isLastItem = (key: OrderItemKey) => P.and(isOnlyItem(key), (o: ActiveOrder) => o.totalAmount === 1);
-
-export const isOneOf: P.Refinement<OrderItemModifier, OneOf> = Refinement.isTagged("OneOf");
-
-export const isExtras: P.Refinement<OrderItemModifier, Extras> = Refinement.isTagged("Extras");
-
-export const isActiveOrder: P.Refinement<Order, ActiveOrder> = Refinement.isTagged("ActiveOrder");
-
-export const isEmptyOrder: P.Refinement<Order, EmptyOrder> = Refinement.isTagged("EmptyOrder");
-
-export const isNewActiveItem: P.Refinement<ActiveItem, NewActiveItem> = Refinement.isTagged("NewActiveItem");
-
-export const isExistingActiveItem: P.Refinement<ActiveItem, ExistingActiveItem> = Refinement.isTagged(
-  "ExistingActiveItem",
-);
-
-export const isMultiOrderItem: P.Refinement<OrderItem, MultiOrderItem> = Refinement.isTagged("MultiOrderItem");
 
 const decrementAmount = (opt: O.Option<OrderItem>) =>
   pipe(

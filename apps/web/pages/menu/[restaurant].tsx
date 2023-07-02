@@ -17,10 +17,7 @@ import { useLocale } from "src/core/hooks/useLocale";
 import MenuLayout from "src/core/layouts/MenuLayout";
 import * as Category from "src/menu/components/Category";
 import { Closed } from "src/menu/components/Closed";
-import { ModalProvider } from "src/menu/components/ModalContext";
 import * as Navigation from "src/menu/components/Navigation";
-import { OrderContext } from "src/menu/components/OrderContext";
-import { PostHogScript } from "src/menu/components/PostHogScript";
 import getMenu from "src/menu/queries/getMenu";
 import * as _Menu from "src/menu/schema";
 import { Query } from "src/menu/validations/page";
@@ -35,9 +32,6 @@ const LazyItemModal = dynamic(() => import("src/menu/components/ItemModal"), {
 const LazyOrderModal = dynamic(() => import("src/menu/components/OrderModal"), {
   loading: () => <Fragment />,
 });
-const LazyPhoneModal = dynamic(() => import("src/menu/components/PhoneModal").then(m => m.FeedbackModal), {
-  loading: () => <Fragment />,
-});
 
 const CategoryOrder = Order.contramap(Str.Order, (b: Venue.Menu.Category) => b.identifier);
 
@@ -48,7 +42,6 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
   const orderedCategories = useMemo(() => A.sort(categories as Array<Venue.Menu.Category>, CategoryOrder), [
     categories,
   ]);
-  // add the item modal state to the dispatch as well, just for laughs
   const locale = useLocale();
   const [reviewOrder, setReviewOrder] = useState(false);
 
@@ -59,6 +52,10 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
       <>
         <Head>
           <title>{getTitle(restaurant.content) + " | Renu"}</title>
+          <meta
+            name="viewport"
+            content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0"
+          />
           <link rel="icon" href="/favicon.ico" />
         </Head>
         <Closed venue={O.map(getContentFor(restaurant.content, locale), c => c.name)} />
@@ -66,47 +63,47 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
     );
   }
 
+
   return (
-    <ModalProvider>
-      <OrderContext>
-        <Head>
-          <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-          <title>{getTitle(restaurant.content) + " | Renu"}</title>
-          <link rel="icon" href="/favicon.ico" />
-        </Head>
-        <PostHogScript />
-        <Navigation.Root>
-          <Navigation.NavList categories={orderedCategories} />
-          <div>
-            {orderedCategories.map((category) => (
-              <Category.Section key={category.id} category={category}>
-                <Category.Items>
-                  {category.categoryItems.map((ci) => <Category.Item key={ci.item.id} item={ci} />)}
-                </Category.Items>
-              </Category.Section>
-            ))}
-          </div>
-          {O.getOrNull(
-            O.map(restaurant.simpleContactInfo, content => <div className="mt-4 text-center">{content}</div>),
-          )}
-          <div className="mt-4 mb-36 text-center">
-            ביטול עסקה בהתאם לתקנות הגנת הצרכן (ביטול עסקה), התשע״א-2010 וחוק הגנת הצרכן, התשמ״א-1981
-            <br />
-            פרטי הלקוחות לא מועברים לצד ג למעט עבור ביצוע העסקה
-          </div>
-        </Navigation.Root>
-        <LazyViewOrderButton
-          onClick={() => setReviewOrder(true)}
+    <>
+      <Head>
+        <meta
+          name="viewport"
+          content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0"
         />
-        <LazyOrderModal
-          venueId={restaurant.id}
-          open={reviewOrder}
-          onClose={() => setReviewOrder(false)}
-        />
-        <LazyItemModal />
-        <LazyPhoneModal />
-      </OrderContext>
-    </ModalProvider>
+        <title>{getTitle(restaurant.content) + " | Renu"}</title>
+        <link rel="icon" href="/favicon.ico" />
+      </Head>
+      <Navigation.Root>
+        <Navigation.NavList categories={orderedCategories} />
+        <div>
+          {orderedCategories.map((category) => (
+            <Category.Section key={category.id} category={category}>
+              <Category.Items>
+                {category.categoryItems.map((ci, i) => <Category.Item priority={i < 6} key={ci.item.id} item={ci} />)}
+              </Category.Items>
+            </Category.Section>
+          ))}
+        </div>
+        {O.getOrNull(
+          O.map(restaurant.simpleContactInfo, content => <div className="mt-4 text-center">{content}</div>),
+        )}
+        <div className="mt-4 mb-36 text-center">
+          ביטול עסקה בהתאם לתקנות הגנת הצרכן (ביטול עסקה), התשע״א-2010 וחוק הגנת הצרכן, התשמ״א-1981
+          <br />
+          פרטי הלקוחות לא מועברים לצד ג למעט עבור ביצוע העסקה
+        </div>
+      </Navigation.Root>
+      <LazyViewOrderButton
+        onClick={() => setReviewOrder(true)}
+      />
+      <LazyOrderModal
+        venueId={restaurant.id}
+        open={reviewOrder}
+        onClose={() => setReviewOrder(false)}
+      />
+      <LazyItemModal />
+    </>
   );
 };
 
@@ -138,6 +135,7 @@ export const getStaticProps = gSP(async (context) => {
       },
     };
   } catch (e) {
+    console.error(e);
     throw new NotFoundError();
   }
 });

@@ -54,7 +54,7 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
           <title>{getTitle(restaurant.content) + " | Renu"}</title>
           <meta
             name="viewport"
-            content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0"
+            content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1, user-scalable=0, shrink-to-fit=no"
           />
           <link rel="icon" href="/favicon.ico" />
         </Head>
@@ -63,13 +63,12 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
     );
   }
 
-
   return (
     <>
       <Head>
         <meta
           name="viewport"
-          content="width=device-width, height=device-height, initial-scale=1.0, minimum-scale=1.0"
+          content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1, user-scalable=0, shrink-to-fit=no"
         />
         <title>{getTitle(restaurant.content) + " | Renu"}</title>
         <link rel="icon" href="/favicon.ico" />

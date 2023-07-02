@@ -56,7 +56,8 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
             name="viewport"
             content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1, user-scalable=0, shrink-to-fit=no"
           />
-          <link rel="icon" href="/favicon.ico" />
+          <link rel="shortcut icon" href="/favicon.ico" />
+          <link rel="apple-touch-icon-precomposed" href="/24round4.png" />
         </Head>
         <Closed venue={O.map(getContentFor(restaurant.content, locale), c => c.name)} />
       </>
@@ -71,7 +72,8 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
           content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1, user-scalable=0, shrink-to-fit=no"
         />
         <title>{getTitle(restaurant.content) + " | Renu"}</title>
-        <link rel="icon" href="/favicon.ico" />
+        <link rel="shortcut icon" href="/favicon.ico" />
+        <link rel="apple-touch-icon-precomposed" href="/24round4.png" />
       </Head>
       <Navigation.Root>
         <Navigation.NavList categories={orderedCategories} />

@@ -38,6 +38,9 @@
     "@sqlfx/pg": "0.4.4",
     "effect-schema-class": "0.4.0"
   },
+  "engines": {
+    "node": "18"
+  },
   "pnpm": {
     "overrides": {
       "@fp-ts/data": "npm:@effect/data",

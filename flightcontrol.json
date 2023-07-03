@@ -26,7 +26,7 @@
           "healthCheckPath": "/api/healthcheck",
           "envVariables": {
             "APP_ENV": "production",
-            "NIXPACKS_VERSION": "1.6.0"
+            "NIXPACKS_VERSION": "1.9.2"
           }
         },
         {

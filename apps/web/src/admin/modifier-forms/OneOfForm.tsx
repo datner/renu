@@ -1,4 +1,5 @@
 import * as A from "@effect/data/ReadonlyArray";
+import * as Schema from "@effect/schema/Schema";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { ActionIcon, Button, NumberInput, Select, TextInput } from "@mantine/core";
@@ -21,7 +22,7 @@ type Props = {
 export const OneOfForm = (props: Props) => {
   const { index, update, field, onDuplicate, onDelete } = props;
   const { register, reset, control, watch, handleSubmit, formState } = useForm({
-    resolver: schemaResolver(OneOfSchema),
+    resolver: schemaResolver(Schema.from(OneOfSchema)),
     defaultValues: field.config,
   });
   useEffect(() => {

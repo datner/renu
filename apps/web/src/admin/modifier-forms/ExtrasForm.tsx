@@ -1,8 +1,9 @@
+import { pipe } from "@effect/data/Function";
+import * as A from "@effect/data/ReadonlyArray";
+import * as Schema from "@effect/schema/Schema";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { ActionIcon, Button, NumberInput, Switch, TextInput } from "@mantine/core";
-import * as A from "fp-ts/Array";
-import { pipe } from "fp-ts/function";
 import { useEffect } from "react";
 import { Control, Controller, useFieldArray, UseFieldArrayUpdate, useForm } from "react-hook-form";
 import { schemaResolver } from "shared/effect/Schema";
@@ -20,7 +21,7 @@ type Props = {
 export const ExtrasForm = (props: Props) => {
   const { index, update, field, onDuplicate } = props;
   const { register, reset, control, handleSubmit, formState } = useForm({
-    resolver: schemaResolver(ExtrasSchema),
+    resolver: schemaResolver(Schema.from(ExtrasSchema)),
     defaultValues: field.config,
   });
 
@@ -80,7 +81,7 @@ export const ExtrasForm = (props: Props) => {
       <div className="space-y-2 mt-4">
         {pipe(
           fields,
-          A.mapWithIndex((i, f) => (
+          A.map((f, i) => (
             <div
               key={f.id}
               className="relative border border-gray-300 bg-white p-4 shadow-md rounded-md"

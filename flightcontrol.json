@@ -19,14 +19,13 @@
           "domain": "renu.menu",
           "minInstances": 2,
           "maxInstances": 4,
-          "buildCommand": "pnpm build --filter web",
-          "startCommand": "pnpm start --filter web",
           "watchPaths": ["apps/web/**", "packages/database/**", "packages/shared/**", "packages/@integrations/**"],
           "enableCloudfrontSwr": true,
           "healthCheckPath": "/api/healthcheck",
           "envVariables": {
             "APP_ENV": "production",
-            "NIXPACKS_VERSION": "1.9.2"
+            "NIXPACKS_VERSION": "1.9.2",
+            "NIXPACKS_TURBO_APP_NAME": "web"
           }
         },
         {

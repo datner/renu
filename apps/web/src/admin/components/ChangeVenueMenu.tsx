@@ -1,5 +1,6 @@
 import { useAuthenticatedSession } from "@blitzjs/auth";
 import { getQueryClient, useMutation, useQuery } from "@blitzjs/rpc";
+import { flow } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as RA from "@effect/data/ReadonlyArray";
 import * as Schema from "@effect/schema/Schema";
@@ -14,6 +15,8 @@ import { useLocale } from "src/core/hooks/useLocale";
 import changeCurrentVenue from "src/venues/mutations/changeCurrentVenue";
 import getOrgVenues from "src/venues/queries/getOrgVenues";
 
+const decodeContent = pipe(Content, Schema.omit("description"), Schema.array, Schema.decode);
+
 export const ChangeVenueMenu = () => {
   const [venues] = useQuery(getOrgVenues, {});
   const { venue } = useAuthenticatedSession();
@@ -23,7 +26,12 @@ export const ChangeVenueMenu = () => {
       fetch("/api/revalidate-current");
     },
   });
-  const title = titleFor(useLocale());
+  const locale = useLocale();
+  const title = flow(
+    decodeContent,
+    RA.findFirst(_ => _.locale === locale),
+    O.map(_ => _.name),
+  )
 
   const currentVenue = pipe(
     O.fromNullable(venue),
@@ -33,9 +41,10 @@ export const ChangeVenueMenu = () => {
   const currentTitle = pipe(
     currentVenue,
     O.map(_ => _.content),
-    O.map(Schema.decode(Schema.array(Content))),
-    O.match(() => "unknown venue", title),
+    O.flatMap(title),
+    O.getOrElse(() => "unknown venue"),
   );
+
   return (
     <Menu as="div" className="relative shrink-0">
       <div>
@@ -82,7 +91,7 @@ export const ChangeVenueMenu = () => {
                         "block w-full px-4 py-2 text-sm text-gray-700 text-left rtl:text-right",
                       )}
                     >
-                      {title(Schema.decode(Schema.array(Content))(venue.content))}
+                      {O.getOrElse(title(venue.content), () => "unknown venue")}
                     </button>
                   )}
                 </Menu.Item>

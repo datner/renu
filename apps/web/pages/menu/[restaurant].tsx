@@ -46,12 +46,14 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
   const [reviewOrder, setReviewOrder] = useState(false);
 
   const getTitle = titleFor(locale);
+  const venueTitle = O.map(A.findFirst(restaurant.content, _ => _.locale === locale), _ => _.name)
+  const orUnknown = O.getOrElse(() => "unknown")
 
   if (!restaurant.open) {
     return (
       <>
         <Head>
-          <title>{getTitle(restaurant.content) + " | Renu"}</title>
+          <title>{orUnknown(venueTitle) + " | Renu"}</title>
           <meta
             name="viewport"
             content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1, user-scalable=0, shrink-to-fit=no"
@@ -59,7 +61,7 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
           <link rel="shortcut icon" href="/favicon.ico" />
           <link rel="apple-touch-icon-precomposed" href="/24round4.png" />
         </Head>
-        <Closed venue={O.map(getContentFor(restaurant.content, locale), c => c.name)} />
+        <Closed venue={venueTitle} />
       </>
     );
   }
@@ -71,7 +73,7 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
           name="viewport"
           content="width=device-width, initial-scale=1.0, minimum-scale=1, maximum-scale=1, user-scalable=0, shrink-to-fit=no"
         />
-        <title>{getTitle(restaurant.content) + " | Renu"}</title>
+        <title>{orUnknown(venueTitle) + " | Renu"}</title>
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon-precomposed" href="/24round4.png" />
       </Head>

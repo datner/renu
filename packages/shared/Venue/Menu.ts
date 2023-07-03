@@ -35,14 +35,14 @@ const Item = Schema.transformResult(
   ParseResult.success,
 );
 
-export interface Item extends Schema.To<typeof Item> {}
+export interface Item extends Schema.To<typeof Item> { }
 
 const CategoryItemExtension = Schema.struct({
   item: Item,
 });
 
 export const CategoryItem = Schema.extend(CategoryItemExtension)(CI.Item);
-export interface CategoryItem extends Schema.To<typeof CategoryItem> {}
+export interface CategoryItem extends Schema.To<typeof CategoryItem> { }
 
 export const CategoryItems = Schema.transformResult(
   Schema.from(Schema.array(CI.Item)),
@@ -57,14 +57,14 @@ export const CategoryItems = Schema.transformResult(
   ),
   ParseResult.success,
 );
-export interface CategoryItems extends Schema.To<typeof CategoryItems> {}
+export interface CategoryItems extends Schema.To<typeof CategoryItems> { }
 
 const CategoryExtension = Schema.struct({
   content: Schema.array(Common.Content),
   categoryItems: CategoryItems,
 });
 
-export interface Category extends Schema.To<typeof Category> {}
+export interface Category extends Schema.To<typeof Category> { }
 
 const Category = Schema.transformResult(
   Schema.from(C.Category),
@@ -83,7 +83,7 @@ const Category = Schema.transformResult(
 );
 
 const VenueExtension = Schema.struct({
-  content: Schema.array(Common.Content),
+  content: Schema.array(pipe(Common.Content, Schema.omit("description"))),
   categories: Schema.array(Category),
 });
 
@@ -103,7 +103,7 @@ export const fromVenue = Schema.transformResult(
   ParseResult.success,
 );
 
-export type MenuModifierItem = Schema.To<typeof IM.Modifier> 
+export type MenuModifierItem = Schema.To<typeof IM.Modifier>;
 
 export const MenuItem = pipe(
   I.Item,
@@ -124,7 +124,7 @@ export const MenuItem = pipe(
     ),
   })),
 );
-export interface MenuItem extends Schema.To<typeof MenuItem> {}
+export interface MenuItem extends Schema.To<typeof MenuItem> { }
 
 export const MenuCategoryItem = pipe(
   CI.Item,
@@ -135,7 +135,7 @@ export const MenuCategoryItem = pipe(
     ),
   })),
 );
-export interface MenuCategoryItem extends Schema.To<typeof MenuCategoryItem> {}
+export interface MenuCategoryItem extends Schema.To<typeof MenuCategoryItem> { }
 
 export const MenuCategory = pipe(
   C.Category,
@@ -148,17 +148,17 @@ export const MenuCategory = pipe(
     ),
   })),
 );
-export interface MenuCategory extends Schema.To<typeof MenuCategory> {}
+export interface MenuCategory extends Schema.To<typeof MenuCategory> { }
 
 export const Menu = pipe(
   V.Venue,
   Schema.pick("id", "open", "simpleContactInfo"),
   Schema.extend(Schema.struct({
-    content: Schema.array(Common.Content),
+    content: pipe(Common.Content, Schema.omit("description"), Schema.array),
     categories: pipe(
       MenuCategory,
       Schema.array,
     ),
   })),
 );
-export interface Menu extends Schema.To<typeof Menu> {}
+export interface Menu extends Schema.To<typeof Menu> { }

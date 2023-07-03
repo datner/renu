@@ -33,7 +33,7 @@ export const Description = pipe(
 export const Content = S.struct({
   locale: S.enums(Locale),
   name: Name,
-  description: S.optional(S.optionFromNullable(Description)).toOption(),
+  description: S.optionFromNullable(Description)
 });
 
 export interface Content extends S.To<typeof Content> { }

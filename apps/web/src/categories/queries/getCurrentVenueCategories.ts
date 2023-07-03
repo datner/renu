@@ -9,7 +9,7 @@ import { Resolver } from "src/auth";
 import { Renu, Server } from "src/core/effect";
 import { prismaError } from "src/core/helpers/prisma";
 
-interface GetCategoriesArgs extends Pick<Prisma.CategoryFindManyArgs, "where" | "orderBy" | "skip" | "take"> { }
+interface GetCategoriesArgs extends Pick<Prisma.CategoryFindManyArgs, "where" | "orderBy" | "skip" | "take"> {}
 
 const Max250Int = pipe(
   S.number,
@@ -21,7 +21,7 @@ const Max250Int = pipe(
 const handler = resolver.pipe(
   ({ skip = 0, take = 50, ..._ }: GetCategoriesArgs) => Effect.succeed({ skip, take, ..._ }),
   Resolver.authorize(),
-  Resolver.flatMap(Resolver.esnureOrgVenueMatch),
+  Resolver.flatMapAuthorized(Resolver.esnureOrgVenueMatch),
   Resolver.map(({ where, ..._ }, ctx) => ({
     ..._,
     where: {
@@ -31,7 +31,7 @@ const handler = resolver.pipe(
       ...where,
     },
   })),
-  Effect.flatMap(({ where, orderBy, skip, take }) =>
+  Resolver.flatMap(({ where, orderBy = {}, skip, take }) =>
     Server.paginate(Number.NonNegativeInt, Max250Int)(
       (skip, take) =>
         Effect.tryCatchPromise(

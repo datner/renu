@@ -3,7 +3,7 @@ import * as Schema from "@effect/schema/Schema";
 import { Category, ModifierConfig } from "shared";
 import { Common, Number } from "shared/schema";
 
-const Content_ = Schema.struct({ name: Schema.string, description: Schema.string });
+const Content_ = Schema.struct({ name: Common.Name, description: Common.Description });
 const Content = Schema.struct({
   en: Content_,
   he: Content_,

@@ -2,12 +2,11 @@ import { resolver } from "@blitzjs/rpc";
 import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as Effect from "@effect/io/Effect";
-import * as Parser from "@effect/schema/Parser";
-import * as Schema from "@effect/schema/Schema";
+import * as TreeFormatter from "@effect/schema/TreeFormatter";
 import * as Optic from "@fp-ts/optic";
 import { Prisma } from "database";
 import db from "db";
-import { Session } from "src/auth";
+import { Resolver, Session } from "src/auth";
 import * as Renu from "src/core/effect/runtime";
 import { getBlurHash } from "src/core/helpers/plaiceholder";
 import { PrismaError } from "src/core/helpers/prisma";
@@ -66,7 +65,7 @@ const setPositionInCategory = <T extends ReturnType<typeof toCreateItem>>(
   );
 
 const createItem = resolver.pipe(
-  (i: Schema.From<typeof CreateItemSchema>) => Parser.decodeEffect(CreateItemSchema)(i),
+  Resolver.schema(CreateItemSchema),
   Effect.map(toCreateItem),
   Effect.bind("blurHash", ({ image }) => getBlurHash(image)),
   Effect.bind("organizationId", () => Effect.map(Session.Organization, o => o.id)),
@@ -74,6 +73,7 @@ const createItem = resolver.pipe(
   Effect.flatMap(setPositionInCategory),
   Effect.flatMap(createDbItem),
   Session.authorizeResolver,
+  Effect.catchTag("ParseError", _ => Effect.fail(TreeFormatter.formatErrors(_.errors))),
   Renu.runPromise$,
 );
 

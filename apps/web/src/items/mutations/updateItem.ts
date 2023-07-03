@@ -5,10 +5,11 @@ import * as A from "@effect/data/ReadonlyArray";
 import * as RR from "@effect/data/ReadonlyRecord";
 import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
+import * as TreeFormatter from "@effect/schema/TreeFormatter";
 import db, { Prisma } from "db";
 import { ModifierConfig } from "shared";
 import { UpdateItemPayload } from "src/admin/validations/item-form";
-import { Session } from "src/auth";
+import { Resolver, Session } from "src/auth";
 import * as Renu from "src/core/effect/runtime";
 import { getBlurHash } from "src/core/helpers/plaiceholder";
 import { PrismaError, prismaError } from "src/core/helpers/prisma";
@@ -39,7 +40,7 @@ const getItem = (id: number) =>
 const encodeRep = Schema.encode(ModifierConfig.Base.ManagementRepresentationSchema);
 
 export default resolver.pipe(
-  (i: Schema.From<typeof UpdateItemPayload>) => Schema.decodeEffect(UpdateItemPayload)(i),
+  Resolver.schema(UpdateItemPayload),
   Effect.tap((it) => Effect.log("getting item with id " + it.id)),
   Effect.flatMap(i => Effect.all(Effect.succeed(i), getItem(i.id))),
   Effect.flatMap(([input, item]) =>
@@ -175,5 +176,6 @@ export default resolver.pipe(
   Effect.flatMap(Schema.decodeEffect(toFullItem)),
   Effect.flatMap(Schema.encodeEffect(FullItem)),
   Session.authorizeResolver,
+  Effect.catchTag("ParseError", _ => Effect.fail(TreeFormatter.formatErrors(_.errors))),
   Renu.runPromise$,
 );

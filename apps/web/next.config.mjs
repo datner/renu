@@ -41,6 +41,10 @@ const config = {
           source: "/t/:path",
           destination: "/tiny/:path",
         },
+        {
+          source: "/kiosk/:identifier",
+          destination: "/menu/:identifier"
+        }
       ],
       afterFiles: [],
       fallback: [],

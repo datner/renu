@@ -20,7 +20,7 @@ export const Section = memo(
         aria-current={active?.id === category.identifier && "location"}
         ref={observe}
         key={category.id}
-        className={clsx("group pt-14", [
+        className={clsx("group pt-4", [
           "5nth-1:bg-emerald-100",
           "5nth-2:bg-ocre-100",
           "5nth-3:bg-ginger-100",
@@ -31,7 +31,7 @@ export const Section = memo(
         <div ref={ref} className="mb-2 px-4 mx-0.5 py-1 font-medium text-gray-800">
           <h3
             className={clsx(
-              "font-bold font-title text-start text-5xl sm:text-kxl underline underline-offset-4 decoration-3 leading-tight",
+              "font-bold font-title text-start text-3xl underline underline-offset-4 decoration-3 leading-tight",
               [
                 "group-5nth-1:text-emerald-800 group-5nth-1:decoration-emerald-500",
                 "group-5nth-2:text-ocre-800 group-5nth-2:decoration-ocre-400",

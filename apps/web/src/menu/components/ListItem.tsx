@@ -107,10 +107,10 @@ export const ListItem = memo(
               priority={priority}
               className="object-cover"
               fill
-              src={item.image}
+              src={`${item.image}?cs=strip`}
               placeholder={O.match(item.blurDataUrl, () => "empty", () => "blur")}
               blurDataURL={O.getOrUndefined(item.blurDataUrl)}
-              quality={20}
+              quality={45}
               alt={item.identifier}
               sizes="(min-width: 370px) 12rem,
               8rem"

@@ -44,8 +44,7 @@ export function OrderModalItem(props: Props) {
               )}
               {item.image && (
                 <Image
-                  priority
-                  src={item.image}
+                  src={`${item.image}?cs=strip`}
                   className="object-cover overflow-hidden rounded-md h-16 w-24"
                   fill
                   sizes="(min-width: 370px) 12rem,

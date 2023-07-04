@@ -24,6 +24,7 @@ const config = {
     ],
     loader: "custom",
     loaderFile: "./imgix-loader.js",
+    deviceSizes: [640, 750, 828, 1080],
   },
   async redirects() {
     return [

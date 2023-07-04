@@ -17,7 +17,7 @@ export const NavList = (props: NavListProps) => {
     <div
       role="tablist"
       aria-label="Categories"
-      className="fixed bottom-0 z-20 flex border-t min-h-0 shrink-0 inset-x-0 overflow-x-auto bg-white shadow snap-x snap-mandatory scroll-smooth gap-2 p-2 scroll-m-2"
+      className="fixed bottom-0 z-20 flex border-t-2 min-h-0 shrink-0 inset-x-0 overflow-x-auto bg-white shadow snap-x snap-mandatory scroll-smooth gap-2 p-2 scroll-m-2"
     >
       {categories.map((it) => (
         <button
@@ -36,7 +36,7 @@ export const NavList = (props: NavListProps) => {
                 "5nth-5:bg-blush-100 5nth-5:text-blush-700 5nth-5:ring-blush-400",
               ]
               : "border-transparent text-gray-500 hover:text-gray-700",
-            "block flex-shrink-0 rounded-md snap-start px-3 py-2 text-sm font-semibold scroll-m-2",
+            "block flex-shrink-0 rounded-md snap-start px-4 py-4 text font-semibold scroll-m-2",
           )}
         >
           {title(it.content)}

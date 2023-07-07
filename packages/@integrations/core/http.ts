@@ -5,7 +5,6 @@ import * as O from "@effect/data/Option";
 import * as P from "@effect/data/Predicate";
 import * as Effect from "@effect/io/Effect";
 import * as Layer from "@effect/io/Layer";
-import { inspect } from "util";
 
 export interface HttpConfig {
   readonly baseUrl?: string;
@@ -18,10 +17,14 @@ export interface HttpConfigService {
 }
 export const HttpConfigService = Context.Tag<HttpConfigService>();
 
+export interface Http {
+  readonly _: unique symbol;
+}
+
 export interface HttpService {
   request: HttpRequest;
 }
-export const HttpService = Context.Tag<HttpService>();
+export const HttpService = Context.Tag<Http, HttpService>();
 export const Http = HttpService;
 export const Service = Http;
 
@@ -45,7 +48,7 @@ export class HttpRequestError extends Data.TaggedClass("HttpRequestError")<{
   message: string;
   options?: HttpResponseErrorOptions | undefined;
   cause?: unknown;
-}> {}
+}> { }
 
 interface HttpResponseErrorOptions extends ErrorOptions {
   readonly response?: Response;
@@ -55,21 +58,21 @@ export class HttpResponseError extends Data.TaggedClass("HttpResponseError")<{
   message: string;
   options?: HttpResponseErrorOptions | undefined;
   response?: Response;
-}> {}
+}> { }
 
-export class HttpNotFoundError extends Data.TaggedClass("HttpNotFoundError")<GenericError> {}
+export class HttpNotFoundError extends Data.TaggedClass("HttpNotFoundError")<GenericError> { }
 
-export class HttpBadRequestError extends Data.TaggedClass("HttpBadRequestError")<GenericError> {}
+export class HttpBadRequestError extends Data.TaggedClass("HttpBadRequestError")<GenericError> { }
 
-export class HttpUnauthorizedError extends Data.TaggedClass("HttpUnauthorizedError")<GenericError> {}
+export class HttpUnauthorizedError extends Data.TaggedClass("HttpUnauthorizedError")<GenericError> { }
 
-export class HttpForbiddenError extends Data.TaggedClass("HttpForbiddenError")<GenericError> {}
+export class HttpForbiddenError extends Data.TaggedClass("HttpForbiddenError")<GenericError> { }
 
-export class HttpInternalServerError extends Data.TaggedClass("HttpInternalServerError")<GenericError> {}
+export class HttpInternalServerError extends Data.TaggedClass("HttpInternalServerError")<GenericError> { }
 
-export class HttpUnprocessableEntityError extends Data.TaggedClass("HttpUnprocessableEntityError")<GenericError> {}
+export class HttpUnprocessableEntityError extends Data.TaggedClass("HttpUnprocessableEntityError")<GenericError> { }
 
-export class HttpRedirectAttempt extends Data.TaggedClass("HttpRedirectAttempt")<GenericError> {}
+export class HttpRedirectAttempt extends Data.TaggedClass("HttpRedirectAttempt")<GenericError> { }
 
 interface HttpParseErrorOptions extends ErrorOptions {
   readonly target: "json" | "text"; // add more as needed
@@ -81,12 +84,12 @@ export class HttpParseError extends Data.TaggedClass("HttpParseError")<{
   message: string;
   options?: HttpParseErrorOptions | undefined;
   cause?: unknown;
-}> {}
+}> { }
 
 export type HttpRequest = (
   input: RequestInfo | URL,
   init?: RequestInit | undefined,
-) => Effect.Effect<HttpConfigService, HttpError, Response>;
+) => Effect.Effect<never, HttpError, Response>;
 
 export const request = (...args: Parameters<HttpRequest>) => Effect.flatMap(HttpService, (s) => s.request(...args));
 

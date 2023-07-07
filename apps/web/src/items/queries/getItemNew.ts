@@ -23,9 +23,10 @@ export const toFullItem = Schema.transformResult(
   FullItem,
   (i) =>
     pipe(
-      Effect.allPar(
+      Effect.all(
         Item.getContent(i.id),
         Item.getModifiers(i.id),
+        { concurrency: "unbounded" },
       ),
       Effect.map(([content, modifiers]) => ({ ...i, content, modifiers })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
@@ -45,7 +46,7 @@ export default resolver.pipe(
         : Item.getByIdentifier(_, session.venue.id),
     )
   ),
-  Effect.flatMap(Schema.decodeEffect(toFullItem)),
-  Effect.flatMap(Schema.encodeEffect(FullItem)),
+  Effect.flatMap(Schema.decode(toFullItem)),
+  Effect.flatMap(Schema.encode(FullItem)),
   Renu.runPromise$,
 );

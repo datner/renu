@@ -1,8 +1,8 @@
 import { BlitzPage } from "@blitzjs/auth";
 import * as O from "@effect/data/Option";
+import * as Order from "@effect/data/Order";
 import * as A from "@effect/data/ReadonlyArray";
 import * as Str from "@effect/data/String";
-import * as Order from "@effect/data/typeclass/Order";
 import * as Parser from "@effect/schema/Parser";
 import { NotFoundError } from "blitz";
 import db, { Locale } from "db";
@@ -12,7 +12,7 @@ import Head from "next/head";
 import { Fragment, useMemo, useState } from "react";
 import { Venue } from "shared";
 import { gSP } from "src/blitz-server";
-import { getContentFor, titleFor } from "src/core/helpers/content";
+import { titleFor } from "src/core/helpers/content";
 import { useLocale } from "src/core/hooks/useLocale";
 import MenuLayout from "src/core/layouts/MenuLayout";
 import * as Category from "src/menu/components/Category";
@@ -37,7 +37,7 @@ const CategoryOrder = Order.contramap(Str.Order, (b: Venue.Menu.Category) => b.i
 
 export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) => {
   const { menu } = props;
-  const restaurant = useMemo(() => Parser.decode(Venue.Menu.Menu)(menu), [menu]);
+  const restaurant = useMemo(() => Parser.decodeSync(Venue.Menu.Menu)(menu), [menu]);
   const { categories } = restaurant;
   const orderedCategories = useMemo(() => A.sort(categories as Array<Venue.Menu.Category>, CategoryOrder), [
     categories,
@@ -46,8 +46,8 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
   const [reviewOrder, setReviewOrder] = useState(false);
 
   const getTitle = titleFor(locale);
-  const venueTitle = O.map(A.findFirst(restaurant.content, _ => _.locale === locale), _ => _.name)
-  const orUnknown = O.getOrElse(() => "unknown")
+  const venueTitle = O.map(A.findFirst(restaurant.content, _ => _.locale === locale), _ => _.name);
+  const orUnknown = O.getOrElse(() => "unknown");
 
   if (!restaurant.open) {
     return (

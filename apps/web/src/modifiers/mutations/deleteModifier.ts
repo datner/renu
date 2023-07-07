@@ -19,10 +19,10 @@ const killOrder = (orderId: number, ctx: Ctx) =>
       )
     ),
     Effect.flatMap((where) =>
-      Effect.tryCatchPromise(
-        () => db.itemModifier.updateMany({ where, data: { deleted: new Date() } }),
-        prismaError("Order"),
-      )
+      Effect.tryPromise({
+        try: () => db.itemModifier.updateMany({ where, data: { deleted: new Date() } }),
+        catch: prismaError("Order"),
+      })
     ),
     Effect.catchTag("PrismaError", (e) =>
       Effect.sync(() => {

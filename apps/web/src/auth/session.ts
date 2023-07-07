@@ -45,8 +45,10 @@ export type AuthError =
 export const ensureOrgVenueMatch = Effect.asUnit(
   Effect.filterOrFail(
     Session,
-    (session) => session.venue.organizationId === session.organization.id,
-    VenueOrgMismatchError,
+    {
+      filter: (session) => session.venue.organizationId === session.organization.id,
+      orFailWith: () => VenueOrgMismatchError(),
+    },
   ),
 );
 
@@ -70,9 +72,11 @@ export const ensureSuperAdmin = withEffect((session) =>
     Effect.orElse(() =>
       pipe(
         O.fromNullable(session.impersonatingFromUserId),
-        Effect.getOrFailDiscard,
         Effect.flatMap((id) => Effect.tryPromise(() => db.user.findUniqueOrThrow({ where: { id } }))),
-        Effect.filterOrDieMessage((u) => u.role === GlobalRole.SUPER, "how did you impersonate?"),
+        Effect.filterOrDieMessage({
+          filter: (u) => u.role === GlobalRole.SUPER,
+          message: "how did you impersonate?",
+        }),
       )
     ),
     Effect.asUnit,
@@ -84,12 +88,12 @@ export type AuthenticatedSession = AuthenticatedSessionContext & Brand.Brand<"Au
 export const authorize = (ctx: Ctx) =>
   Effect.provideServiceEffect(
     Session,
-    Effect.tryCatch(
-      () => {
+    Effect.try({
+      try: () => {
         ctx.session.$authorize();
         return ctx.session as AuthenticatedSession;
       },
-      (error): AuthError => {
+      catch: (error): AuthError => {
         if (error instanceof AuthenticationError) {
           return AuthenticationErrorCase({ message: error.message });
         }
@@ -101,7 +105,7 @@ export const authorize = (ctx: Ctx) =>
         }
         throw new Error("unexpected error ");
       },
-    ),
+    }),
   );
 
 export const authorizeResolver: <R, E, A, C extends Ctx>(

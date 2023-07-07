@@ -73,20 +73,20 @@ const toOrderInput = (order: SendOrder) => ({
   items: {
     create: A.map(order.orderItems, toOrderItemInput),
   },
-  managementExtra: S.encode(Order.Management.ExtraSchema)(order.managementExtra),
-  clearingExtra: S.encode(Order.Clearing.ExtraSchema)(order.clearingExtra),
+  managementExtra: S.encodeSync(Order.Management.ExtraSchema)(order.managementExtra),
+  clearingExtra: S.encodeSync(Order.Clearing.ExtraSchema)(order.clearingExtra),
   totalCost: N.sumAll(A.map(order.orderItems, getItemCost)),
 } satisfies Prisma.OrderCreateInput);
 
 const anonymous: <I, A>(
   s: S.Schema<I, A>,
-) => (input: I, ctx: Ctx) => Effect.Effect<never, ParseError, A> = s => (i, _) => S.decodeEffect(s)(i);
+) => (input: I, ctx: Ctx) => Effect.Effect<never, ParseError, A> = s => (i, _) => S.decode(s)(i);
 
 const createNewOrder = (input: SendOrder) =>
   pipe(
     Effect.sync(() => toOrderInput(input)),
     Effect.flatMap(Order.createDeepOrder),
-    Effect.flatMap(S.decodeEffect(Order.Schema)),
+    Effect.flatMap(S.decode(Order.Schema)),
   );
 
 const matchProvider = Match.discriminator("provider");
@@ -98,25 +98,28 @@ export default resolver.pipe(
 New Order received for ${order.venueId}!
 
 Customer ordered:
-${A.join(
-      A.map(
-        order.orderItems,
-        (oi) =>
-          `${oi.amount} x ${oi.item.identifier} for ${N.divide(oi.cost, 100).toLocaleString("us-IL", {
-            style: "currency",
-            currency: "ILS",
-          })
-          }`,
-      ),
-      `\n`,
-    )
-      }
+${
+      A.join(
+        A.map(
+          order.orderItems,
+          (oi) =>
+            `${oi.amount} x ${oi.item.identifier} for ${
+              N.divide(oi.cost, 100).toLocaleString("us-IL", {
+                style: "currency",
+                currency: "ILS",
+              })
+            }`,
+        ),
+        `\n`,
+      )
+    }
 `)
   ),
   Effect.flatMap(order =>
-    Effect.zipPar(
+    Effect.zip(
       createNewOrder(order),
-      S.decodeEffect(Venue.Clearing.fromVenue)(order.venueId),
+      S.decode(Venue.Clearing.fromVenue)(order.venueId),
+      { parallel: true },
     )
   ),
   Effect.tap(o => Effect.sync(() => console.log(inspect(o, false, null, true)))),

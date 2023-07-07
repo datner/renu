@@ -174,19 +174,18 @@ export function ItemModalForm(props: ItemModalFormProps) {
 
   const defaultValues = useMemo<DefaultValues<ItemFieldValues>>(
     () =>
-      O.match(
-        order,
-        () => ({
+      O.match(order, {
+        onNone: () => ({
           comment: "",
           amount: 1,
           modifiers: makeDefaults(item),
         }),
-        (o) => ({
+        onSome: (o) => ({
           comment: o.comment,
           amount: Order.getAmount(o),
           modifiers: makeOrderDefaults(o),
         }),
-      ),
+      }),
     [order, item],
   );
 
@@ -329,7 +328,12 @@ function SubmitButton(props: SubmitButtonProps) {
   switch (orderState) {
     case OrderState.NEW:
       return (
-        <button disabled={RR.isEmptyRecord(errors) ? false : !isValid} form="item-form" type="submit" className="btn grow px-2 btn-primary">
+        <button
+          disabled={RR.isEmptyRecord(errors) ? false : !isValid}
+          form="item-form"
+          type="submit"
+          className="btn grow px-2 btn-primary"
+        >
           <span className="inline-block text-left rtl:text-right grow xs:grow-0 xs:mx-1.5">
             {t("add")}
           </span>{" "}

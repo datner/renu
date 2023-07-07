@@ -2,7 +2,7 @@ import { useQuery } from "@blitzjs/rpc";
 import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as S from "@effect/data/String";
-import * as Equivalence from "@effect/data/typeclass/Equivalence";
+import * as Equivalence from "@effect/data/Equivalence";
 import * as Parser from "@effect/schema/Parser";
 import * as Optic from "@fp-ts/optic";
 import * as Management from "@integrations/management";
@@ -53,7 +53,7 @@ const eqManagementModifierOption = (
 function Integrations() {
   const [managementMenu] = useQuery(getManagementMenu, null, {
     select: (data) => ({
-      menu: Parser.decode(Management.Menu)(data.menu),
+      menu: Parser.decodeSync(Management.Menu)(data.menu),
       integration: data.integration,
     }),
   });

@@ -6,43 +6,43 @@ import * as RR from "@effect/data/ReadonlyRecord";
 import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
 import * as TreeFormatter from "@effect/schema/TreeFormatter";
-import db, { Prisma } from "db";
+import db, { Organization, Prisma } from "db";
 import { ModifierConfig } from "shared";
 import { UpdateItemPayload } from "src/admin/validations/item-form";
-import { Resolver, Session } from "src/auth";
+import { Resolver } from "src/auth";
 import * as Renu from "src/core/effect/runtime";
 import { getBlurHash } from "src/core/helpers/plaiceholder";
 import { PrismaError, prismaError } from "src/core/helpers/prisma";
 import { inspect } from "util";
 import { FullItem, toFullItem } from "../queries/getItemNew";
 
-const getItem = (id: number) =>
-  Effect.flatMap(Session.Organization, (org) =>
-    Effect.tryCatchPromise(
-      () =>
-        db.item.findFirstOrThrow({
-          where: { id, organizationId: org.id },
-          select: {
-            image: true,
-            blurHash: true,
-            categoryId: true,
-            content: true,
-            categoryItems: { select: { id: true, categoryId: true } },
-          },
-        }),
-      (cause) =>
-        new PrismaError("Didn't find the specified item within the organization", {
-          cause,
-          resource: "Item",
-        }),
-    ));
+const getItem = (id: number, org: Organization) =>
+  Effect.tryPromise({
+    try: () =>
+      db.item.findFirstOrThrow({
+        where: { id, organizationId: org.id },
+        select: {
+          image: true,
+          blurHash: true,
+          categoryId: true,
+          content: true,
+          categoryItems: { select: { id: true, categoryId: true } },
+        },
+      }),
+    catch: (cause) =>
+      new PrismaError("Didn't find the specified item within the organization", {
+        cause,
+        resource: "Item",
+      }),
+  });
 
 const encodeRep = Schema.encode(ModifierConfig.Base.ManagementRepresentationSchema);
 
 export default resolver.pipe(
   Resolver.schema(UpdateItemPayload),
   Effect.tap((it) => Effect.log("getting item with id " + it.id)),
-  Effect.flatMap(i => Effect.all(Effect.succeed(i), getItem(i.id))),
+  Resolver.authorize(),
+  Resolver.flatMap((i, ctx) => Effect.all(Effect.succeed(i), getItem(i.id, ctx.session.organization))),
   Effect.flatMap(([input, item]) =>
     pipe(
       Effect.sync(() => ({
@@ -153,29 +153,30 @@ export default resolver.pipe(
       Effect.zipWith(
         Effect.if(
           item.image === input.image,
-          Effect.succeed(item.blurHash),
-          getBlurHash(input.image!),
+          {
+            onTrue: Effect.succeed(item.blurHash),
+            onFalse: getBlurHash(input.image!),
+          },
         ),
         (data, blurHash) => ({ ...data, blurHash }),
       ),
       Effect.tap(() => Effect.log("updating item with following body")),
       Effect.tap((body) => Effect.sync(() => console.log(inspect(body, false, null, true)))),
       Effect.flatMap(({ id, ...data }) =>
-        Effect.tryCatchPromise(
-          () =>
+        Effect.tryPromise({
+          try: () =>
             db.item.update({
               where: { id },
               data,
             }),
-          prismaError("Item"),
-        )
+          catch: prismaError("Item"),
+        })
       ),
       Effect.tap(() => Effect.log("successfully updated item")),
     )
   ),
-  Effect.flatMap(Schema.decodeEffect(toFullItem)),
-  Effect.flatMap(Schema.encodeEffect(FullItem)),
-  Session.authorizeResolver,
+  Effect.flatMap(Schema.decode(toFullItem)),
+  Effect.flatMap(Schema.encode(FullItem)),
   Effect.catchTag("ParseError", _ => Effect.fail(TreeFormatter.formatErrors(_.errors))),
   Renu.runPromise$,
 );

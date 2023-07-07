@@ -12,22 +12,24 @@ const handler = (_: null, ctx: Ctx) =>
     Session.with((session) => session.venue),
     Effect.tap((a) => Effect.log(inspect(a))),
     Effect.flatMap((venue) =>
-      Effect.tryCatchPromise(
-        () => db.managementIntegration.findFirstOrThrow({ where: { Venue: { id: venue.id } } }),
-        prismaError("ManagementIntegration"),
-      )
+      Effect.tryPromise({
+        try: () => db.managementIntegration.findFirstOrThrow({ where: { Venue: { id: venue.id } } }),
+        catch: prismaError("ManagementIntegration"),
+      })
     ),
     Effect.catchTag("PrismaError", (_) =>
       Session.withEffect((session) =>
-        Effect.cond(
-          () => _.options.resource === "ManagementIntegration" && !_.isValidationError,
-          (): ManagementIntegration => ({
-            id: -1,
-            vendorData: {},
-            venueId: session.venue.id,
-            provider: "RENU",
-          }),
-          () => _,
+        Effect.if(
+          _.options.resource === "ManagementIntegration" && !_.isValidationError,
+          {
+            onTrue: Effect.sync((): ManagementIntegration => ({
+              id: -1,
+              vendorData: {},
+              venueId: session.venue.id,
+              provider: "RENU",
+            })),
+            onFalse: Effect.fail(_),
+          },
         )
       )),
     Session.authorize(ctx),

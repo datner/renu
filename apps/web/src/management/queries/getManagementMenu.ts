@@ -9,13 +9,13 @@ import { ofVenue } from "../helpers/query-filters";
 
 export default resolver.pipe(resolver.authorize(), (_, ctx) =>
   pipe(
-    Effect.tryCatchPromise(
-      () =>
+    Effect.tryPromise({
+      try: () =>
         db.managementIntegration.findUniqueOrThrow({
           where: ofVenue(ctx.session.venue.id),
         }),
-      prismaError("ManagementIntegration"),
-    ),
+      catch: prismaError("ManagementIntegration"),
+    }),
     Effect.flatMap((int) =>
       Effect.all({
         integration: Effect.succeed(int),

@@ -13,7 +13,7 @@ export const makeRuntime = <R, E, A>(layer: Layer.Layer<R, E, A>) =>
 
     return {
       runtime,
-      clean: Scope.close(scope, Exit.unit()),
+      clean: Scope.close(scope, Exit.unit),
     };
   });
 

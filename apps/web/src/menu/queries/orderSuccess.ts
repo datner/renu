@@ -24,17 +24,17 @@ class StateNotConfirmedError {
 
 export default resolver.pipe(resolver.zod(OrderSuccess), (input: OrderSuccess) =>
   pipe(
-    Effect.tryCatchPromise(
-      () => db.order.findUniqueOrThrow({ where: { id: input.orderId } }),
-      prismaError("Order"),
-    ),
-    Effect.filterOrFail(
-      (o) => o.txId != null,
-      () => new NoTxIdError(),
-    ),
-    Effect.filterOrFail(
-      (o) => o.state === "Confirmed",
-      () => new StateNotConfirmedError(),
-    ),
+    Effect.tryPromise({
+      try: () => db.order.findUniqueOrThrow({ where: { id: input.orderId } }),
+      catch: prismaError("Order"),
+    }),
+    Effect.filterOrFail({
+      filter: (o) => o.txId != null,
+      orFailWith: () => new NoTxIdError(),
+    }),
+    Effect.filterOrFail({
+      filter: (o) => o.state === "Confirmed",
+      orFailWith: () => new StateNotConfirmedError(),
+    }),
     Effect.runPromise,
   ));

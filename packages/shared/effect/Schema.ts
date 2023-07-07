@@ -27,7 +27,7 @@ const buildError = (error: ParseResult.ParseErrors, path = [] as string[]): Arra
         message: pipe(
           _.message,
           O.orElse(() => O.map(getMessage(_.expected), apply(_.actual))),
-          O.orElse(() => pipe(getExamples(_.expected), O.filter(A.every(Predicate.isString)), O.map(A.join(", ")))),
+          O.orElse(() => pipe(getExamples(_.expected), O.map(A.filter(Predicate.isString)), O.map(A.join(", ")))),
           O.getOrElse(() => `Unexpected value: ${_.actual}`),
         ),
       }] as Entry,
@@ -63,10 +63,13 @@ export const schemaResolver =
   <I extends FieldValues, A>(schema: Schema.Schema<I, A>) => (data: I, _context: any, options: ResolverOptions<I>) =>
     pipe(
       Schema.decodeEither(schema)(data, { errors: "all" }),
-      E.match(({ errors }) => {
-        return ({
-          values: {},
-          errors: toNestError(RR.fromEntries(A.flatMap(errors, _ => buildError(_))), options),
-        });
-      }, values => ({ values, errors: {} })),
+      E.match({
+        onLeft: ({ errors }) => {
+          return ({
+            values: {},
+            errors: toNestError(RR.fromEntries(A.flatMap(errors, _ => buildError(_))), options),
+          });
+        },
+        onRight: values => ({ values, errors: {} }),
+      }),
     );

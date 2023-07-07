@@ -22,10 +22,10 @@ const resolveGetCategoryById = pipe(
   ) =>
     pipe(
       Effect.flatMap(Database, db =>
-        Effect.tryCatchPromise(
-          () => db.category.findMany({ where: { id: { in: requests.map(req => req.id) } } }),
-          () => new GetCategoryByIdError(),
-        )),
+        Effect.tryPromise({
+          try: () => db.category.findMany({ where: { id: { in: requests.map(req => req.id) } } }),
+          catch: () => new GetCategoryByIdError(),
+        })),
       Effect.flatMap(data =>
         Effect.forEach(requests, req =>
           Request.completeEffect(

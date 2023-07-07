@@ -12,7 +12,7 @@ const getCurrentVenueItems = (_: void, ctx: Ctx) =>
     Session.ensureOrgVenueMatch,
     Effect.zipRight(Session.Session),
     Effect.flatMap((sess) => Item.getByVenue(sess.venue.id, sess.organization.id)),
-    Effect.flatMap(Effect.forEachPar(Schema.decodeEffect(Item.withContent))),
+    Effect.flatMap(Effect.forEach(_ => Schema.decode(Item.withContent)(_), {batched: true})),
     Session.authorize(ctx),
     Effect.catchTag("ParseError", _ => Effect.fail(TreeFormatter.formatErrors(_.errors))),
     Renu.runPromise$,

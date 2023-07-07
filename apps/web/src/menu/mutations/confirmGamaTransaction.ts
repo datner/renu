@@ -6,6 +6,7 @@ import { Gama } from "@integrations/gama";
 import { Presto } from "@integrations/presto";
 import * as Message from "integrations/telegram/sendMessage";
 import { Order } from "shared";
+import { Resolver } from "src/auth";
 import { Renu } from "src/core/effect";
 
 const ConfirmGamaTransaction = Schema.struct({
@@ -13,18 +14,18 @@ const ConfirmGamaTransaction = Schema.struct({
 });
 
 const confirmGamaTransaction = resolver.pipe(
-  (i: Schema.From<typeof ConfirmGamaTransaction>) => Schema.decodeEffect(ConfirmGamaTransaction)(i),
+  Resolver.schema(ConfirmGamaTransaction),
   Effect.zip(Gama),
   Effect.flatMap(([{ jwt }, gama]) => gama.attachTxId(jwt)),
   Effect.tap((id) => Order.setOrderState(id, "PaidFor")),
   Effect.zip(Presto),
-  (self, ctx) =>
-    Effect.flatMap(self, ([id, presto]) =>
-      pipe(
-        presto.postOrder(id),
-        Effect.tap(() => Order.setOrderState(id, "Confirmed")),
-        Effect.tap(() => Effect.promise(() => ctx.session.$setPublicData({ orderId: id }))),
-      )),
+  Resolver.flatMap(([id, presto], ctx) =>
+    pipe(
+      presto.postOrder(id),
+      Effect.tap(() => Order.setOrderState(id, "Confirmed")),
+      Effect.tap(() => Effect.promise(() => ctx.session.$setPublicData({ orderId: id }))),
+    )
+  ),
   Effect.tap(Message.sendJson),
   Renu.runPromise$,
 );

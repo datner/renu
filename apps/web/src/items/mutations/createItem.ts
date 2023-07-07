@@ -15,14 +15,14 @@ import { CreateItem, CreateItemSchema, toCreateItem } from "../validations";
 
 export type CreateItemOutput = z.infer<typeof CreateItem>;
 const createDbItem = (data: Prisma.ItemCreateInput) =>
-  Effect.tryCatchPromise(
-    () =>
+  Effect.tryPromise({
+    try: () =>
       db.item.create({
         include: { content: true, modifiers: true },
         data,
       }),
-    (cause) => new PrismaError("failed to create new item", { cause, resource: "Item" }),
-  );
+    catch: (cause) => new PrismaError("failed to create new item", { cause, resource: "Item" }),
+  });
 
 const input_ = Optic.id<Prisma.ItemCreateInput>();
 
@@ -46,8 +46,8 @@ const setPositionInCategory = <T extends ReturnType<typeof toCreateItem>>(
   input: T,
 ) =>
   pipe(
-    Effect.tryCatchPromise(
-      () =>
+    Effect.tryPromise({
+      try: () =>
         db.categoryItem.count({
           where: {
             Category: {
@@ -55,12 +55,12 @@ const setPositionInCategory = <T extends ReturnType<typeof toCreateItem>>(
             },
           },
         }),
-      (cause) =>
+      catch: (cause) =>
         new PrismaError("could not get category item count", {
           cause,
           resource: "CategoryItem",
         }),
-    ),
+    }),
     Effect.map((count) => Optic.replace(categoryItemPosition)(count)(input)),
   );
 

@@ -49,7 +49,7 @@ export function OrderModalItem(props: Props) {
                   fill
                   sizes="(min-width: 370px) 12rem,
               8rem"
-                  placeholder={O.match(item.blurDataUrl, () => "empty", () => "blur")}
+                  placeholder={O.match(item.blurDataUrl, { onNone: () => "empty", onSome: () => "blur" })}
                   blurDataURL={O.getOrUndefined(item.blurDataUrl)}
                   quality={20}
                   alt={item.identifier}

@@ -12,14 +12,14 @@ const _removeCategory = (id: _Menu.CategoryId, ctx: Ctx) =>
   pipe(
     Session.ensureSuperAdmin,
     Effect.flatMap(() =>
-      Effect.tryCatchPromise(
-        () =>
+      Effect.tryPromise({
+        try: () =>
           db.category.update({
             where: { id },
             data: { deleted: new Date() },
           }),
-        prismaError("Category"),
-      )
+        catch: prismaError("Category"),
+      })
     ),
     Session.authorize(ctx),
     Effect.tapError((c) => Effect.sync(() => console.log((c as Error).cause))),

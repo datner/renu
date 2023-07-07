@@ -28,7 +28,7 @@ export const VenueResolver = pipe(
   RequestResolver.makeBatched((
     requests: VenueRequest[],
   ) =>
-    Effect.allPar(
+    Effect.all(
       Effect.sync(() => console.log(inspect(requests.map(r => r._tag), false, null, true))),
       resolveBatch(
         filterRequestsByTag(requests, "GetVenueCategories"),
@@ -59,8 +59,10 @@ export const VenueResolver = pipe(
         (req, integs) =>
           Option.match(
             A.findFirst(integs, _ => _.venueId === req.id),
-            () => Exit.fail(new GetVenueClearingIntegrationError()),
-            Exit.succeed,
+            {
+              onNone: () => Exit.fail(new GetVenueClearingIntegrationError()),
+              onSome: Exit.succeed,
+            },
           ),
       ),
       resolveSingle(
@@ -72,8 +74,10 @@ export const VenueResolver = pipe(
         (req, integs) =>
           Option.match(
             A.findFirst(integs, _ => _.venueId === req.id),
-            () => Exit.fail(new GetVenueManagementIntegrationError()),
-            Exit.succeed,
+            {
+              onNone: () => Exit.fail(new GetVenueManagementIntegrationError()),
+              onSome: Exit.succeed,
+            },
           ),
       ),
       pipe(
@@ -91,28 +95,33 @@ export const VenueResolver = pipe(
               }),
           )),
         Effect.flatMap(venues =>
-          Effect.allPar(
-            Effect.forEachPar(getByIds(requests), req =>
+          Effect.all(
+            Effect.forEach(getByIds(requests), req =>
               Request.complete(
                 req,
                 Option.match(
                   A.findFirst(venues, _ => _.id === req.id),
-                  () => Exit.fail(new GetVenueByIdError()),
-                  Exit.succeed,
+                  {
+                    onNone: () => Exit.fail(new GetVenueByIdError()),
+                    onSome: Exit.succeed,
+                  },
                 ),
               )),
-            Effect.forEachPar(getByIdentifiers(requests), req =>
+            Effect.forEach(getByIdentifiers(requests), req =>
               Request.complete(
                 req,
                 Option.match(
                   A.findFirst(venues, _ => _.identifier === req.identifier),
-                  () => Exit.fail(new GetVenueByIdentifierError()),
-                  Exit.succeed,
+                  {
+                    onNone: () => Exit.fail(new GetVenueByIdentifierError()),
+                    onSome: Exit.succeed,
+                  },
                 ),
               )),
           )
         ),
       ),
+      { concurrency: "unbounded" },
     )
   ),
   RequestResolver.contextFromServices(Database),

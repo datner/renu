@@ -7,16 +7,16 @@ import { belongsToOrg, isVenue } from "../helpers/queryFilters";
 
 export default resolver.pipe(resolver.authorize(), (_, ctx) =>
   pipe(
-    Effect.tryCatchPromise(
-      () =>
+    Effect.tryPromise({
+      try: () =>
         db.venue.findFirstOrThrow({
           where: {
             AND: [belongsToOrg(ctx.session.organization.id), isVenue(ctx.session.venue.id)],
           },
           select: { open: true },
         }),
-      prismaError("Venue"),
-    ),
+      catch: prismaError("Venue"),
+    }),
     Effect.catchTag("PrismaError", () => Effect.succeed({ open: false })),
     Effect.runPromise,
   ));

@@ -43,14 +43,14 @@ const runOperations = (order: DeepOrder) =>
       Ref.get(orderRef),
       Effect.flatMap(Clearing.validateTransaction),
       Effect.flatMap((txId) =>
-        Effect.tryCatchPromise(
-          () =>
+        Effect.tryPromise({
+          try: () =>
             db.order.update({
               where: { id: order.id },
               data: { state: OrderState.PaidFor, txId },
             }),
-          prismaError("Order"),
-        )
+          catch: prismaError("Order"),
+        })
       ),
       Effect.flatMap((updated) =>
         Ref.updateAndGet(
@@ -67,14 +67,14 @@ const runOperations = (order: DeepOrder) =>
       Ref.get(orderRef),
       Effect.flatMap(Management.reportOrder),
       Effect.flatMap(() =>
-        Effect.tryCatchPromise(
-          () =>
+        Effect.tryPromise({
+          try: () =>
             db.order.update({
               where: { id: order.id },
               data: { state: OrderState.Unconfirmed },
             }),
-          prismaError("Order"),
-        )
+          catch: prismaError("Order"),
+        })
       ),
       Effect.flatMap((updated) => Ref.updateAndGet(orderRef, Optic.replace(orderState)(updated.state))),
     );
@@ -83,10 +83,10 @@ const runOperations = (order: DeepOrder) =>
       Ref.get(orderRef),
       Effect.flatMap(Management.getOrderStatus),
       Effect.flatMap((state) =>
-        Effect.tryCatchPromise(
-          () => db.order.update({ where: { id: order.id }, data: { state } }),
-          prismaError("Order"),
-        )
+        Effect.tryPromise({
+          try: () => db.order.update({ where: { id: order.id }, data: { state } }),
+          catch: prismaError("Order"),
+        })
       ),
       Effect.flatMap((updated) => Ref.updateAndGet(orderRef, Optic.replace(orderState)(updated.state))),
     );
@@ -109,56 +109,60 @@ const runOperations = (order: DeepOrder) =>
 export default resolver.pipe(
   resolver.zod(ValidateStatus),
   (input) =>
-    Renu.runPromiseEither$(
-      Effect.flatMap(
-        Effect.tryCatchPromise(
-          () =>
-            db.order.findUniqueOrThrow({
-              where: { id: input.orderId },
-              include: fullOrderInclude,
-            }),
-          prismaError("Order"),
-        ),
-        (order) =>
-          pipe(
-            Effect.ifEffect(
-              Effect.succeed(order.state !== OrderState.Confirmed),
-              runOperations(order),
-              Effect.succeed(order),
-            ),
-            Effect.provideServiceEffect(
-              Management.Integration,
-              Effect.tryCatchPromise(
-                () =>
-                  db.managementIntegration.findFirstOrThrow({
-                    where: { Venue: { id: order.venueId } },
-                  }),
-                prismaError("ManagementIntegration"),
+    Renu.runPromise$(
+      Effect.either(
+        Effect.flatMap(
+          Effect.tryPromise({
+            try: () =>
+              db.order.findUniqueOrThrow({
+                where: { id: input.orderId },
+                include: fullOrderInclude,
+              }),
+            catch: prismaError("Order"),
+          }),
+          (order) =>
+            pipe(
+              Effect.if(
+                Effect.succeed(order.state !== OrderState.Confirmed),
+                {
+                  onTrue: runOperations(order),
+                  onFalse: Effect.succeed(order),
+                },
               ),
-            ),
-            Effect.provideServiceEffect(
-              Clearing.IntegrationSettingsService,
-              Effect.tryCatchPromise(
-                () =>
-                  db.clearingIntegration.findFirstOrThrow({
-                    where: { Venue: { id: order.venueId } },
-                  }),
-                prismaError("ClearingIntegration"),
+              Effect.provideServiceEffect(
+                Management.Integration,
+                Effect.tryPromise({
+                  try: () =>
+                    db.managementIntegration.findFirstOrThrow({
+                      where: { Venue: { id: order.venueId } },
+                    }),
+                  catch: prismaError("ManagementIntegration"),
+                }),
               ),
-            ),
-            Effect.catchAll((e) =>
-              Effect.failSync(() => {
-                if (e.cause instanceof Http.HttpNotFoundError) {
-                  return new NotFoundError();
-                }
-                if (e.cause instanceof CircuitBreaker.CircuitBreakerError) {
-                  return new ManagementUnreachableError();
-                }
+              Effect.provideServiceEffect(
+                Clearing.IntegrationSettingsService,
+                Effect.tryPromise({
+                  try: () =>
+                    db.clearingIntegration.findFirstOrThrow({
+                      where: { Venue: { id: order.venueId } },
+                    }),
+                  catch: prismaError("ClearingIntegration"),
+                }),
+              ),
+              Effect.catchAll((e) =>
+                Effect.failSync(() => {
+                  if (e.cause instanceof Http.HttpNotFoundError) {
+                    return new NotFoundError();
+                  }
+                  if (e.cause instanceof CircuitBreaker.CircuitBreakerError) {
+                    return new ManagementUnreachableError();
+                  }
 
-                return new NotFoundError("Order not found");
-              })
+                  return new NotFoundError("Order not found");
+                })
+              ),
             ),
-          ),
+        ),
       ),
     ),
 );

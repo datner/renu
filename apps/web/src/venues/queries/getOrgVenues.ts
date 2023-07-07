@@ -5,12 +5,12 @@ import { prismaError } from "src/core/helpers/prisma";
 
 export default resolver.pipe(resolver.authorize(), (_, ctx) =>
   Effect.runPromise(
-    Effect.tryCatchPromise(
-      () =>
+    Effect.tryPromise({
+      try: () =>
         db.venue.findMany({
           where: { organizationId: ctx.session.organization.id },
           include: { content: true },
         }),
-      prismaError("Venue"),
-    ),
+      catch: prismaError("Venue"),
+    }),
   ));

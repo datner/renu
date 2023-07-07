@@ -19,11 +19,11 @@ const EmptyImageError = Data.tagged<EmptyImageError>("EmptyImageError");
 export const getBlurHash = (image: string) =>
   pipe(
     Effect.succeed(image),
-    Effect.filterOrFail(
+    Effect.filterOrFail({
       // TODO: Find where the null leak is coming from
-      (img) => typeof img === "string" && img !== "",
-      () => EmptyImageError({} as unknown as void),
-    ),
+      filter: (img) => typeof img === "string" && img !== "",
+      orFailWith: () => EmptyImageError({} as unknown as void),
+    }),
     Effect.flatMap((img) => Http.request(`${img}?fm=blurhash&w=30`)),
     Effect.flatMap(Http.toText),
     Effect.catchTag("EmptyImageError", (_) => Effect.succeed(null)),

@@ -34,8 +34,8 @@ const handler = resolver.pipe(
   Resolver.flatMap(({ where, orderBy = {}, skip, take }) =>
     Server.paginate(Number.NonNegativeInt, Max250Int)(
       (skip, take) =>
-        Effect.tryCatchPromise(
-          () =>
+        Effect.tryPromise({
+          try: () =>
             db.category.findMany({
               skip,
               take,
@@ -58,10 +58,11 @@ const handler = resolver.pipe(
               where,
               orderBy,
             }),
-          prismaError("Category"),
+          catch:prismaError("Category"),
+        }
         ),
       Effect.map(
-        Effect.tryCatchPromise(() => db.category.count({ where }), prismaError("Category")),
+        Effect.tryPromise({try: () => db.category.count({ where }), catch: prismaError("Category")}),
         Number.NonNegativeInt,
       ),
     )(skip, take)

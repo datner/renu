@@ -8,7 +8,6 @@ import { Modifiers } from "database-helpers";
 import db, { Prisma } from "db";
 import { Number } from "shared/branded";
 import { Common } from "shared/schema";
-import { Content } from "shared/schema/common";
 import { Session } from "src/auth";
 import { Renu, Server } from "src/core/effect";
 import { prismaError } from "src/core/helpers/prisma";
@@ -37,8 +36,8 @@ const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx
     Effect.flatMap((where) =>
       Server.paginate(Number.NonNegativeInt, Max250Int)(
         (skip, take) =>
-          Effect.tryCatchPromise(
-            () =>
+          Effect.tryPromise({
+            try: () =>
               db.order.findMany({
                 skip,
                 take,
@@ -55,10 +54,10 @@ const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx
                 where,
                 orderBy,
               }),
-            prismaError("Order"),
-          ),
+            catch: prismaError("Order"),
+          }),
         Effect.map(
-          Effect.tryCatchPromise(() => db.order.count({ where }), prismaError("Category")),
+          Effect.tryPromise({ try: () => db.order.count({ where }), catch: prismaError("Category") }),
           Number.NonNegativeInt,
         ),
       )(skip, take)
@@ -70,13 +69,13 @@ const handler = ({ skip = 0, take = 50, orderBy, where }: GetCategoriesArgs, ctx
           ...it,
           item: {
             ...it.item,
-            content: P.decode(S.array(Common.Content))(it.item.content)
+            content: S.decodeSync(S.array(Common.Content))(it.item.content),
           },
           modifiers: A.map(it.modifiers, (mod) => ({
             ...mod,
             modifier: {
               ...mod.modifier,
-              config: P.parse(Modifiers.ModifierConfig)(mod.modifier.config),
+              config: S.parseSync(Modifiers.ModifierConfig)(mod.modifier.config),
             },
           })),
         })),

@@ -23,7 +23,7 @@ const DorixConfig = Config.all({
 
 const provideDorixIntegration = Effect.provideServiceEffect(
   IntegrationService,
-  Effect.map(Management.IntegrationSettingsService, Parser.parse(Integration)),
+  Effect.flatMap(Management.IntegrationSettingsService, Parser.parse(Integration)),
 );
 
 const provideHttpConfig = Effect.provideServiceEffect(
@@ -70,7 +70,7 @@ export const layer = Layer.effect(
           ),
           breaker((e) => e instanceof Http.HttpRequestError),
           Effect.flatMap(Http.toJson),
-          Effect.map(Parser.parse(SendOrderResponse)),
+          Effect.flatMap(Parser.parse(SendOrderResponse)),
           Effect.flatMap((res) => res.ack ? Effect.succeed(res) : Effect.fail(new Error(res.message))),
           provideHttpConfig,
           provideDorixIntegration,
@@ -89,7 +89,7 @@ export const layer = Layer.effect(
           Effect.flatMap((qs) => client.request(`/v1/order/${order.id}/status?${qs.toString()}`)),
           breaker((e) => e instanceof Http.HttpRequestError),
           Effect.flatMap(Http.toJson),
-          Effect.map(Parser.parse(StatusResponse)),
+          Effect.flatMap(Parser.parse(StatusResponse)),
           Effect.map((p) => {
             switch (p.order.status) {
               case "FAILED":
@@ -113,7 +113,7 @@ export const layer = Layer.effect(
         Effect.flatMap((branchId) => client.request(`/v1/menu/branch/${branchId}`)),
         breaker(),
         Effect.flatMap(Http.toJson),
-        Effect.map(Parser.parse(DorixMenu)),
+        Effect.flatMap(Parser.parse(DorixMenu)),
         Effect.map(toMenu),
         provideHttpConfig,
         provideDorixIntegration,

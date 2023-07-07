@@ -24,10 +24,10 @@ const resolveGetCategoryByVenue = pipe(
   ) =>
     pipe(
       Effect.flatMap(Database, db =>
-        Effect.tryCatchPromise(
-          () => db.category.findMany({ where: { id: { in: requests.map(req => req.id) } } }),
-          () => new GetCategoryByVenueError(),
-        )),
+        Effect.tryPromise({
+          try: () => db.category.findMany({ where: { id: { in: requests.map(req => req.id) } } }),
+          catch: () => new GetCategoryByVenueError(),
+        })),
       Effect.map(A.groupBy(c => String(c.id))),
       Effect.flatMap(data =>
         Effect.forEach(requests, req =>

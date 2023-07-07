@@ -24,9 +24,10 @@ const Item = Schema.transformResult(
   Schema.extend(ItemExtension)(I.Item),
   (i) =>
     pipe(
-      Effect.allPar(
+      Effect.all(
         IR.getContent(i.id),
         IR.getModifiers(i.id),
+        { batched: true },
       ),
       Effect.map(([content, modifiers]) => ({ ...i, content, modifiers })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
@@ -35,45 +36,45 @@ const Item = Schema.transformResult(
   ParseResult.success,
 );
 
-export interface Item extends Schema.To<typeof Item> { }
+export interface Item extends Schema.To<typeof Item> {}
 
 const CategoryItemExtension = Schema.struct({
   item: Item,
 });
 
 export const CategoryItem = Schema.extend(CategoryItemExtension)(CI.Item);
-export interface CategoryItem extends Schema.To<typeof CategoryItem> { }
+export interface CategoryItem extends Schema.To<typeof CategoryItem> {}
 
 export const CategoryItems = Schema.transformResult(
   Schema.from(Schema.array(CI.Item)),
   Schema.array(CategoryItem),
-  Effect.forEachPar(ci =>
+  Effect.forEach(ci =>
     pipe(
       IR.getById(ci.itemId),
       Effect.map((item) => ({ ...ci, item })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
       accessing(Database),
-    )
-  ),
+    ), { batched: true }),
   ParseResult.success,
 );
-export interface CategoryItems extends Schema.To<typeof CategoryItems> { }
+export interface CategoryItems extends Schema.To<typeof CategoryItems> {}
 
 const CategoryExtension = Schema.struct({
   content: Schema.array(Common.Content),
   categoryItems: CategoryItems,
 });
 
-export interface Category extends Schema.To<typeof Category> { }
+export interface Category extends Schema.To<typeof Category> {}
 
 const Category = Schema.transformResult(
   Schema.from(C.Category),
   Schema.extend(CategoryExtension)(C.Category),
   (c) =>
     pipe(
-      Effect.allPar(
+      Effect.all(
         CR.getContent(c.id),
         CR.getItems(c.id),
+        { concurrency: "unbounded" },
       ),
       Effect.map(([content, categoryItems]) => ({ ...c, content, categoryItems })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
@@ -92,9 +93,10 @@ export const fromVenue = Schema.transformResult(
   Schema.extend(VenueExtension)(V.Venue),
   v =>
     pipe(
-      Effect.allPar(
+      Effect.all(
         VR.getContent(v.id),
         VR.getCategories(v.id),
+        { concurrency: "unbounded" },
       ),
       Effect.map(([content, categories]) => ({ ...v, content, categories })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
@@ -124,7 +126,7 @@ export const MenuItem = pipe(
     ),
   })),
 );
-export interface MenuItem extends Schema.To<typeof MenuItem> { }
+export interface MenuItem extends Schema.To<typeof MenuItem> {}
 
 export const MenuCategoryItem = pipe(
   CI.Item,
@@ -135,7 +137,7 @@ export const MenuCategoryItem = pipe(
     ),
   })),
 );
-export interface MenuCategoryItem extends Schema.To<typeof MenuCategoryItem> { }
+export interface MenuCategoryItem extends Schema.To<typeof MenuCategoryItem> {}
 
 export const MenuCategory = pipe(
   C.Category,
@@ -148,7 +150,7 @@ export const MenuCategory = pipe(
     ),
   })),
 );
-export interface MenuCategory extends Schema.To<typeof MenuCategory> { }
+export interface MenuCategory extends Schema.To<typeof MenuCategory> {}
 
 export const Menu = pipe(
   V.Venue,
@@ -161,4 +163,4 @@ export const Menu = pipe(
     ),
   })),
 );
-export interface Menu extends Schema.To<typeof Menu> { }
+export interface Menu extends Schema.To<typeof Menu> {}

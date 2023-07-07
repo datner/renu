@@ -327,7 +327,7 @@ export const toCreateItem = ({
       RA.filter((m) => m.modifierId == null),
       RA.map(({ config }, p) => ({
         position: p,
-        config: Parser.encode(Modifiers.ModifierConfig)(config) as Prisma.InputJsonValue,
+        config: Parser.encodeSync(Modifiers.ModifierConfig)(config) as Prisma.InputJsonValue,
       })),
     ),
   },

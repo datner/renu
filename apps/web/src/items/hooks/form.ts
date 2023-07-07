@@ -19,10 +19,11 @@ import getItem from "../queries/getItem";
 import getItemNew from "../queries/getItemNew";
 import getItems from "../queries/getItems";
 
-const invalidateQueries = Effect.allPar([
+const invalidateQueries = Effect.all(
   Effect.promise(() => invalidateQuery(getItems)),
   Effect.promise(() => invalidateQuery(getCurrentVenueCategories)),
-]);
+  { discard: true, concurrency: "unbounded" },
+);
 
 export const FullItem = Schema.extend(
   Schema.struct({
@@ -78,8 +79,10 @@ const useCreate = (redirect = false) => {
         Effect.tap(({ identifier }) =>
           Effect.if(
             redirect,
-            Effect.sync(() => router.push(Routes.AdminItemsItem({ identifier }))),
-            Effect.unit(),
+            {
+              onTrue: Effect.sync(() => router.push(Routes.AdminItemsItem({ identifier }))),
+              onFalse: Effect.unit,
+            },
           )
         ),
         Effect.runPromise,
@@ -94,7 +97,7 @@ const useCreate = (redirect = false) => {
 const useUpdate = (identifier: string) => {
   const router = useRouter();
 
-  const [item, { setQueryData }] = useQuery(getItemNew, identifier, { select: Schema.decode(FullItem) });
+  const [item, { setQueryData }] = useQuery(getItemNew, identifier, { select: Schema.decodeSync(FullItem) });
 
   const onSubmit = (data: Schema.To<typeof ItemFormSchema>) =>
     pipe(
@@ -104,15 +107,17 @@ const useUpdate = (identifier: string) => {
       Effect.catchAll(() => Effect.succeed(data.image ?? "")),
       Effect.flatMap((image) => Effect.promise(() => invoke(updateItem, { id: item.id, ...data, image }))),
       Effect.tap((item) =>
-        Effect.allPar(
+        Effect.all(
           // @ts-expect-error the types here are wrong. They use the select type instead of data type
           Effect.promise(() => setQueryData(item)),
           revalidate,
           invalidateQueries,
           Effect.if(
             item.identifier === identifier,
-            Effect.unit(),
-            Effect.promise(() => router.push(Routes.AdminItemsItem({ identifier: item.identifier }))),
+            {
+              onTrue: Effect.unit,
+              onFalse: Effect.promise(() => router.push(Routes.AdminItemsItem({ identifier: item.identifier }))),
+            },
           ),
         )
       ),

@@ -45,7 +45,7 @@ export function ItemModal() {
       }}
     >
       {O.getOrNull(
-        O.map(activeItem, (item) => <_ItemModal activeItem={item} onClose={handleClose} dispatch={dispatch} />),
+        O.map(activeItem, (item) => <ItemModal_ activeItem={item} onClose={handleClose} dispatch={dispatch} />),
       )}
     </Modal>
   );
@@ -59,7 +59,7 @@ interface Props2 {
 
 const AnimatedBlurhash = animated(Blurhash);
 
-function _ItemModal(props: Props2) {
+function ItemModal_(props: Props2) {
   const { activeItem, dispatch, onClose } = props;
   const locale = useLocale();
   const title = titleFor(locale);
@@ -109,10 +109,10 @@ function _ItemModal(props: Props2) {
       const extrasMap = HashMap.make(...RA.map(extras, (oo) => [String(oo.id), oo] as const));
 
       const oneOfCost = pipe(
-        RR.map(modifiers.oneOf, (oo, id) => O.tuple(O.some(oo), HashMap.get(oneOfMap, id))),
+        RR.map(modifiers.oneOf, (oo, id) => O.all(O.some(oo), HashMap.get(oneOfMap, id))),
         RR.compact,
         RR.map(([oo, of]) =>
-          O.tuple(
+          O.all(
             O.some(oo.amount),
             RA.findFirst(of.config.options, (o) => o.identifier === oo.choice),
           )
@@ -123,11 +123,11 @@ function _ItemModal(props: Props2) {
       );
 
       const extrasCost = pipe(
-        RR.map(modifiers.extras, (oo, id) => O.tuple(O.some(oo), HashMap.get(extrasMap, id))),
+        RR.map(modifiers.extras, (oo, id) => O.all(O.some(oo), HashMap.get(extrasMap, id))),
         RR.compact,
         RR.collect((_, [oo, of]) =>
           RR.collect(oo.choices, (choice, amount) =>
-            O.tuple(
+            O.all(
               O.some(amount),
               RA.findFirst(of.config.options, (o) => o.identifier === choice),
             ))
@@ -231,7 +231,7 @@ function _ItemModal(props: Props2) {
                 className="object-cover"
                 fill
                 src={item.image}
-                placeholder={O.match(item.blurDataUrl, () => "empty", () => "blur")}
+                placeholder={O.match(item.blurDataUrl, { onNone: () => "empty", onSome: () => "blur" })}
                 blurDataURL={O.getOrUndefined(item.blurDataUrl)}
                 alt={item.identifier}
                 sizes="100vw"

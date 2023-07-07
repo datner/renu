@@ -11,8 +11,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@effect/data": "0.12.10",
-    "@effect/schema": "0.21.1",
+    "@effect/data": "0.13.3",
+    "@effect/schema": "0.25.0",
     "@prisma/client": "4.16.2"
   },
   "devDependencies": {

@@ -1,4 +1,5 @@
-import { flow, pipe } from "@effect/data/Function";
+import { pipe } from "@effect/data/Function";
+import * as Num from "@effect/data/Number";
 import * as Option from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import { Locale } from "database";
@@ -6,7 +7,6 @@ import * as O from "monocle-ts/Optional";
 import { Common } from "shared/schema";
 import { Nullish } from "src/menu/types/utils";
 import { get } from "./common";
-import { divide } from "./number";
 
 interface ContentPartial {
   locale: Locale;
@@ -40,9 +40,14 @@ export const priceOption = pipe(
 ).getOption;
 
 export const price = get(priceOption, 0);
-export const toShekel = flow(divide(100), shekel.format);
-export const priceShekel = flow(price, toShekel);
-export const getContentFor = (content: ReadonlyArray<Common.Content>, locale: Locale) => A.findFirst(content, c => c.locale === locale);
+export const toShekel = (cost: number) => pipe(Num.divide(cost, 100), shekel.format);
+export const priceShekel = (
+  k: {
+    price: number;
+  } | null,
+) => pipe(k, price, toShekel);
+export const getContentFor = (content: ReadonlyArray<Common.Content>, locale: Locale) =>
+  A.findFirst(content, c => c.locale === locale);
 // export const titleFor = (locale: Locale) => get(contentOption("name", locale), "");
 export const titleFor = (locale: Locale) => (content: ReadonlyArray<Common.Content>) =>
   pipe(

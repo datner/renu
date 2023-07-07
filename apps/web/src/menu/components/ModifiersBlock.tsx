@@ -1,6 +1,6 @@
 import { pipe } from "@effect/data/Function";
 import * as A from "@effect/data/ReadonlyArray";
-import * as Order from "@effect/data/typeclass/Order";
+import * as Order from "@effect/data/Order";
 import { useMemo } from "react";
 import { Item, Venue } from "shared";
 import { ExtrasComponent } from "src/menu/modifier-blocks/Extras";

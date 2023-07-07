@@ -3,15 +3,15 @@ import { pipe } from "@effect/data/Function";
 import * as HashMap from "@effect/data/HashMap";
 import * as A from "@effect/data/ReadonlyArray";
 import { memo } from "react";
+import { Venue } from "shared";
 import * as Order from "src/menu/hooks/useOrder";
 import * as _Menu from "src/menu/schema";
 import { ListItem } from "../ListItem";
 import { useOrderState } from "../OrderContext";
-import { Venue } from "shared";
 
 interface ItemProps {
-  item: Venue.Menu.MenuCategoryItem
-  priority: boolean
+  item: Venue.Menu.MenuCategoryItem;
+  priority: boolean;
 }
 
 export const Item = memo<ItemProps>(({ item, priority }) => {
@@ -25,23 +25,22 @@ export const Item = memo<ItemProps>(({ item, priority }) => {
     A.fromIterable,
   );
 
-  const items = A.match(
-    orderItem,
-    () => [
+  const items = A.match(orderItem, {
+    onEmpty: () => [
       <ListItem
         priority={priority}
         key={`${item.item.identifier}-0`}
         item={Order.NewActiveItem({ item: Data.struct(item.item) })}
       />,
     ],
-    A.map(([key, item], i) => (
+    onNonEmpty: A.map(([key, item], i) => (
       <ListItem
         priority={priority}
         key={`${item.item.identifier}-${i}`}
         item={Order.ExistingActiveItem({ item, key })}
       />
     )),
-  );
+  });
   return <>{items}</>;
 });
 

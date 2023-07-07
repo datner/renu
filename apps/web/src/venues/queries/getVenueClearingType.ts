@@ -21,12 +21,12 @@ export type GetVenueClearingProviderFrom = Schema.From<typeof GetVenueClearingPr
 
 const getVenueClearingProvider = (input: GetVenueClearingProviderFrom) =>
   pipe(
-    Schema.parseEffect(GetVenueClearingProvider)(input),
+    Schema.parse(GetVenueClearingProvider)(input),
     Effect.flatMap((whereVenue) =>
-      Effect.tryCatchPromise(
-        () => db.clearingIntegration.findFirstOrThrow({ where: { Venue: whereVenue } }),
-        prismaError("ClearingIntegration"),
-      )
+      Effect.tryPromise({
+        try: () => db.clearingIntegration.findFirstOrThrow({ where: { Venue: whereVenue } }),
+        catch: prismaError("ClearingIntegration"),
+      })
     ),
     Effect.map((c) => c.provider),
     Renu.runPromise$,

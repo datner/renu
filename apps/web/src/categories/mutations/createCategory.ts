@@ -22,8 +22,8 @@ export const handler = resolver.pipe(
   ),
   Resolver.flatMapAuthorized((data, { session }) =>
     Effect.flatMap(Database, db =>
-      Effect.tryCatchPromise(
-        () =>
+      Effect.tryPromise({
+        try: () =>
           db.category.create({
             data: {
               ...data,
@@ -34,8 +34,8 @@ export const handler = resolver.pipe(
               content: true,
             },
           }),
-        prismaError("Category"),
-      ))
+        catch: prismaError("Category"),
+      }))
   ),
   Renu.runPromise$,
 );

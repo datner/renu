@@ -21,13 +21,13 @@ export default resolver.pipe(
   setDefaultVenue,
   ({ phone, address, venue }) =>
     Renu.runPromise$(
-      Effect.tryCatchPromise(
-        () =>
+      Effect.tryPromise({
+        try: () =>
           db.venue.update({
             where: { id: venue.id },
             data: { simpleContactInfo: `${address} - ${toPhoneNumber(phone)}` },
           }),
-        prismaError("Venue"),
-      ),
+        catch: prismaError("Venue"),
+      }),
     ),
 );

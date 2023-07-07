@@ -13,8 +13,7 @@ export default resolver.pipe(
   Resolver.schema(GetMenu),
   Effect.map(_ => _.identifier),
   Effect.flatMap(Venue.getByIdentifier),
-  Effect.flatMap(Schema.decodeEffect(Venue.Menu.fromVenue)),
-  Effect.flatMap(Schema.encodeEffect(Venue.Menu.Menu)),
-  Effect.withParallelism(1),
+  Effect.flatMap(Schema.decode(Venue.Menu.fromVenue)),
+  Effect.flatMap(Schema.encode(Venue.Menu.Menu)),
   Renu.runPromise$,
 );

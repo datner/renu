@@ -115,14 +115,14 @@ export function ModifierPanel() {
           console.log("deleting ", index);
           return remove(index);
         }),
-        O.match(
-          () => <PickAction />,
-          (props) =>
+        O.match({
+          onNone: () => <PickAction />,
+          onSome: (props) =>
             match(props)
               .with({ field: { config: { _tag: "oneOf" } } }, (props) => <OneOfForm {...props} />)
               .with({ field: { config: { _tag: "extras" } } }, (props) => <ExtrasForm {...props} />)
               .otherwise((props) => <EditOrCreate {...props} />),
-        ),
+        }),
       )}
     </div>
   );

@@ -18,7 +18,7 @@ export const CategoryResolver = pipe(
   RequestResolver.makeBatched((
     requests: CategoryRequest[],
   ) =>
-    Effect.allPar(
+    Effect.all(
       Effect.sync(() => console.log(inspect(requests.map(r => r._tag), false, null, true))),
       resolveBatch(
         A.filter(requests, (_): _ is GetCategoryItems => _._tag === "GetCategoryItems"),
@@ -45,15 +45,18 @@ export const CategoryResolver = pipe(
         (reqs, db) =>
           db.category.findMany({
             where: idIn(reqs),
-            orderBy: {identifier: "asc"}
+            orderBy: { identifier: "asc" },
           }),
         (req, items) =>
           Option.match(
             A.findFirst(items, _ => _.id === req.id),
-            () => Exit.fail(new GetCategoryByIdError()),
-            Exit.succeed,
+            {
+              onNone: () => Exit.fail(new GetCategoryByIdError()),
+              onSome: Exit.succeed,
+            },
           ),
       ),
+      { concurrency: "unbounded" },
     )
   ),
   RequestResolver.contextFromServices(Database),

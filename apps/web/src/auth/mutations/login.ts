@@ -35,9 +35,10 @@ const rehashPassword = Effect.serviceFunctionEffect(
 );
 
 const getUser = Effect.serviceFunctionEffect(Database, db => (email: string) =>
-  Effect.tryCatchPromise(
-    () => db.user.findFirstOrThrow({ where: { email }, include: withMembership }),
-    () => new AuthenticationError(),
+  Effect.tryPromise({
+    try: () => db.user.findFirstOrThrow({ where: { email }, include: withMembership }),
+    catch: () => new AuthenticationError(),
+  }
   ));
 
 export default resolver.pipe(
@@ -46,8 +47,10 @@ export default resolver.pipe(
     Effect.tap(getUser(_.email), user =>
       Effect.filterOrElse(
         verify(user.hashedPassword, _.password),
-        isValidNeedsRehash,
-        () => rehashPassword(_),
+        {
+        filter: isValidNeedsRehash,
+        orElse: () => rehashPassword(_),
+        }
       ))
   ),
   Effect.bindTo("user"),

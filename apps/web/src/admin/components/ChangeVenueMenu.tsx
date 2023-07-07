@@ -1,13 +1,12 @@
 import { useAuthenticatedSession } from "@blitzjs/auth";
 import { getQueryClient, useMutation, useQuery } from "@blitzjs/rpc";
-import { flow } from "@effect/data/Function";
+import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as RA from "@effect/data/ReadonlyArray";
 import * as Schema from "@effect/schema/Schema";
 import { Menu, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { clsx, Loader } from "@mantine/core";
-import { pipe } from "fp-ts/function";
 import { Fragment } from "react";
 import { Content } from "shared/schema/common";
 import { titleFor } from "src/core/helpers/content";
@@ -15,7 +14,10 @@ import { useLocale } from "src/core/hooks/useLocale";
 import changeCurrentVenue from "src/venues/mutations/changeCurrentVenue";
 import getOrgVenues from "src/venues/queries/getOrgVenues";
 
-const decodeContent = pipe(Content, Schema.omit("description"), Schema.array, Schema.decode);
+const VenueContent = pipe(Content, Schema.omit("description"), Schema.array);
+interface VenueContent extends Schema.To<typeof VenueContent> {}
+
+const decodeContent = Schema.decodeSync(VenueContent);
 
 export const ChangeVenueMenu = () => {
   const [venues] = useQuery(getOrgVenues, {});
@@ -27,11 +29,12 @@ export const ChangeVenueMenu = () => {
     },
   });
   const locale = useLocale();
-  const title = flow(
-    decodeContent,
-    RA.findFirst(_ => _.locale === locale),
-    O.map(_ => _.name),
-  )
+  const title = (content: VenueContent) =>
+    pipe(
+      decodeContent(content),
+      RA.findFirst(_ => _.locale === locale),
+      O.map(_ => _.name),
+    );
 
   const currentVenue = pipe(
     O.fromNullable(venue),
@@ -71,8 +74,8 @@ export const ChangeVenueMenu = () => {
         >
           {pipe(
             venues,
-            RA.match(
-              () => [
+            RA.match({
+              onEmpty: () => [
                 <Menu.Item
                   key="loading"
                   as="button"
@@ -81,7 +84,7 @@ export const ChangeVenueMenu = () => {
                   loading...
                 </Menu.Item>,
               ],
-              RA.map((venue) => (
+              onNonEmpty: RA.map((venue) => (
                 <Menu.Item key={venue.identifier}>
                   {({ active }) => (
                     <button
@@ -96,7 +99,7 @@ export const ChangeVenueMenu = () => {
                   )}
                 </Menu.Item>
               )),
-            ),
+            }),
           )}
         </Menu.Items>
       </Transition>

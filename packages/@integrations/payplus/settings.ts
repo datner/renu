@@ -2,6 +2,7 @@ import * as Context from "@effect/data/Context";
 import { pipe } from "@effect/data/Function";
 import * as Config from "@effect/io/Config";
 import * as Effect from "@effect/io/Effect";
+import * as Layer from "@effect/io/Layer";
 import * as P from "@effect/schema/Parser";
 import * as S from "@effect/schema/Schema";
 import { Clearing } from "@integrations/core";
@@ -33,7 +34,7 @@ export interface Integration extends S.To<typeof Integration> {}
 export const IntegrationService = Context.Tag<Integration>();
 
 export const payplusIntegrationLayer = pipe(
-  Effect.flatMap(Clearing.IntegrationSettingsService, P.parseEffect(Integration)),
+  Effect.flatMap(Clearing.IntegrationSettingsService, P.parse(Integration)),
   Effect.mapError(
     (cause) =>
       new Clearing.ClearingError("failed to parse integration setting", {
@@ -41,5 +42,5 @@ export const payplusIntegrationLayer = pipe(
         cause,
       }),
   ),
-  Effect.toLayer(IntegrationService),
+  Layer.effect(IntegrationService),
 );

@@ -10,7 +10,10 @@ import * as RequestResolver from "@effect/io/RequestResolver";
 import * as Schema from "@effect/schema/Schema";
 import { Database } from "../Database";
 
-type RequestError<Tag extends string> = Data.Case & { readonly _tag: `${Tag}Error` };
+interface RequestError<Tag extends string> extends Data.Case {
+  readonly _tag: `${Tag}Error`;
+  readonly error: unknown;
+}
 
 export const createRequest =
   <Tag extends string, E extends RequestError<Tag>>(tag: Tag) =>
@@ -39,12 +42,12 @@ export const createRequest =
       pipe(
         Database,
         Effect.flatMap(db =>
-          Effect.tryCatchPromise(
-            () => f(requests, db),
-            () => SomeError({} as any),
-          )
+          Effect.tryPromise({
+            try: () => f(requests, db),
+            catch: (error) => SomeError({error} as any),
+          })
         ),
-        Effect.flatMap(Schema.decodeEffect(Schema.array(schema))),
+        Effect.flatMap(Schema.decode(Schema.array(schema))),
         Effect.flatMap(data =>
           Effect.forEach(requests, req =>
             Request.completeEffect(
@@ -53,11 +56,11 @@ export const createRequest =
                 A.findFirst(data, datum => pred(req, datum)),
                 () => SomeError({} as any),
               ) as RequestEffect,
-            ))
+            ), {discard: true})
         ),
-        Effect.refineTagOrDie(`${tag}Error` as any),
+        Effect.catchTag("ParseError" as any,error => Effect.fail(SomeError({ error } as any))),
         Effect.catchAll((_) =>
-          Effect.forEach(requests, req => Request.completeEffect(req, Effect.fail(_) as any as RequestEffect))
+          Effect.forEach(requests, req => Request.completeEffect(req, Effect.fail(_) as any))
         ),
       )
     );
@@ -79,14 +82,14 @@ export const resolveBatch = <E, A, Req extends Request.Request<E, A[]>>(
     Effect.flatMap(Database, db => Effect.promise(() => getResult(requests, db))),
     Effect.map(A.groupBy(getDataKey)),
     Effect.flatMap(data =>
-      Effect.forEachPar(requests, req =>
+      Effect.forEach(requests, req =>
         Request.succeed(
           req,
           pipe(
             RA.get(data, getRequestKey(req)),
             O.getOrElse(() => []),
           ) as any,
-        ))
+        ), { concurrency: "unbounded" })
     ),
     // Effect.catchAll((_) => Effect.forEach(requests, req => Request.fail(req, _))),
   );
@@ -110,5 +113,7 @@ export const resolveSingle = <E, A, R extends Request.Request<E, A>>(
   pipe(
     Database,
     Effect.flatMap(db => Effect.promise(() => getResult(requests, db))),
-    Effect.flatMap(data => Effect.forEachPar(requests, req => Request.complete(req, resolve(req, data)))),
+    Effect.flatMap(data =>
+      Effect.forEach(requests, req => Request.complete(req, resolve(req, data)), { concurrency: "unbounded" })
+    ),
   );

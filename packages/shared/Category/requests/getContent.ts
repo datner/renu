@@ -24,14 +24,14 @@ const resolveGetCategoryContent = pipe(
   ) =>
     pipe(
       Effect.flatMap(Database, db =>
-        Effect.tryCatchPromise(
-          () =>
+        Effect.tryPromise({
+          try: () =>
             db.categoryI18L.findMany({
               where: { categoryId: { in: requests.map(req => req.id) } },
               orderBy: { categoryId: "asc" },
             }),
-          () => new GetCategoryContentError(),
-        )),
+          catch: () => new GetCategoryContentError(),
+        })),
       Effect.map(A.groupBy(c => String(c.categoryId!))),
       Effect.flatMap(data =>
         Effect.forEach(requests, req =>
@@ -54,4 +54,3 @@ export const getCategoryContent = (id: number) =>
     GetCategoryContent({ id }),
     resolveGetCategoryContent,
   );
-

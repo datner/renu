@@ -2,7 +2,7 @@ import * as E from "@effect/data/Either";
 import { pipe } from "@effect/data/Function";
 import * as Str from "@effect/data/String";
 import * as Effect from "@effect/io/Effect";
-import * as P from "@effect/schema/Parser";
+import * as Schema from "@effect/schema/Schema";
 import { fullOrderInclude } from "@integrations/core/management";
 import * as Management from "@integrations/management";
 import db, { OrderState } from "db";
@@ -16,29 +16,29 @@ import { Format } from "telegraf";
 const handler = async (request: NextApiRequest, res: NextApiResponse) =>
   pipe(
     Effect.succeed(request),
-    Effect.filterOrDieMessage(
-      (req) => Str.toLowerCase(req.method || "") === "post",
-      "this endpoint only received POST messages",
-    ),
+    Effect.filterOrDieMessage({
+      filter: (req) => Str.toLowerCase(req.method || "") === "post",
+      message: "this endpoint only received POST messages",
+    }),
     Effect.map((req) => req.body),
-    Effect.flatMap(P.parseEffect(PayPlusCallback)),
-    Effect.filterOrDieMessage(
-      (ppc) => ppc.transaction.status_code === "000",
-      "payplus returned a failed transaction. Why?",
-    ),
+    Effect.flatMap(Schema.parse(PayPlusCallback)),
+    Effect.filterOrDieMessage({
+      filter: (ppc) => ppc.transaction.status_code === "000",
+      message: "payplus returned a failed transaction. Why?",
+    }),
     Effect.flatMap((ppc) =>
       pipe(
         Effect.gen(function*($) {
           let order = yield* $(
-            Effect.tryCatchPromise(
-              () =>
+            Effect.tryPromise({
+              try: () =>
                 db.order.update({
                   where: { id: ppc.transaction.more_info },
                   data: { txId: ppc.transaction.uid },
                   include: fullOrderInclude,
                 }),
-              prismaError("Order"),
-            ),
+              catch: prismaError("Order"),
+            }),
           );
 
           const either = yield* $(Effect.either(Management.reportOrder(order)));
@@ -60,40 +60,40 @@ const handler = async (request: NextApiRequest, res: NextApiResponse) =>
           }
 
           order = yield* $(
-            Effect.tryCatchPromise(
-              () =>
+            Effect.tryPromise({
+              try: () =>
                 db.order.update({
                   where: { id: order.id },
                   data: { state: OrderState.Unconfirmed },
                   include: fullOrderInclude,
                 }),
-              prismaError("Order"),
-            ),
+              catch: prismaError("Order"),
+            }),
           );
 
           const state = yield* $(Management.getOrderStatus(order));
 
           return yield* $(
-            Effect.tryCatchPromise(
-              () =>
+            Effect.tryPromise({
+              try: () =>
                 db.order.update({
                   where: { id: order.id },
                   data: { state },
                   include: fullOrderInclude,
                 }),
-              prismaError("Order"),
-            ),
+              catch: prismaError("Order"),
+            }),
           );
         }),
         Effect.provideServiceEffect(
           Management.Integration,
-          Effect.tryCatchPromise(
-            () =>
+          Effect.tryPromise({
+            try: () =>
               db.managementIntegration.findUniqueOrThrow({
                 where: { venueId: ppc.transaction.more_info_1 },
               }),
-            prismaError("ManagementIntegration"),
-          ),
+            catch: prismaError("ManagementIntegration"),
+          }),
         ),
       )
     ),
@@ -105,10 +105,10 @@ const handler = async (request: NextApiRequest, res: NextApiResponse) =>
         ),
       )
     ),
-    Effect.match(
-      () => res.status(400).json({ success: false }),
-      () => res.status(200).json({ success: true }),
-    ),
+    Effect.match({
+      onFailure: () => res.status(400).json({ success: false }),
+      onSuccess: () => res.status(200).json({ success: true }),
+    }),
     Renu.runPromise$,
   );
 

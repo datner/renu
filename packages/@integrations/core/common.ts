@@ -23,8 +23,7 @@ export const DefaultRetrySchedule: ScheduleService = {
   retry: pipe(
     Schedule.exponential(Duration.millis(10), 2),
     Schedule.either(Schedule.spaced(Duration.seconds(1))),
-    Schedule.compose(Schedule.elapsed()),
-    Schedule.whileOutput(Duration.lessThanOrEqualTo(Duration.seconds(30))),
+    Schedule.upTo(Duration.seconds(30)),
   ),
 };
 

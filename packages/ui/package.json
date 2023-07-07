@@ -16,7 +16,7 @@
     "typescript": "^5.1.6"
   },
   "dependencies": {
-    "@effect/data": "0.12.10",
-    "@effect/schema": "0.21.1"
+    "@effect/data": "0.13.3",
+    "@effect/schema": "0.25.0"
   }
 }

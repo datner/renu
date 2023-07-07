@@ -6,13 +6,15 @@ import * as RequestResolver from "@effect/io/RequestResolver";
 import { Prisma } from "database";
 import { Database } from "../../Database/service";
 
-export class GetMenuByIdentifierError extends Data.TaggedClass("GetMenuByIdentifierError")<{}> {}
+export class GetMenuByIdentifierError extends Data.TaggedClass("GetMenuByIdentifierError")<{
+  readonly error: unknown;
+}> {}
 
 export interface GetMenuByIdentifier
   extends Request.Request<GetMenuByIdentifierError, Prisma.VenueGetPayload<{ select: typeof select }>>
 {
   readonly _tag: "GetMenuByIdentifier";
-  readonly identifier: string
+  readonly identifier: string;
 }
 export const GetMenuByIdentifier = Request.tagged<GetMenuByIdentifier>("GetMenuByIdentifier");
 
@@ -81,19 +83,19 @@ export const select = {
 
 export const makeGetMenuByIdentifierResolver = (db: Database) =>
   RequestResolver.fromFunctionEffect((request: GetMenuByIdentifier) =>
-    Effect.tryCatchPromise(
-      () => db.venue.findUniqueOrThrow({ where: { identifier: request.identifier }, select }),
-      () => new GetMenuByIdentifierError(),
-    )
+    Effect.tryPromise({
+      try: () => db.venue.findUniqueOrThrow({ where: { identifier: request.identifier }, select }),
+      catch: (error) => new GetMenuByIdentifierError({ error }),
+    })
   );
 
 const resolveGetMenuByIdentifier = pipe(
   RequestResolver.fromFunctionEffect((request: GetMenuByIdentifier) =>
     Effect.flatMap(Database, db =>
-      Effect.tryCatchPromise(
-        () => db.venue.findUniqueOrThrow({ where: { identifier: request.identifier }, select }),
-        () => new GetMenuByIdentifierError(),
-      ))
+      Effect.tryPromise({
+        try: () => db.venue.findUniqueOrThrow({ where: { identifier: request.identifier }, select }),
+        catch: (error) => new GetMenuByIdentifierError({ error }),
+      }))
   ),
   RequestResolver.contextFromEffect,
 );

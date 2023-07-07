@@ -377,7 +377,7 @@ export const removeItem = (key: OrderItemKey): Action => (state) =>
         O.getOrElse(() => 0),
       );
 
-      const amount = O.match(item, () => 0, getAmount);
+      const amount = O.match(item, { onNone: () => 0, onSome: getAmount });
 
       return State({
         ...state,
@@ -412,22 +412,26 @@ export const decrementItem = (key: OrderItemKey): Action => (state) => {
     Match.tag("ActiveOrder", ({ _tag, ...o }) =>
       O.match(
         HashMap.get(o.items, key),
-        () => state,
-        (it) =>
-          B.match(
-            it._tag === "SingleOrderItem",
-            () =>
-              State({
-                ...state,
-                order: ActiveOrder({
-                  ...o,
-                  items: HashMap.modifyAt(o.items, key, decrementAmount),
-                  totalAmount: Number.Amount(o.totalAmount - 1),
-                  totalCost: Number.Cost(o.totalCost - getItemCost(it)),
-                }),
-              }),
-            () => removeItem(key)(state),
-          ),
+        {
+          onNone: () => state,
+          onSome: (it) =>
+            B.match(
+              it._tag === "SingleOrderItem",
+              {
+                onFalse: () =>
+                  State({
+                    ...state,
+                    order: ActiveOrder({
+                      ...o,
+                      items: HashMap.modifyAt(o.items, key, decrementAmount),
+                      totalAmount: Number.Amount(o.totalAmount - 1),
+                      totalCost: Number.Cost(o.totalCost - getItemCost(it)),
+                    }),
+                  }),
+                onTrue: () => removeItem(key)(state),
+              },
+            ),
+        },
       )),
     Match.exhaustive,
   );
@@ -438,9 +442,9 @@ export const updateItem = (hash: OrderItemKey, update: (v: OrderItem) => OrderIt
     state.order,
     O.liftPredicate(isActiveOrder),
     O.map((ord) => HashMap.modify(ord.items, hash, update)),
-    O.match(
-      () => state,
-      (items) =>
+    O.match({
+      onNone: () => state,
+      onSome: (items) =>
         State({
           ...state,
           order: ActiveOrder({
@@ -451,7 +455,7 @@ export const updateItem = (hash: OrderItemKey, update: (v: OrderItem) => OrderIt
             valid: HashMap.reduce(items, true, (acc, _) => acc && _.valid),
           }),
         }),
-    ),
+    }),
   );
 
 export const setNewActiveItem = (item: Venue.Menu.MenuItem): Action => (state) =>

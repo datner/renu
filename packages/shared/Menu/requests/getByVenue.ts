@@ -9,7 +9,7 @@ import * as RequestResolver from "@effect/io/RequestResolver";
 import * as Models from "database";
 import { Database } from "../../Database";
 
-export class GetMenusByVenueError extends Data.TaggedClass("GetMenusByVenueError")<{}> { }
+export class GetMenusByVenueError extends Data.TaggedClass("GetMenusByVenueError")<{}> {}
 
 export interface GetMenusByVenue extends Request.Request<GetMenusByVenueError, Models.Menu[]> {
   readonly _tag: "GetMenusByVenue";
@@ -24,10 +24,10 @@ const resolveGetMenusByVenue = pipe(
   ) =>
     pipe(
       Effect.flatMap(Database, db =>
-        Effect.tryCatchPromise(
-          () => db.menu.findMany({ where: { id: { in: requests.map(req => req.id) } } }),
-          () => new GetMenusByVenueError(),
-        )),
+        Effect.tryPromise({
+          try: () => db.menu.findMany({ where: { id: { in: requests.map(req => req.id) } } }),
+          catch: () => new GetMenusByVenueError(),
+        })),
       Effect.map(A.groupBy(c => String(c.id))),
       Effect.flatMap(data =>
         Effect.forEach(requests, req =>
@@ -50,5 +50,3 @@ export const getByVenue = (id: number) =>
     GetMenusByVenue({ id }),
     resolveGetMenusByVenue,
   );
-
-

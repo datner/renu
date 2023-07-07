@@ -14,8 +14,8 @@ const blurhashify = (_: null, ctx: Ctx) =>
     Effect.flatMap(() =>
       Session.withEffect((session) =>
         pipe(
-          Effect.tryCatchPromise(
-            () =>
+          Effect.tryPromise({
+            try: () =>
               db.item.findMany({
                 where: {
                   Venue: { id: session.venue.id },
@@ -24,20 +24,20 @@ const blurhashify = (_: null, ctx: Ctx) =>
                   blurHash: null,
                 },
               }),
-            prismaError("Item"),
-          ),
+            catch: prismaError("Item"),
+          }),
           Effect.map(A.map((it) => Effect.all(Effect.succeed(it.id), getBlurHash(it.image)))),
-          Effect.flatMap((effects) => Effect.withParallelism(Effect.allPar(effects), 5)),
+          Effect.flatMap((effects) => Effect.all(effects, { concurrency: 5 })),
           Effect.flatMap((items) =>
             pipe(
-              Effect.allParDiscard(
+              Effect.all(
                 A.map(items, ([id, blurHash]) =>
-                  Effect.tryCatchPromise(
-                    () => db.item.update({ where: { id }, data: { blurHash } }),
-                    prismaError("Item"),
-                  )),
+                  Effect.tryPromise({
+                    try: () => db.item.update({ where: { id }, data: { blurHash } }),
+                    catch: prismaError("Item"),
+                  })),
+                { concurrency: 10, discard: true },
               ),
-              Effect.withParallelism(10),
             )
           ),
         )

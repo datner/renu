@@ -45,7 +45,7 @@ const toDefaultModifier = pipe(
         _.content,
         _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
       ) as any,
-      managementRepresentation: Schema.encode(ModifierConfig.Base.ManagementRepresentationSchema)(
+      managementRepresentation: Schema.encodeSync(ModifierConfig.Base.ManagementRepresentationSchema)(
         _.managementRepresentation,
       ),
       price: _.price,
@@ -66,7 +66,7 @@ const toDefaultModifier = pipe(
         _.content,
         _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
       ) as any,
-      managementRepresentation: Schema.encode(ModifierConfig.Base.ManagementRepresentationSchema)(
+      managementRepresentation: Schema.encodeSync(ModifierConfig.Base.ManagementRepresentationSchema)(
         _.managementRepresentation,
       ),
       price: _.price,
@@ -83,36 +83,38 @@ const toDefault = (item: O.Option<FullItem>): F =>
   pipe(
     O.match(
       item,
-      (): F => ({
-        price: 0,
-        identifier: "",
-        categoryId: -1,
-        modifiers: [],
-        image: {
-          src: "",
-        },
-        content: {
-          en: { name: "", description: "" },
-          he: { name: "", description: "" },
-        },
-      }),
-      _ => ({
-        price: _.price,
-        identifier: _.identifier,
-        categoryId: _.categoryId,
-        image: {
-          src: _.image,
-          blur: O.getOrUndefined(_.blurHash),
-        },
-        modifiers: A.map(_.modifiers, (_): ModifierSchema => ({
-          modifierId: _.id,
-          config: toDefaultModifier(_),
-        })),
-        content: RR.fromIterable(
-          _.content,
-          _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
-        ) as any,
-      }),
+      {
+        onNone: (): F => ({
+          price: 0,
+          identifier: "",
+          categoryId: -1,
+          modifiers: [],
+          image: {
+            src: "",
+          },
+          content: {
+            en: { name: "", description: "" },
+            he: { name: "", description: "" },
+          },
+        }),
+        onSome: _ => ({
+          price: _.price,
+          identifier: _.identifier,
+          categoryId: _.categoryId,
+          image: {
+            src: _.image,
+            blur: O.getOrUndefined(_.blurHash),
+          },
+          modifiers: A.map(_.modifiers, (_): ModifierSchema => ({
+            modifierId: _.id,
+            config: toDefaultModifier(_),
+          })),
+          content: RR.fromIterable(
+            _.content,
+            _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
+          ) as any,
+        }),
+      },
     ),
   );
 
@@ -160,16 +162,18 @@ export function ItemForm(props: Props) {
 
   const title = pipe(
     item,
-    O.match(
-      () => t("title.new"),
-      () => t("title.edit"),
-    ),
+    O.match({
+      onNone: () => t("title.new"),
+      onSome: () => t("title.edit"),
+    }),
   );
 
   const deleteButton = O.match(
     item,
-    constNull,
-    (it) => <DeleteButton identifier={it.identifier!} onRemove={remove} />,
+    {
+      onNone: constNull,
+      onSome: (it) => <DeleteButton identifier={it.identifier!} onRemove={remove} />,
+    },
   );
 
   const { field: priceProps } = useController({ control, name: "price" });

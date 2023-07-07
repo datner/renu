@@ -20,12 +20,12 @@ interface Presto {
 export interface PrestoService {
   readonly postOrder: (
     orderId: Order.Id,
-  ) => Effect.Effect<Database.Database, never, Schema.To<typeof PrestoOrder>>;
+  ) => Effect.Effect<never, never, Schema.To<typeof PrestoOrder>>;
 }
 export const Presto = Context.Tag<Presto, PrestoService>("Presto");
 
 const toPrestoOrder = (o: FullOrder) =>
-  Schema.encodeEffect(PrestoOrder)({
+  Schema.encode(PrestoOrder)({
     id: o.id,
     contact: {
       firstName: O.getOrElse(o.customerName, () => "Anonymous"),
@@ -157,14 +157,17 @@ export const layer = Layer.effect(
     const sem = yield* _(Effect.makeSemaphore(1));
     const client = yield* _(Ref.make(new FTP.Client()));
 
-    const FTPClient = Effect.zipRight(sem.take(1), Ref.get(client));
+    const FTPClient = Effect.acquireRelease({
+      acquire: Effect.tap(Ref.get(client), () => sem.take(1)),
+      release: (_: FTP.Client) => Effect.tap(Effect.sync(() => _.close()), () => sem.release(1)),
+    });
 
     return {
       postOrder: (orderId: Order.Id) =>
         pipe(
           Effect.gen(function*(_) {
-            const o = yield* _(Schema.decodeEffect(FullOrder)(orderId));
-            const mgmt = yield* _(Schema.decodeEffect(Venue.Management.fromVenue)(o.venueId));
+            const o = yield* _(Schema.decode(FullOrder)(orderId));
+            const mgmt = yield* _(Schema.decode(Venue.Management.fromVenue)(o.venueId));
             if (mgmt.provider !== "PRESTO") {
               throw yield* _(Effect.dieMessage("Wrong integration"));
             }
@@ -173,24 +176,17 @@ export const layer = Layer.effect(
 
             if (process.env.NODE_ENV === "production") {
               yield* _(
-                Effect.acquireUseRelease(
-                  Effect.flatMap(FTPClient, client =>
-                    Effect.zipRight(
-                      Effect.promise(() => client.access(mgmt.vendorData)),
-                      Effect.sync(() => client),
-                    )),
-                  client => {
+                FTPClient,
+                Effect.tap(_ => Effect.promise(() => _.access(mgmt.vendorData))),
+                Effect.flatMap(_ =>
+                  Effect.promise(() => {
                     const s = new Readable();
                     s.push(JSON.stringify(prestoOrder));
                     s.push(null);
-                    return Effect.promise(() => client.uploadFrom(s, `renu-${Date.now()}.BOK`));
-                  },
-                  client =>
-                    Effect.zipRight(
-                      sem.release(1),
-                      Effect.sync(() => client.close()),
-                    ),
+                    return _.uploadFrom(s, `renu-${Date.now()}.BOK`);
+                  })
                 ),
+                Effect.scoped,
               );
             }
             return prestoOrder;

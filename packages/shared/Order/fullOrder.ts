@@ -29,14 +29,16 @@ export const OrderItem = Schema.transformResult(
   ),
   i =>
     pipe(
-      Effect.allPar({
+      Effect.all({
         item: ItemRequest.getById(i.itemId),
         modifiers: pipe(
           i.modifiers,
-          Effect.forEachPar(m => Effect.zipPar(Effect.succeed(m), ItemRequest.getModifierById(m.itemModifierId))),
+          Effect.forEach(m => Effect.zip(Effect.succeed(m), ItemRequest.getModifierById(m.itemModifierId)), {
+            batched: true,
+          }),
           Effect.map(A.map(([m, modifier]) => ({ ...m, modifier }))),
         ),
-      }),
+      }, { concurrency: 2 }),
       Effect.map((ex) => ({ ...i, ...ex })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
       accessing(Database),
@@ -49,9 +51,10 @@ export const FullOrder = Schema.transformResult(
   pipe(Schema.to(Order.Schema), Schema.extend(Schema.struct({ items: Schema.array(OrderItem) }))),
   (id) =>
     pipe(
-      Effect.zipPar(
-        Effect.flatMap(OrderRequest.getById(id), Schema.decodeEffect(Order.Schema)),
-        Effect.flatMap(OrderRequest.getItems(id), Schema.decodeEffect(Schema.array(OrderItem))),
+      Effect.zip(
+        Effect.flatMap(OrderRequest.getById(id), Schema.decode(Order.Schema)),
+        Effect.flatMap(OrderRequest.getItems(id), Schema.decode(Schema.array(OrderItem))),
+        { parallel: true },
       ),
       Effect.map(([order, items]) => ({ ...order, items })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),

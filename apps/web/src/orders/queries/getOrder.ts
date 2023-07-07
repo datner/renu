@@ -9,7 +9,7 @@ const getOrder = resolver.pipe(
   (_, ctx) => ctx.session.orderId,
   O.fromNullable,
   Effect.flatMap(Order.getById),
-  Effect.flatMap(Schema.decodeEffect(Order.Schema)),
+  Effect.flatMap(Schema.decode(Order.Schema)),
   Renu.runPromise$,
 );
 

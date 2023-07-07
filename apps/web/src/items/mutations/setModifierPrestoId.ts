@@ -3,9 +3,8 @@ import { pipe } from "@effect/data/Function";
 import * as A from "@effect/data/ReadonlyArray";
 import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
-import * as Optic from "@fp-ts/optic";
 import { Item, ModifierConfig } from "shared";
-import { Session } from "src/auth";
+import { Resolver, Session } from "src/auth";
 import { Renu } from "src/core/effect";
 import { inspect } from "util";
 
@@ -15,15 +14,14 @@ const UpdatePrestoId = Schema.struct({
   prestoId: Schema.number,
 });
 
-type F = ModifierConfig.OneOf.Option | ModifierConfig.Extras.Option | ModifierConfig.Slider.Option;
-
 export default resolver.pipe(
-  (i: Schema.From<typeof UpdatePrestoId>) => Schema.decodeEffect(UpdatePrestoId)(i),
-  Effect.tap(() => Session.ensureOrgVenueMatch),
+  Resolver.schema(UpdatePrestoId),
+  Resolver.authorize(),
+  Resolver.flatMap(Resolver.esnureOrgVenueMatch),
   Effect.flatMap((i) =>
     pipe(
       Item.getModifierById(i.id),
-      Effect.flatMap(Schema.decodeEffect(Item.Modifier.fromPrisma)),
+      Effect.flatMap(Schema.decode(Item.Modifier.fromPrisma)),
       Effect.map(_ => _.config),
       Effect.map(
         _ => ({

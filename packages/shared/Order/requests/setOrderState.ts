@@ -6,7 +6,7 @@ import * as Models from "database";
 import { Database } from "../../Database";
 import * as Order from "../order";
 
-export class SetOrderStateError extends Data.TaggedClass("SetOrderStateError")<{}> { }
+export class SetOrderStateError extends Data.TaggedClass("SetOrderStateError")<{ error: unknown }> {}
 
 export interface SetOrderState extends Request.Request<SetOrderStateError, Models.Order> {
   readonly _tag: "SetOrderState";
@@ -21,10 +21,10 @@ export const SetOrderStateResolver = RequestResolver.contextFromEffect(
     Effect.serviceFunctionEffect(
       Database,
       db => (req: SetOrderState) =>
-        Effect.tryCatchPromise(
-          () => db.order.update({ where: { id: req.id }, data: { state: req.state } }),
-          () => new SetOrderStateError(),
-        ),
+        Effect.tryPromise({
+          try: () => db.order.update({ where: { id: req.id }, data: { state: req.state } }),
+          catch: (error) => new SetOrderStateError({ error }),
+        }),
     ),
   ),
 );

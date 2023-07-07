@@ -1,8 +1,5 @@
 import { useParam } from "@blitzjs/next";
 import { useMutation, useQuery } from "@blitzjs/rpc";
-import { pipe } from "@effect/data/Function";
-import * as Option from "@effect/data/Option";
-import * as Match from "@effect/match";
 import * as Schema from "@effect/schema/Schema";
 import { CheckIcon } from "@heroicons/react/24/solid";
 import { useState } from "react";
@@ -16,7 +13,7 @@ import getItemNew from "src/items/queries/getItemNew";
 
 export function PrestoIntegrationPanel() {
   const identifier = useParam("identifier", "string")!;
-  const [item] = useQuery(getItemNew, identifier, { select: Schema.decode(FullItem) });
+  const [item] = useQuery(getItemNew, identifier, { select: Schema.decodeSync(FullItem) });
   const [updatePrestoId] = useMutation(setPrestoId);
   const itemRep = item.managementRepresentation._tag === "Presto" ? item.managementRepresentation.id : undefined;
   const [id, setId] = useState(itemRep);

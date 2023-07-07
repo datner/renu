@@ -16,10 +16,13 @@ import { GeneratePaymentLinkResponse, GetStatusResponse, StatusSuccess } from ".
 import { Integration, IntegrationService, PayPlusConfig } from "./settings";
 import { GeneratePaymentLinkBody, PaymentItem } from "./types";
 
+export interface PayPlus {
+  readonly _: unique symbol;
+}
 export interface PayPlusService extends Clearing.ClearingService {
   _tag: typeof ClearingProvider.PAY_PLUS;
 }
-export const Tag = Context.Tag<PayPlusService>();
+export const Tag = Context.Tag<PayPlus, Effect.Effect.Success<typeof PayplusService>>();
 
 const provideHttpConfig = Effect.provideServiceEffect(
   Http.HttpConfigService,
@@ -92,125 +95,129 @@ const authorizeResponse = (res: Response) =>
   Effect.flatMap(IntegrationService, (integration) =>
     pipe(
       Effect.succeed(res),
-      Effect.filterOrFail(
-        (r) => r.headers.get("user-agent") === "PayPlus",
-        () =>
+      Effect.filterOrFail({
+        filter: (r) => r.headers.get("user-agent") === "PayPlus",
+        orFailWith: (cause) =>
           new Clearing.ClearingError(
             `Payplus user agent is ${res.headers.get("user-agent")} and not as expected`,
-            { provider: "PAY_PLUS" },
+            { provider: "PAY_PLUS", cause },
           ),
-      ),
+      }),
       Effect.tap((res) =>
         pipe(
           Effect.promise(() => res.clone().text()),
-          Effect.filterOrFail(
-            (text) =>
+          Effect.filterOrFail({
+            filter: (text) =>
               crypto
                 .createHmac("sha256", integration.vendorData.secret_key)
                 .update(text)
                 .digest("base64") === res.headers.get("hash"),
-            () =>
+            orFailWith: (cause) =>
               new Clearing.ClearingError(
                 `PayPlus response hash does not match. Man in the middle attack suspected`,
-                { provider: "PAY_PLUS" },
+                { provider: "PAY_PLUS", cause },
               ),
-          ),
+          }),
         )
       ),
     ));
 
 const parseIntegration = Effect.provideServiceEffect(
   IntegrationService,
-  Effect.map(Clearing.Settings, P.parse(Integration)),
+  Effect.flatMap(Clearing.Settings, P.parse(Integration)),
 );
 
-export const layer = Layer.effect(
-  Tag,
-  Effect.gen(function*($) {
-    const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "PayPlus" }));
-    const Client = yield* $(Http.Http);
+const PayplusService = Effect.gen(function*($) {
+  const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "PayPlus" }));
+  const Client = yield* $(Http.Http);
 
-    return {
-      _tag: ClearingProvider.PAY_PLUS,
-      validateTransaction: (order: any) =>
-        pipe(
-          Client.request("/api/v1.0/PaymentPages/ipn", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              related_transaction: false,
-              more_info: String(order.id),
+  return {
+    _tag: ClearingProvider.PAY_PLUS,
+    validateTransaction: (order: any) =>
+      pipe(
+        Client.request("/api/v1.0/PaymentPages/ipn", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            related_transaction: false,
+            more_info: String(order.id),
+          }),
+        }),
+        Effect.flatMap(authorizeResponse),
+        Effect.flatMap(Http.toJson),
+        breaker((e) => {
+          return e instanceof Http.HttpRequestError;
+        }),
+        provideHttpConfig,
+        parseIntegration,
+        Effect.flatMap(P.parse(GetStatusResponse)),
+        Effect.filterOrFail({
+          filter: (res): res is StatusSuccess => res.results.status === "success",
+          orFailWith: (cause) =>
+            new ClearingError("Failed to get a payment page status from payplus", {
+              provider: "PAY_PLUS",
+              cause,
             }),
-          }),
-          Effect.flatMap(authorizeResponse),
-          Effect.flatMap(Http.toJson),
-          breaker((e) => {
-            return e instanceof Http.HttpRequestError;
-          }),
-          provideHttpConfig,
-          parseIntegration,
-          Effect.map(P.parse(GetStatusResponse)),
-          Effect.filterOrFail(
-            (res): res is StatusSuccess => res.results.status === "success",
-            () =>
-              new ClearingError("Failed to get a payment page status from payplus", {
-                provider: "PAY_PLUS",
-              }),
-          ),
-          Effect.filterOrFail(
-            (res) => res.data.status_code === "000",
-            () =>
-              new ClearingError("Transaction failed", {
-                provider: "PAY_PLUS",
-              }),
-          ),
-          Effect.mapBoth(
-            (cause) => {
-              if (cause instanceof Clearing.ClearingError) return cause;
-
-              return new Clearing.ClearingError("could not generate payment link", {
-                cause,
-                provider: "PAY_PLUS",
-              });
-            },
-            (r) => Clearing.TxId(r.data.transaction_uid),
-          ),
-        ) as any,
-
-      getClearingPageLink: (orderId: Order.Id) =>
-        pipe(
-          Schema.decodeEffect(FullOrder)(orderId),
-          Effect.flatMap(toPayload),
-          parseIntegration,
-          Effect.map(JSON.stringify),
-          Effect.tap(Effect.log),
-          Effect.flatMap((body) =>
-            Client.request("/api/v1.0/PaymentPages/generateLink", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body,
-            })
-          ),
-          Effect.flatMap(authorizeResponse),
-          Effect.flatMap(Http.toJson),
-          Effect.flatMap(P.parseEffect(GeneratePaymentLinkResponse)),
-          Effect.map((r) => r.data.payment_page_link),
-          Effect.map((link) => new URL(link)),
-          breaker((e) => e instanceof Http.HttpRequestError || e instanceof Http.HttpResponseError),
-          provideHttpConfig,
-          Effect.mapError((cause) => {
+        }),
+        Effect.filterOrFail({
+          filter: (res) => res.data.status_code === "000",
+          orFailWith: (cause) =>
+            new ClearingError("Transaction failed", {
+              provider: "PAY_PLUS",
+              cause,
+            }),
+        }),
+        Effect.mapBoth({
+          onFailure: (cause) => {
             if (cause instanceof Clearing.ClearingError) return cause;
 
             return new Clearing.ClearingError("could not generate payment link", {
               cause,
-              provider: "GAMA",
+              provider: "PAY_PLUS",
             });
-          }),
+          },
+          onSuccess: (r) => Clearing.TxId(r.data.transaction_uid),
+        }),
+      ),
+
+    getClearingPageLink: (orderId: Order.Id) =>
+      pipe(
+        Schema.decode(FullOrder)(orderId),
+        Effect.flatMap(toPayload),
+        parseIntegration,
+        Effect.map(JSON.stringify),
+        Effect.tap(Effect.log),
+        Effect.flatMap((body) =>
+          Client.request("/api/v1.0/PaymentPages/generateLink", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body,
+          })
         ),
-    } as any;
-  }),
+        Effect.flatMap(authorizeResponse),
+        Effect.flatMap(Http.toJson),
+        Effect.flatMap(P.parse(GeneratePaymentLinkResponse)),
+        Effect.map((r) => r.data.payment_page_link),
+        Effect.map((link) => new URL(link)),
+        breaker((e) => e instanceof Http.HttpRequestError || e instanceof Http.HttpResponseError),
+        provideHttpConfig,
+        Effect.mapError((cause) => {
+          if (cause instanceof Clearing.ClearingError) return cause;
+
+          return new Clearing.ClearingError("could not generate payment link", {
+            cause,
+            provider: "GAMA",
+          });
+        }),
+      ),
+  };
+});
+
+export const layer = Layer.effect(
+  Tag,
+  PayplusService,
 );

@@ -25,13 +25,16 @@ const hashPassword = Effect.serviceFunctionEffect(
 );
 
 export const getUserById = Effect.serviceFunctionEffect(Database, db => (id: number) =>
-  Effect.tryCatchPromise(
-    () => db.user.findUniqueOrThrow({ where: { id } }),
-    () => new AuthenticationError(),
-  ));
+  Effect.tryPromise({
+    try: () => db.user.findUniqueOrThrow({ where: { id } }),
+    catch: () => new AuthenticationError(),
+  }));
 
 export const verifyPassword = (hashedPassword: string | null, password: string) =>
-  Effect.filterOrFail(verify(hashedPassword, password), isValid, () => new AuthenticationError());
+  Effect.filterOrFail(verify(hashedPassword, password), {
+    filter: isValid,
+    orFailWith: () => new AuthenticationError(),
+  });
 
 export const Password = pipe(
   Schema.string,

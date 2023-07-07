@@ -32,18 +32,18 @@ function AsideDirectory() {
             <li key={item.id} className="bg-white">
               <div className="relative px-5 py-5 flex items-center gap-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-emerald-500">
                 <div className="flex-shrink-0 relative w-10 h-10 rounded-full overflow-hidden">
-                  { pipe(
+                  {pipe(
                     Option.map(item.blurHash, hash => <Blurhash hash={hash} width={40} height={40} />),
                     Option.getOrNull,
                   )}
-                  { item.image && (
+                  {item.image && (
                     <Image
                       src={item.image}
                       alt={item.identifier}
                       style={{ objectFit: "cover", aspectRatio: 1, position: "absolute", inset: 0 }}
                       width={40}
                       height={40}
-                      placeholder={Option.match(item.blurDataUrl, () => "empty", () => "blur")}
+                      placeholder={Option.match(item.blurDataUrl, { onNone: () => "empty", onSome: () => "blur" })}
                       blurDataURL={Option.getOrUndefined(item.blurDataUrl)}
                     />
                   )}

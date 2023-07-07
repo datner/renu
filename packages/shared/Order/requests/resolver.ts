@@ -25,7 +25,7 @@ export const OrderResolver = pipe(
   RequestResolver.makeBatched((
     requests: OrderRequest[],
   ) =>
-    Effect.allPar(
+    Effect.all(
       Effect.sync(() => console.log(inspect(requests.map(r => r._tag), false, null, true))),
       resolveBatch(
         filterRequestsByTag(requests, "GetOrderItems"),
@@ -47,25 +47,26 @@ export const OrderResolver = pipe(
         (req, items) =>
           Option.match(
             A.findFirst(items, _ => _.id === req.id),
-            () => Exit.fail(new GetOrderByIdError()),
-            Exit.succeed,
+            {
+              onNone: () => Exit.fail(new GetOrderByIdError()),
+              onSome: Exit.succeed,
+            },
           ),
       ),
       pipe(
         filterRequestsByTag(requests, "CreateFullOrder"),
-        Effect.forEachPar(req =>
+        Effect.forEach(req =>
           pipe(
             Effect.flatMap(
               Database,
               db => Effect.promise(() => db.order.create({ data: req.order })),
             ),
             Effect.flatMap(order => Request.succeed(req, order)),
-          )
-        ),
+          ), { concurrency: 5 }),
       ),
       pipe(
         filterRequestsByTag(requests, "SetOrderTransactionId"),
-        Effect.forEachPar(req =>
+        Effect.forEach(req =>
           pipe(
             Effect.flatMap(
               Database,
@@ -75,9 +76,9 @@ export const OrderResolver = pipe(
                 ),
             ),
             Effect.flatMap(order => Request.succeed(req, order)),
-          )
-        ),
+          ), { concurrency: 5 }),
       ),
+      { concurrency: "unbounded" },
     )
   ),
   RequestResolver.contextFromServices(Database),

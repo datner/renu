@@ -1,4 +1,4 @@
-import { constFalse, constNull, pipe } from "@effect/data/Function";
+import { constFalse, pipe } from "@effect/data/Function";
 import * as N from "@effect/data/Number";
 import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
@@ -121,7 +121,7 @@ export const ExtrasComponent = (props: Props) => {
     name: `modifiers.extras.${id}.choices`,
     rules: {
       validate: {
-        overMax: (o) => O.match(config.max, constTrue, N.greaterThanOrEqualTo(getAmount(o))),
+        overMax: (o) => O.match(config.max, { onNone: constTrue, onSome: N.greaterThanOrEqualTo(getAmount(o)) }),
         belowMin: (o) =>
           N.lessThanOrEqualTo(
             O.getOrElse(config.min, () => 0),
@@ -133,15 +133,18 @@ export const ExtrasComponent = (props: Props) => {
 
   const value = useWatch({ control, name: `modifiers.extras.${id}.choices` });
 
-  const maxReached = O.match(config.max, constFalse, (max) => N.lessThanOrEqualTo(max, getAmount(value)));
+  const maxReached = O.match(config.max, {
+    onNone: constFalse,
+    onSome: (max) => N.lessThanOrEqualTo(max, getAmount(value)),
+  });
 
   const minText = O.map(config.min, (min) => t("min", { min }));
 
   const maxText = O.map(config.max, (max) => t("max", { max }));
 
   const minMaxText = pipe(
-    A.sequence(O.Applicative)([minText, maxText]),
-    O.match(constNull, (txts) => txts.join(" ")),
+    A.compact([minText, maxText]),
+    A.join(" "),
   );
 
   return (

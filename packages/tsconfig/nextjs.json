@@ -9,18 +9,13 @@
     "skipLibCheck": true,
     "declaration": false,
     "declarationMap": false,
-    "strict": true,
     "strictNullChecks": true,
     "forceConsistentCasingInFileNames": true,
     "noUncheckedIndexedAccess": true,
-    "noEmit": true,
-    "incremental": true,
     "esModuleInterop": true,
     "module": "esnext",
     "resolveJsonModule": true,
-    "isolatedModules": true,
     "downlevelIteration": true,
-    "tsBuildInfoFile": ".tsbuildinfo",
     "jsx": "preserve",
     "plugins": [
       {

@@ -48,7 +48,7 @@ export class HttpRequestError extends Data.TaggedClass("HttpRequestError")<{
   message: string;
   options?: HttpResponseErrorOptions | undefined;
   cause?: unknown;
-}> { }
+}> {}
 
 interface HttpResponseErrorOptions extends ErrorOptions {
   readonly response?: Response;
@@ -58,21 +58,21 @@ export class HttpResponseError extends Data.TaggedClass("HttpResponseError")<{
   message: string;
   options?: HttpResponseErrorOptions | undefined;
   response?: Response;
-}> { }
+}> {}
 
-export class HttpNotFoundError extends Data.TaggedClass("HttpNotFoundError")<GenericError> { }
+export class HttpNotFoundError extends Data.TaggedClass("HttpNotFoundError")<GenericError> {}
 
-export class HttpBadRequestError extends Data.TaggedClass("HttpBadRequestError")<GenericError> { }
+export class HttpBadRequestError extends Data.TaggedClass("HttpBadRequestError")<GenericError> {}
 
-export class HttpUnauthorizedError extends Data.TaggedClass("HttpUnauthorizedError")<GenericError> { }
+export class HttpUnauthorizedError extends Data.TaggedClass("HttpUnauthorizedError")<GenericError> {}
 
-export class HttpForbiddenError extends Data.TaggedClass("HttpForbiddenError")<GenericError> { }
+export class HttpForbiddenError extends Data.TaggedClass("HttpForbiddenError")<GenericError> {}
 
-export class HttpInternalServerError extends Data.TaggedClass("HttpInternalServerError")<GenericError> { }
+export class HttpInternalServerError extends Data.TaggedClass("HttpInternalServerError")<GenericError> {}
 
-export class HttpUnprocessableEntityError extends Data.TaggedClass("HttpUnprocessableEntityError")<GenericError> { }
+export class HttpUnprocessableEntityError extends Data.TaggedClass("HttpUnprocessableEntityError")<GenericError> {}
 
-export class HttpRedirectAttempt extends Data.TaggedClass("HttpRedirectAttempt")<GenericError> { }
+export class HttpRedirectAttempt extends Data.TaggedClass("HttpRedirectAttempt")<GenericError> {}
 
 interface HttpParseErrorOptions extends ErrorOptions {
   readonly target: "json" | "text"; // add more as needed
@@ -84,7 +84,7 @@ export class HttpParseError extends Data.TaggedClass("HttpParseError")<{
   message: string;
   options?: HttpParseErrorOptions | undefined;
   cause?: unknown;
-}> { }
+}> {}
 
 export type HttpRequest = (
   input: RequestInfo | URL,
@@ -94,26 +94,26 @@ export type HttpRequest = (
 export const request = (...args: Parameters<HttpRequest>) => Effect.flatMap(HttpService, (s) => s.request(...args));
 
 export const toJson = (res: Response) =>
-  Effect.tryCatchPromise(
-    () => res.json() as Promise<unknown>,
-    (cause) =>
+  Effect.tryPromise({
+    try: () => res.json() as Promise<unknown>,
+    catch: (cause) =>
       new HttpParseError({
         message: "failed to parse json",
         cause,
         target: "json",
       }),
-  );
+  });
 
 export const toText = (res: Response) =>
-  Effect.tryCatchPromise(
-    () => res.text(),
-    (cause) =>
+  Effect.tryPromise({
+    try: () => res.text(),
+    catch: (cause) =>
       new HttpParseError({
         message: "failed to parse json",
         cause,
         target: "text",
       }),
-  );
+  });
 
 const isRequestError = (e: unknown): e is HttpRequestError => e instanceof HttpRequestError;
 const isResponseError = (e: unknown): e is HttpResponseError => e instanceof HttpResponseError;
@@ -160,8 +160,8 @@ export const layer = Layer.succeed(HttpService, {
     pipe(
       Effect.map(Effect.context<never>(), Context.getOption(HttpConfigService)),
       Effect.flatMap((config) =>
-        Effect.tryCatchPromiseInterrupt(
-          (signal) => {
+        Effect.tryPromiseInterrupt({
+          try: (signal) => {
             const baseUrl = pipe(
               config,
               O.flatMapNullable((c) => c.baseUrl),
@@ -188,18 +188,18 @@ export const layer = Layer.succeed(HttpService, {
 
             return fetch(req);
           },
-          (cause) =>
+          catch: (cause) =>
             new HttpRequestError({
               message: cause instanceof DOMException
                 ? "request was aborted"
                 : "request malformed -- TypeError",
               cause,
             }),
-        )
+        })
       ),
-      Effect.filterOrElseWith(
-        (res) => res.ok,
-        (res) => Effect.fail(getResponseError(res)),
-      ),
+      Effect.filterOrElse({
+        filter: (res) => res.ok,
+        orElse: (res) => Effect.fail(getResponseError(res)),
+      }),
     ),
 });

@@ -38,7 +38,7 @@ export const makeRuntime = <R, E, A>(layer: Layer.Layer<R, E, A>) =>
 
     return {
       runtime,
-      clean: Scope.close(scope, Exit.unit()),
+      clean: Scope.close(scope, Exit.unit),
     };
   });
 
@@ -48,4 +48,4 @@ export const basicRuntime = Runtime.runSync(Runtime.defaultRuntime)(
 
 export const runPromise$ = Runtime.runPromise(basicRuntime.runtime);
 export const runSync$ = Runtime.runSync(basicRuntime.runtime);
-export const runPromiseEither$ = Runtime.runPromiseEither(basicRuntime.runtime);
+export const runPromiseEither$ = Runtime.runPromise(basicRuntime.runtime);

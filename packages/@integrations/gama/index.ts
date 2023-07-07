@@ -5,7 +5,6 @@ import * as Config from "@effect/io/Config";
 import * as Effect from "@effect/io/Effect";
 import * as Layer from "@effect/io/Layer";
 import * as P from "@effect/schema/Parser";
-import * as ParseResult from "@effect/schema/ParseResult";
 import * as Schema from "@effect/schema/Schema";
 import { CircuitBreaker, Http } from "@integrations/core";
 import * as jose from "jose";
@@ -20,11 +19,9 @@ import {
   PaymentNetworks,
   paymentProcess,
   PaymentProcesses,
-  Session,
 } from "./schema";
 export * as Schema from "./schema";
-import { Database, Order, Venue } from "shared";
-import { SetOrderTransactionIdError } from "shared/Order/requests/setTransactionId";
+import { Order, Venue } from "shared";
 import { inspect } from "util";
 
 interface BitPayment {
@@ -46,7 +43,7 @@ const toPayload = (
   input: CreateSessionInput,
   int: Venue.Clearing.GamaIntegration,
 ) =>
-  P.decodeEffect(CreateSessionPayload)({
+  P.decode(CreateSessionPayload)({
     clientId: int.vendorData.id,
     clientSecret: int.vendorData.secret_key,
     userIp: "1.2.3.4",
@@ -64,24 +61,10 @@ const toPayload = (
     },
   });
 
-export interface GamaService {
-  readonly createSession: (
-    input: CreateSessionInput,
-    integration: Venue.Clearing.GamaIntegration,
-  ) => Effect.Effect<
-    never,
-    CircuitBreaker.CircuitBreakerError,
-    Session
-  >;
-  readonly attachTxId: (
-    jtw: string,
-  ) => Effect.Effect<Database.Database, ParseResult.ParseError | SetOrderTransactionIdError, Order.Id>;
-}
-
 interface Gama {
   readonly _: unique symbol;
 }
-export const Gama = Context.Tag<Gama, GamaService>();
+export const Gama = Context.Tag<Gama, Effect.Effect.Success<typeof GamaService>>();
 
 export const GamaConfig = Config.all({
   url: Config.string(`api.url`),
@@ -107,52 +90,53 @@ const JWTPayload = pipe(
   }),
 );
 
+const GamaService = Effect.gen(function*($) {
+  const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "Gama" }));
+  const Client = yield* $(Http.Http);
+
+  return {
+    createSession: (input: CreateSessionInput, integration: Venue.Clearing.GamaIntegration) =>
+      pipe(
+        toPayload(input, integration),
+        Effect.flatMap((body) =>
+          Client.request("/api/gpapi/v1/session", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(P.encode(CreateSessionPayload)(body)),
+          })
+        ),
+        Effect.flatMap(Http.toJson),
+        Effect.tap((b) => Effect.sync(() => console.log(inspect(b, false, null, true)))),
+        Effect.flatMap(P.parse(CreateSessionSuccess)),
+        Effect.map((data) => data.session),
+        breaker(),
+        Effect.catchTag("HttpUnprocessableEntityError", (e) =>
+          pipe(
+            Http.toJson(e.response),
+            Effect.flatMap(P.parse(CreateSessionErrorBody)),
+            Effect.tap(b => Effect.log(inspect(b, false, null, true))),
+            Effect.map((body) => body.errors),
+            Effect.map(A.map((err) => err.msg)),
+            Effect.map(A.join("\n")),
+            Effect.map(s => "\n\n" + s),
+            Effect.flatMap(Effect.dieMessage),
+          )),
+        provideHttpConfig(integration),
+      ),
+    attachTxId: (jwt: string) =>
+      pipe(
+        Effect.sync(() => jose.decodeJwt(jwt)),
+        Effect.tap((t) => Effect.sync(() => console.log(inspect(t, false, null, true)))),
+        Effect.flatMap(Schema.parse(JWTPayload)),
+        Effect.tap(_ => Order.setTransactionId(_.orderId, _.transactionId)),
+        Effect.map(_ => _.orderId),
+      ),
+  };
+});
+
 export const layer = Layer.effect(
   Gama,
-  Effect.gen(function*($) {
-    const breaker = yield* $(CircuitBreaker.makeBreaker({ name: "Gama" }));
-    const Client = yield* $(Http.Http);
-
-    return {
-      createSession: (input, integration) =>
-        pipe(
-          toPayload(input, integration),
-          Effect.flatMap((body) =>
-            Client.request("/api/gpapi/v1/session", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify(P.encode(CreateSessionPayload)(body)),
-            })
-          ),
-          Effect.flatMap(Http.toJson),
-          Effect.tap((b) => Effect.sync(() => console.log(inspect(b, false, null, true)))),
-          Effect.flatMap(P.parseEffect(CreateSessionSuccess)),
-          Effect.map((data) => data.session),
-          breaker(),
-          Effect.catchTag("HttpUnprocessableEntityError", (e) =>
-            pipe(
-              Http.toJson(e.response),
-              Effect.flatMap(P.parseEffect(CreateSessionErrorBody)),
-              Effect.tap(b => Effect.log(inspect(b, false, null, true))),
-              Effect.map((body) => body.errors),
-              Effect.map(A.map((err) => err.msg)),
-              Effect.map(A.join("\n")),
-              Effect.map(s => "\n\n" + s),
-              Effect.flatMap(Effect.dieMessage),
-            )),
-          Effect.refineTagOrDie("CircuitBreakerError"),
-          provideHttpConfig(integration),
-        ),
-      attachTxId: jwt =>
-        pipe(
-          Effect.sync(() => jose.decodeJwt(jwt)),
-          Effect.tap((t) => Effect.sync(() => console.log(inspect(t, false, null, true)))),
-          Effect.flatMap(Schema.parseEffect(JWTPayload)),
-          Effect.tap(_ => Order.setTransactionId(_.orderId, _.transactionId)),
-          Effect.map(_ => _.orderId),
-        ),
-    };
-  }),
+  GamaService,
 );

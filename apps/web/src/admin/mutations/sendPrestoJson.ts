@@ -6,8 +6,8 @@ import { Presto } from "@integrations/presto";
 import { OrderRepository } from "database-helpers/order";
 import db, { OrderState } from "db";
 import * as Message from "integrations/telegram/sendMessage";
-import * as Telegram from "integrations/telegram";
 import { Order } from "shared";
+import { Resolver } from "src/auth";
 import { Renu } from "src/core/effect";
 import { prismaError } from "src/core/helpers/prisma";
 
@@ -16,32 +16,30 @@ const SendPrestoJson = Schema.struct({
 });
 
 const sendPrestoJson = resolver.pipe(
-  (i: Schema.From<typeof SendPrestoJson>) => Schema.decodeEffect(SendPrestoJson)(i),
+  Resolver.schema(SendPrestoJson),
   Effect.zip(Presto),
-  Effect.flatMap(([{id}, presto]) => presto.postOrder(id)),
+  Effect.flatMap(([{ id }, presto]) => presto.postOrder(id)),
   Effect.tap(o => Message.sendJson(o)),
   Effect.provideService(OrderRepository, {
     getOrder: (orderId, args) =>
       pipe(
-        Effect.tryCatchPromise(
-          () => db.order.findUniqueOrThrow({ where: { id: orderId }, ...args }) ,
-          prismaError("Order"),
-        ),
+        Effect.tryPromise({
+          try: () => db.order.findUniqueOrThrow({ where: { id: orderId }, ...args }),
+          catch: prismaError("Order"),
+        }),
         Effect.orDie,
       ) as any,
-    setTransactionId: (orderId, txId) => 
+    setTransactionId: (orderId, txId) =>
       pipe(
-        Effect.tryCatchPromise(
-          () => db.order.update({ where: { id: orderId }, data: {txId, state: OrderState.PaidFor} }),
-          prismaError("Order"),
-        ),
-        Effect.flatMap(Schema.decodeEffect(Order.Schema)),
+        Effect.tryPromise({
+          try: () => db.order.update({ where: { id: orderId }, data: { txId, state: OrderState.PaidFor } }),
+          catch: prismaError("Order"),
+        }),
+        Effect.flatMap(Schema.decode(Order.Schema)),
         Effect.orDie,
-      )
+      ),
   }),
-  Effect.provideSomeLayer(Telegram.layer),
-  Renu.runPromise$
+  Renu.runPromise$,
 );
 
-export default sendPrestoJson
-
+export default sendPrestoJson;

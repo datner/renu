@@ -15,25 +15,25 @@ import { SetModifierConfig } from "./setModifierConfig";
 import { SetPrestoId } from "./setPrestoId";
 
 export const getById = (id: number, venueId?: number) =>
-  Effect.withRequestCaching("on")(Effect.request(
+  Effect.withRequestCaching(true)(Effect.request(
     GetItemById({ id, venueId: Option.fromNullable(venueId) }),
     ItemResolver,
   ));
 
 export const getByIdentifier = (identifier: Common.Slug, venueId?: number) =>
-  Effect.withRequestCaching("on")(Effect.request(
+  Effect.withRequestCaching(true)(Effect.request(
     GetItemByIdentifier({ identifier, venueId: Option.fromNullable(venueId) }),
     ItemResolver,
   ));
 
 export const getContent = (id: number) =>
-  Effect.withRequestCaching("on")(Effect.request(
+  Effect.withRequestCaching(true)(Effect.request(
     GetItemContent({ id }),
     ItemResolver,
   ));
 
 export const getModifiers = (id: number) =>
-  Effect.withRequestCaching("on")(Effect.request(
+  Effect.withRequestCaching(true)(Effect.request(
     GetItemModifiers({ id }),
     ItemResolver,
   ));
@@ -45,7 +45,7 @@ export const getModifierById = (id: number) =>
   );
 
 export const getByVenue = (venueId: number, orgId: number) =>
-  Effect.withRequestCaching("on")(Effect.request(
+  Effect.withRequestCaching(true)(Effect.request(
     GetItemsByVenue({ venueId, orgId }),
     ItemResolver,
   ));

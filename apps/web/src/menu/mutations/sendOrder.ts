@@ -119,7 +119,7 @@ ${
     Effect.zip(
       createNewOrder(order),
       S.decode(Venue.Clearing.fromVenue)(order.venueId),
-      { parallel: true },
+      { concurrent: true },
     )
   ),
   Effect.tap(o => Effect.sync(() => console.log(inspect(o, false, null, true)))),

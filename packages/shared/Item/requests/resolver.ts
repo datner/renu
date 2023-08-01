@@ -34,7 +34,7 @@ export const ItemResolver = pipe(
   RequestResolver.makeBatched((
     requests: ItemRequest[],
   ) =>
-    Effect.all(
+    Effect.all([
       Effect.sync(() => console.log(inspect(requests.map(r => r._tag), false, null, true))),
       resolveBatch(
         A.filter(requests, (_): _ is GetItemModifiers => _._tag === "GetItemModifiers"),
@@ -176,8 +176,7 @@ export const ItemResolver = pipe(
             ),
           ), { concurrency: "unbounded" }),
       ),
-      { concurrency: "unbounded" },
-    )
+    ], { concurrency: "unbounded" })
   ),
   RequestResolver.contextFromServices(Database),
 );

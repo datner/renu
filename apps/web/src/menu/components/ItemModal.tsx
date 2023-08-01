@@ -109,13 +109,13 @@ function ItemModal_(props: Props2) {
       const extrasMap = HashMap.make(...RA.map(extras, (oo) => [String(oo.id), oo] as const));
 
       const oneOfCost = pipe(
-        RR.map(modifiers.oneOf, (oo, id) => O.all(O.some(oo), HashMap.get(oneOfMap, id))),
+        RR.map(modifiers.oneOf, (oo, id) => O.all([O.some(oo), HashMap.get(oneOfMap, id)])),
         RR.compact,
         RR.map(([oo, of]) =>
-          O.all(
+          O.all([
             O.some(oo.amount),
             RA.findFirst(of.config.options, (o) => o.identifier === oo.choice),
-          )
+          ])
         ),
         RR.compact,
         RR.collect((_, [am, opt]) => am * opt.price),
@@ -123,14 +123,14 @@ function ItemModal_(props: Props2) {
       );
 
       const extrasCost = pipe(
-        RR.map(modifiers.extras, (oo, id) => O.all(O.some(oo), HashMap.get(extrasMap, id))),
+        RR.map(modifiers.extras, (oo, id) => O.all([O.some(oo), HashMap.get(extrasMap, id)])),
         RR.compact,
         RR.collect((_, [oo, of]) =>
           RR.collect(oo.choices, (choice, amount) =>
-            O.all(
+            O.all([
               O.some(amount),
               RA.findFirst(of.config.options, (o) => o.identifier === choice),
-            ))
+            ]))
         ),
         RA.flatten,
         RA.compact,

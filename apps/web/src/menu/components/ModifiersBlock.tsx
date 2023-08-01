@@ -10,7 +10,7 @@ interface Props {
   readonly modifiers: ReadonlyArray<Venue.Menu.MenuModifierItem>;
 }
 
-const ModifierOrder = Order.contramap(Order.number, (m: Venue.Menu.MenuModifierItem) => m.position);
+const ModifierOrder = Order.mapInput(Order.number, (m: Venue.Menu.MenuModifierItem) => m.position);
 
 export function ModifiersBlock(props: Props) {
   const { modifiers } = props;

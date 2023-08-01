@@ -23,10 +23,10 @@ export const toFullItem = Schema.transformResult(
   FullItem,
   (i) =>
     pipe(
-      Effect.all(
+      Effect.zip(
         Item.getContent(i.id),
         Item.getModifiers(i.id),
-        { concurrency: "unbounded" },
+        { batching: true },
       ),
       Effect.map(([content, modifiers]) => ({ ...i, content, modifiers })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),

@@ -33,7 +33,7 @@ export const alertDatner = (msg: string | Format.FmtString) =>
     Effect.flatMap((config) =>
       Effect.tryPromise(() => new Telegram(config.botToken).sendMessage(config.datnerId, msg))
     ),
-    Effect.catchAll(() => Effect.log("Failed to send message to Telegram", { level: "Error" })),
+    Effect.catchAllCause((cause) => Effect.logError("Failed to send message to Telegram", cause)),
     Effect.withConfigProvider(ConstantCaseConfigProvider),
   );
 
@@ -43,13 +43,13 @@ export const sendJson = (json: unknown) =>
       Effect.promise(() =>
         t.bot.sendMessage(t.config.chatId, Format.pre("json")(JSON.stringify(json, undefined, 2)))
       )),
-    Effect.catchAll(() => Effect.log("Failed to send message to Telegram", { level: "Error" })),
+    Effect.catchAllCause((cause) => Effect.logError("Failed to send message to Telegram", cause)),
   );
 
 export const notify = (msg: string | Format.FmtString) =>
   pipe(
     Effect.config(TelegramConfig),
     Effect.flatMap((config) => Effect.tryPromise(() => new Telegram(config.botToken).sendMessage(config.chatId, msg))),
-    Effect.catchAll(() => Effect.log("Failed to send message to Telegram", { level: "Error" })),
+    Effect.catchAllCause((cause) => Effect.logError("Failed to send message to Telegram", cause)),
     Effect.withConfigProvider(ConstantCaseConfigProvider),
   );

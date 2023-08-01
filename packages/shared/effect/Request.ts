@@ -4,7 +4,6 @@ import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as RA from "@effect/data/ReadonlyRecord";
 import * as Effect from "@effect/io/Effect";
-import * as Exit from "@effect/io/Exit";
 import * as Request from "@effect/io/Request";
 import * as RequestResolver from "@effect/io/RequestResolver";
 import * as Schema from "@effect/schema/Schema";
@@ -44,7 +43,7 @@ export const createRequest =
         Effect.flatMap(db =>
           Effect.tryPromise({
             try: () => f(requests, db),
-            catch: (error) => SomeError({error} as any),
+            catch: (error) => SomeError({ error } as any),
           })
         ),
         Effect.flatMap(Schema.decode(Schema.array(schema))),
@@ -56,12 +55,10 @@ export const createRequest =
                 A.findFirst(data, datum => pred(req, datum)),
                 () => SomeError({} as any),
               ) as RequestEffect,
-            ), {discard: true})
+            ), { discard: true })
         ),
-        Effect.catchTag("ParseError" as any,error => Effect.fail(SomeError({ error } as any))),
-        Effect.catchAll((_) =>
-          Effect.forEach(requests, req => Request.completeEffect(req, Effect.fail(_) as any))
-        ),
+        Effect.catchTag("ParseError" as any, error => Effect.fail(SomeError({ error } as any))),
+        Effect.catchAll((_) => Effect.forEach(requests, req => Request.completeEffect(req, Effect.fail(_) as any))),
       )
     );
 
@@ -89,7 +86,7 @@ export const resolveBatch = <E, A, Req extends Request.Request<E, A[]>>(
             RA.get(data, getRequestKey(req)),
             O.getOrElse(() => []),
           ) as any,
-        ), { concurrency: "unbounded" })
+        ), { batching: true })
     ),
     // Effect.catchAll((_) => Effect.forEach(requests, req => Request.fail(req, _))),
   );

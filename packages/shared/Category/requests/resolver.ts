@@ -18,7 +18,7 @@ export const CategoryResolver = pipe(
   RequestResolver.makeBatched((
     requests: CategoryRequest[],
   ) =>
-    Effect.all(
+    Effect.all([
       Effect.sync(() => console.log(inspect(requests.map(r => r._tag), false, null, true))),
       resolveBatch(
         A.filter(requests, (_): _ is GetCategoryItems => _._tag === "GetCategoryItems"),
@@ -56,8 +56,7 @@ export const CategoryResolver = pipe(
             },
           ),
       ),
-      { concurrency: "unbounded" },
-    )
+    ], { concurrency: "unbounded" })
   ),
   RequestResolver.contextFromServices(Database),
 );

@@ -25,7 +25,7 @@ export const OrderResolver = pipe(
   RequestResolver.makeBatched((
     requests: OrderRequest[],
   ) =>
-    Effect.all(
+    Effect.all([
       Effect.sync(() => console.log(inspect(requests.map(r => r._tag), false, null, true))),
       resolveBatch(
         filterRequestsByTag(requests, "GetOrderItems"),
@@ -78,8 +78,7 @@ export const OrderResolver = pipe(
             Effect.flatMap(order => Request.succeed(req, order)),
           ), { concurrency: 5 }),
       ),
-      { concurrency: "unbounded" },
-    )
+    ], { concurrency: "unbounded" })
   ),
   RequestResolver.contextFromServices(Database),
 );

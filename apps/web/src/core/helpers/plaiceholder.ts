@@ -2,7 +2,6 @@ import * as Data from "@effect/data/Data";
 import * as Effect from "@effect/io/Effect";
 import { Http } from "@integrations/core";
 import { pipe } from "fp-ts/function";
-import { getPlaiceholder } from "plaiceholder";
 
 interface GetBlurHashError extends Data.Case {
   readonly _tag: "GetBlurHashError";
@@ -19,11 +18,11 @@ const EmptyImageError = Data.tagged<EmptyImageError>("EmptyImageError");
 export const getBlurHash = (image: string) =>
   pipe(
     Effect.succeed(image),
-    Effect.filterOrFail({
+    Effect.filterOrFail(
       // TODO: Find where the null leak is coming from
-      filter: (img) => typeof img === "string" && img !== "",
-      orFailWith: () => EmptyImageError({} as unknown as void),
-    }),
+      (img) => typeof img === "string" && img !== "",
+      () => EmptyImageError({} as unknown as void),
+    ),
     Effect.flatMap((img) => Http.request(`${img}?fm=blurhash&w=30`)),
     Effect.flatMap(Http.toText),
     Effect.catchTag("EmptyImageError", (_) => Effect.succeed(null)),

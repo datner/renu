@@ -31,10 +31,7 @@ export const getUserById = Effect.serviceFunctionEffect(Database, db => (id: num
   }));
 
 export const verifyPassword = (hashedPassword: string | null, password: string) =>
-  Effect.filterOrFail(verify(hashedPassword, password), {
-    filter: isValid,
-    orFailWith: () => new AuthenticationError(),
-  });
+  Effect.filterOrFail(verify(hashedPassword, password), isValid, () => new AuthenticationError());
 
 export const Password = pipe(
   Schema.string,

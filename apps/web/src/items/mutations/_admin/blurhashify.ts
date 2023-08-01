@@ -26,7 +26,7 @@ const blurhashify = (_: null, ctx: Ctx) =>
               }),
             catch: prismaError("Item"),
           }),
-          Effect.map(A.map((it) => Effect.all(Effect.succeed(it.id), getBlurHash(it.image)))),
+          Effect.map(A.map((it) => Effect.zip(Effect.succeed(it.id), getBlurHash(it.image)))),
           Effect.flatMap((effects) => Effect.all(effects, { concurrency: 5 })),
           Effect.flatMap((items) =>
             pipe(

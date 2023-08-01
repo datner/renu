@@ -20,7 +20,7 @@ export const Item = memo<ItemProps>(({ item, priority }) => {
 
   const orderItem = pipe(
     HashMap.filter(orderItems, (it) => it.item.id === item.item.id),
-    HashMap.mapWithIndex((oi, key) => [key, oi] as const),
+    HashMap.map((oi, key) => [key, oi] as const),
     HashMap.values,
     A.fromIterable,
   );

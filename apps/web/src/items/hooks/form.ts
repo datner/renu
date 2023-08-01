@@ -19,11 +19,10 @@ import getItem from "../queries/getItem";
 import getItemNew from "../queries/getItemNew";
 import getItems from "../queries/getItems";
 
-const invalidateQueries = Effect.all(
+const invalidateQueries = Effect.all([
   Effect.promise(() => invalidateQuery(getItems)),
   Effect.promise(() => invalidateQuery(getCurrentVenueCategories)),
-  { discard: true, concurrency: "unbounded" },
-);
+], { discard: true, concurrency: "unbounded" });
 
 export const FullItem = Schema.extend(
   Schema.struct({
@@ -107,7 +106,7 @@ const useUpdate = (identifier: string) => {
       Effect.catchAll(() => Effect.succeed(data.image ?? "")),
       Effect.flatMap((image) => Effect.promise(() => invoke(updateItem, { id: item.id, ...data, image }))),
       Effect.tap((item) =>
-        Effect.all(
+        Effect.all([
           // @ts-expect-error the types here are wrong. They use the select type instead of data type
           Effect.promise(() => setQueryData(item)),
           revalidate,
@@ -119,7 +118,7 @@ const useUpdate = (identifier: string) => {
               onFalse: Effect.promise(() => router.push(Routes.AdminItemsItem({ identifier: item.identifier }))),
             },
           ),
-        )
+        ])
       ),
       Effect.runPromise,
     );

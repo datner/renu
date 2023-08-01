@@ -95,29 +95,29 @@ const authorizeResponse = (res: Response) =>
   Effect.flatMap(IntegrationService, (integration) =>
     pipe(
       Effect.succeed(res),
-      Effect.filterOrFail({
-        filter: (r) => r.headers.get("user-agent") === "PayPlus",
-        orFailWith: (cause) =>
+      Effect.filterOrFail(
+        (r) => r.headers.get("user-agent") === "PayPlus",
+        (cause) =>
           new Clearing.ClearingError(
             `Payplus user agent is ${res.headers.get("user-agent")} and not as expected`,
             { provider: "PAY_PLUS", cause },
           ),
-      }),
+      ),
       Effect.tap((res) =>
         pipe(
           Effect.promise(() => res.clone().text()),
-          Effect.filterOrFail({
-            filter: (text) =>
+          Effect.filterOrFail(
+            (text) =>
               crypto
                 .createHmac("sha256", integration.vendorData.secret_key)
                 .update(text)
                 .digest("base64") === res.headers.get("hash"),
-            orFailWith: (cause) =>
+            (cause) =>
               new Clearing.ClearingError(
                 `PayPlus response hash does not match. Man in the middle attack suspected`,
                 { provider: "PAY_PLUS", cause },
               ),
-          }),
+          ),
         )
       ),
     ));
@@ -153,22 +153,22 @@ const PayplusService = Effect.gen(function*($) {
         provideHttpConfig,
         parseIntegration,
         Effect.flatMap(P.parse(GetStatusResponse)),
-        Effect.filterOrFail({
-          filter: (res): res is StatusSuccess => res.results.status === "success",
-          orFailWith: (cause) =>
+        Effect.filterOrFail(
+          (res): res is StatusSuccess => res.results.status === "success",
+          (cause) =>
             new ClearingError("Failed to get a payment page status from payplus", {
               provider: "PAY_PLUS",
               cause,
             }),
-        }),
-        Effect.filterOrFail({
-          filter: (res) => res.data.status_code === "000",
-          orFailWith: (cause) =>
+        ),
+        Effect.filterOrFail(
+          (res) => res.data.status_code === "000",
+          (cause) =>
             new ClearingError("Transaction failed", {
               provider: "PAY_PLUS",
               cause,
             }),
-        }),
+        ),
         Effect.mapBoth({
           onFailure: (cause) => {
             if (cause instanceof Clearing.ClearingError) return cause;

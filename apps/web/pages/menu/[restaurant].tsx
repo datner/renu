@@ -33,7 +33,7 @@ const LazyOrderModal = dynamic(() => import("src/menu/components/OrderModal"), {
   loading: () => <Fragment />,
 });
 
-const CategoryOrder = Order.contramap(Str.Order, (b: Venue.Menu.Category) => b.identifier);
+const CategoryOrder = Order.mapInput(Str.Order, (b: Venue.Menu.Category) => b.identifier);
 
 export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) => {
   const { menu } = props;

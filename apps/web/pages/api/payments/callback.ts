@@ -16,16 +16,16 @@ import { Format } from "telegraf";
 const handler = async (request: NextApiRequest, res: NextApiResponse) =>
   pipe(
     Effect.succeed(request),
-    Effect.filterOrDieMessage({
-      filter: (req) => Str.toLowerCase(req.method || "") === "post",
-      message: "this endpoint only received POST messages",
-    }),
+    Effect.filterOrDieMessage(
+      (req) => Str.toLowerCase(req.method || "") === "post",
+      "this endpoint only received POST messages",
+    ),
     Effect.map((req) => req.body),
     Effect.flatMap(Schema.parse(PayPlusCallback)),
-    Effect.filterOrDieMessage({
-      filter: (ppc) => ppc.transaction.status_code === "000",
-      message: "payplus returned a failed transaction. Why?",
-    }),
+    Effect.filterOrDieMessage(
+      (ppc) => ppc.transaction.status_code === "000",
+      "payplus returned a failed transaction. Why?",
+    ),
     Effect.flatMap((ppc) =>
       pipe(
         Effect.gen(function*($) {

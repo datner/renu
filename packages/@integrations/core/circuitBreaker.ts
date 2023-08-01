@@ -70,7 +70,7 @@ export const initState = Ref.make(closed(0));
 export const makeBreakerStateProvider = () =>
   pipe(
     initState,
-    Effect.tap(() => Effect.log({ level: "Warning" })("Create new breaker state")),
+    Effect.tap(() => Effect.log("Create new breaker state")),
     Effect.map((state) => Effect.provideService(BreakerStateService, { state })),
   );
 

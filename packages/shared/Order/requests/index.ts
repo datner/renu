@@ -9,7 +9,7 @@ import { SetOrderTransactionId } from "./setTransactionId";
 export { setOrderState } from "./setOrderState";
 
 export const getItems = (id: number) =>
-  Effect.withRequestCaching("on")(Effect.request(
+  Effect.withRequestCaching(true)(Effect.request(
     GetOrderItems({ id }),
     OrderResolver,
   ));

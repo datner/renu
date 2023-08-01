@@ -39,8 +39,6 @@ export const Content = S.struct({
 export interface Content extends S.To<typeof Content> { }
 export interface ContentFrom extends S.From<typeof Content> { }
 
-export const fromJson = <I extends S.Json, A>(schema: S.Schema<I, A>) => schema;
-
-export const PrismaJson = S.json as S.Schema<Prisma.JsonValue, S.Json>;
+export const PrismaJson = S.unknown as S.Schema<Prisma.JsonValue, Prisma.JsonValue>;
 
 export const fromPrisma: <I, A>(s: S.Schema<I, A>) => S.Schema<Prisma.JsonValue, A> = (s) => s as any;

@@ -17,7 +17,7 @@ export const Integration = S.struct({
   id: S.number,
   venueId: S.number,
   provider: S.enums(ManagementProvider),
-  vendorData: S.json,
+  vendorData: S.unknown,
 });
 
 export class ManagementError extends Error {

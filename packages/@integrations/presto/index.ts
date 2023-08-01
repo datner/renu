@@ -157,10 +157,10 @@ export const layer = Layer.effect(
     const sem = yield* _(Effect.makeSemaphore(1));
     const client = yield* _(Ref.make(new FTP.Client()));
 
-    const FTPClient = Effect.acquireRelease({
-      acquire: Effect.tap(Ref.get(client), () => sem.take(1)),
-      release: (_: FTP.Client) => Effect.tap(Effect.sync(() => _.close()), () => sem.release(1)),
-    });
+    const FTPClient = Effect.acquireRelease(
+      Effect.tap(Ref.get(client), () => sem.take(1)),
+      (_) => Effect.tap(Effect.sync(() => _.close()), () => sem.release(1)),
+    );
 
     return {
       postOrder: (orderId: Order.Id) =>

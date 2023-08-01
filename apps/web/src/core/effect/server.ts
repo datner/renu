@@ -20,7 +20,7 @@ export const paginate = <
     Effect.sync(() => [skipBrand(skip), takeBrand(take)] as const),
     Effect.flatMap(([s, t]) =>
       pipe(
-        Effect.all(count, f(s, t)),
+        Effect.zip(count, f(s, t)),
         Effect.map(([c, r]) => ({
           hasMore: s + t < c,
           nextPage: O.liftPredicate((_) => s + t < c)({

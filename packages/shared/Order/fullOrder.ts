@@ -32,10 +32,11 @@ export const OrderItem = Schema.transformResult(
       Effect.all({
         item: ItemRequest.getById(i.itemId),
         modifiers: pipe(
-          i.modifiers,
-          Effect.forEach(m => Effect.zip(Effect.succeed(m), ItemRequest.getModifierById(m.itemModifierId)), {
-            batched: true,
-          }),
+          Effect.forEach(
+            i.modifiers,
+            m => Effect.zip(Effect.succeed(m), ItemRequest.getModifierById(m.itemModifierId)),
+            { batching: true },
+          ),
           Effect.map(A.map(([m, modifier]) => ({ ...m, modifier }))),
         ),
       }, { concurrency: 2 }),
@@ -54,7 +55,7 @@ export const FullOrder = Schema.transformResult(
       Effect.zip(
         Effect.flatMap(OrderRequest.getById(id), Schema.decode(Order.Schema)),
         Effect.flatMap(OrderRequest.getItems(id), Schema.decode(Schema.array(OrderItem))),
-        { parallel: true },
+        { concurrent: true },
       ),
       Effect.map(([order, items]) => ({ ...order, items })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),

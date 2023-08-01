@@ -158,9 +158,9 @@ export const layer = Layer.succeed(HttpService, {
    */
   request: (input: RequestInfo | URL, init?: RequestInit | undefined) =>
     pipe(
-      Effect.map(Effect.context<never>(), Context.getOption(HttpConfigService)),
+      Effect.serviceOption(HttpConfigService),
       Effect.flatMap((config) =>
-        Effect.tryPromiseInterrupt({
+        Effect.tryPromise({
           try: (signal) => {
             const baseUrl = pipe(
               config,
@@ -197,9 +197,9 @@ export const layer = Layer.succeed(HttpService, {
             }),
         })
       ),
-      Effect.filterOrElse({
-        filter: (res) => res.ok,
-        orElse: (res) => Effect.fail(getResponseError(res)),
-      }),
+      Effect.filterOrElse(
+        (res) => res.ok,
+        (res) => Effect.fail(getResponseError(res)),
+      ),
     ),
 });

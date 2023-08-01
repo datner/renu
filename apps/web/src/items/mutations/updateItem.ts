@@ -42,7 +42,7 @@ export default resolver.pipe(
   Resolver.schema(UpdateItemPayload),
   Effect.tap((it) => Effect.log("getting item with id " + it.id)),
   Resolver.authorize(),
-  Resolver.flatMap((i, ctx) => Effect.all(Effect.succeed(i), getItem(i.id, ctx.session.organization))),
+  Resolver.flatMap((i, ctx) => Effect.zip(Effect.succeed(i), getItem(i.id, ctx.session.organization))),
   Effect.flatMap(([input, item]) =>
     pipe(
       Effect.sync(() => ({

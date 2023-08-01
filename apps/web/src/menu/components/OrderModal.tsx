@@ -144,7 +144,7 @@ export function OrderModal(props: Props) {
   const items = OrderState.getOrderItems(order);
   const valid = OrderState.getOrderValidity(order)
 
-  const listItems = HashMap.mapWithIndex(
+  const listItems = HashMap.map(
     items,
     (item, key) => <OrderModalItem key={key} hash={key} dispatch={dispatch} orderItem={item} />,
   );

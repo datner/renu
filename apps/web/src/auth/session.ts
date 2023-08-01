@@ -45,10 +45,8 @@ export type AuthError =
 export const ensureOrgVenueMatch = Effect.asUnit(
   Effect.filterOrFail(
     Session,
-    {
-      filter: (session) => session.venue.organizationId === session.organization.id,
-      orFailWith: () => VenueOrgMismatchError(),
-    },
+    (session) => session.venue.organizationId === session.organization.id,
+    () => VenueOrgMismatchError(),
   ),
 );
 
@@ -73,10 +71,10 @@ export const ensureSuperAdmin = withEffect((session) =>
       pipe(
         O.fromNullable(session.impersonatingFromUserId),
         Effect.flatMap((id) => Effect.tryPromise(() => db.user.findUniqueOrThrow({ where: { id } }))),
-        Effect.filterOrDieMessage({
-          filter: (u) => u.role === GlobalRole.SUPER,
-          message: "how did you impersonate?",
-        }),
+        Effect.filterOrDieMessage(
+          (u) => u.role === GlobalRole.SUPER,
+          "how did you impersonate?",
+        ),
       )
     ),
     Effect.asUnit,

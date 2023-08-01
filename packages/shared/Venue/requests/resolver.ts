@@ -28,7 +28,7 @@ export const VenueResolver = pipe(
   RequestResolver.makeBatched((
     requests: VenueRequest[],
   ) =>
-    Effect.all(
+    Effect.all([
       Effect.sync(() => console.log(inspect(requests.map(r => r._tag), false, null, true))),
       resolveBatch(
         filterRequestsByTag(requests, "GetVenueCategories"),
@@ -95,7 +95,7 @@ export const VenueResolver = pipe(
               }),
           )),
         Effect.flatMap(venues =>
-          Effect.all(
+          Effect.all([
             Effect.forEach(getByIds(requests), req =>
               Request.complete(
                 req,
@@ -118,11 +118,10 @@ export const VenueResolver = pipe(
                   },
                 ),
               )),
-          )
+          ])
         ),
       ),
-      { concurrency: "unbounded" },
-    )
+    ], { concurrency: "unbounded" })
   ),
   RequestResolver.contextFromServices(Database),
 );

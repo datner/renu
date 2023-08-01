@@ -16,27 +16,27 @@
     "check:everything": "pnpm run typecheck lint test"
   },
   "devDependencies": {
-    "@commitlint/cli": "17.6.6",
-    "@commitlint/config-conventional": "17.6.6",
-    "@types/node": "20.4.0",
-    "dprint": "0.38.3",
-    "eslint": "8.44.0",
+    "@commitlint/cli": "17.6.7",
+    "@commitlint/config-conventional": "17.6.7",
+    "@types/node": "20.4.5",
+    "dprint": "0.40.2",
+    "eslint": "8.46.0",
     "eslint-config-custom": "workspace:*",
     "husky": "8.0.3",
     "lint-staged": "13.2.3",
-    "next": "13.4.9",
-    "turbo": "1.10.7",
+    "next": "13.4.12",
+    "turbo": "1.10.12",
     "typescript": "5.1.6"
   },
   "packageManager": "pnpm@8.6.1",
   "dependencies": {
-    "@effect/data": "0.13.3",
-    "@effect/io": "0.31.1",
-    "@effect/match": "0.24.5",
-    "@effect/schema": "0.25.0",
+    "@effect/data": "0.17.1",
+    "@effect/io": "0.37.1",
+    "@effect/match": "0.31.0",
+    "@effect/schema": "0.32.0",
     "@fp-ts/core": "0.2.1",
-    "@sqlfx/pg": "0.5.0",
-    "effect-schema-class": "0.5.0"
+    "@sqlfx/pg": "0.13.0",
+    "effect-schema-class": "0.12.0"
   },
   "engines": {
     "node": "18"

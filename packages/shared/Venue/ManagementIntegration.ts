@@ -26,14 +26,14 @@ const VendorMap = {
   NoData: Schema.object,
 };
 
-const Provider = Schema.enums(ManagementProvider)
+const Provider = Schema.enums(ManagementProvider);
 
 export const managementOf = <I1, A1, T extends ManagementProvider>(s: Schema.Schema<I1, A1>, p: T) => {
   return Schema.struct({
     id: Id,
     venueId: Venue.Id,
     provider: pipe(Provider, Schema.filter((_): _ is T => _ === p)),
-    vendorData: Common.fromPrisma(s),
+    vendorData: Schema.transformResult(Schema.unknown, Schema.to(s), Schema.parseResult(s), Schema.encodeResult(s)),
   });
 };
 
@@ -41,14 +41,14 @@ export const GeneralManagementIntegration = Schema.struct({
   id: Id,
   provider: Provider,
   venueId: Venue.Id,
-  vendorData: Common.PrismaJson,
+  vendorData: Schema.unknown,
 });
-export interface ManagementIntegration extends Schema.To<typeof GeneralManagementIntegration> { }
+export interface ManagementIntegration extends Schema.To<typeof GeneralManagementIntegration> {}
 
 export const DorixIntegration = managementOf(VendorMap.Dorix, "DORIX");
-export interface DorixIntegration extends Schema.To<typeof DorixIntegration> { }
+export interface DorixIntegration extends Schema.To<typeof DorixIntegration> {}
 export const PrestoIntegration = managementOf(VendorMap.Presto, "PRESTO");
-export interface PrestoIntegration extends Schema.To<typeof PrestoIntegration> { }
+export interface PrestoIntegration extends Schema.To<typeof PrestoIntegration> {}
 
 export const ManagementIntegration = Schema.transform(
   Schema.from(GeneralManagementIntegration),

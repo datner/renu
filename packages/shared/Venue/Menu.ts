@@ -24,10 +24,10 @@ const Item = Schema.transformResult(
   Schema.extend(ItemExtension)(I.Item),
   (i) =>
     pipe(
-      Effect.all(
+      Effect.zip(
         IR.getContent(i.id),
         IR.getModifiers(i.id),
-        { batched: true },
+        { batching: true },
       ),
       Effect.map(([content, modifiers]) => ({ ...i, content, modifiers })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
@@ -49,12 +49,11 @@ export const CategoryItems = Schema.transformResult(
   Schema.from(Schema.array(CI.Item)),
   Schema.array(CategoryItem),
   Effect.forEach(ci =>
-    pipe(
-      IR.getById(ci.itemId),
+    IR.getById(ci.itemId).pipe(
       Effect.map((item) => ({ ...ci, item })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
       accessing(Database),
-    ), { batched: true }),
+    ), { batching: true }),
   ParseResult.success,
 );
 export interface CategoryItems extends Schema.To<typeof CategoryItems> {}
@@ -71,10 +70,10 @@ const Category = Schema.transformResult(
   Schema.extend(CategoryExtension)(C.Category),
   (c) =>
     pipe(
-      Effect.all(
+      Effect.zip(
         CR.getContent(c.id),
         CR.getItems(c.id),
-        { concurrency: "unbounded" },
+        { batching: true },
       ),
       Effect.map(([content, categoryItems]) => ({ ...c, content, categoryItems })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
@@ -93,10 +92,10 @@ export const fromVenue = Schema.transformResult(
   Schema.extend(VenueExtension)(V.Venue),
   v =>
     pipe(
-      Effect.all(
+      Effect.zip(
         VR.getContent(v.id),
         VR.getCategories(v.id),
-        { concurrency: "unbounded" },
+        { batching: true },
       ),
       Effect.map(([content, categories]) => ({ ...v, content, categories })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),

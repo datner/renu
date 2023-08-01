@@ -102,7 +102,7 @@ export function ModifierPanel() {
         />
       </div>
       {pipe(
-        O.Do(),
+        O.Do,
         O.bind("index", () => fieldIndex),
         O.bind("field", ({ index }) => A.get(index)(fields)),
         O.let("update", () => updateConfig),

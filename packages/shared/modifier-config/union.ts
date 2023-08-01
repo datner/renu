@@ -1,7 +1,6 @@
 import * as P from "@effect/data/Predicate";
 import * as ParseResult from "@effect/schema/ParseResult";
 import * as S from "@effect/schema/Schema";
-import { Prisma } from "database";
 import { Refinement } from "../effect";
 import * as Extras from "./extras";
 import * as OneOf from "./one-of";
@@ -16,10 +15,10 @@ export const ModifierEnum = {
 export const Schema = S.union(OneOf.Modifier, Extras.Modifier, Slider.Modifier);
 export type Schema = OneOf.OneOf | Extras.Extras | Slider.Slider;
 export const FromPrisma = S.transformResult(
-  S.json as S.Schema<Prisma.JsonValue, S.Json>,
+  S.unknown,
   S.to(Schema),
   S.parse(Schema),
-  S.validate(S.json),
+  S.encode(Schema),
 );
 export const FromUnknown = S.transformResult(S.unknown, S.to(Schema), S.parse(Schema), ParseResult.success);
 

@@ -19,7 +19,7 @@ export const Integration: S.Schema<ClearingIntegration> = S.struct({
   provider: S.enums(ClearingProvider),
   terminal: S.string,
   venueId: S.number,
-  vendorData: S.json as S.Schema<Prisma.JsonValue>,
+  vendorData: S.unknown as S.Schema<Prisma.JsonValue>,
 });
 
 export interface ClearingErrorOptions extends ErrorOptions {

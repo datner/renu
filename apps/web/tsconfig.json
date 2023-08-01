@@ -2,9 +2,22 @@
   "$schema": "https://json.schemastore.org/tsconfig",
   "extends": "tsconfig/nextjs.json",
   "compilerOptions": {
-    "baseUrl": "."
+    "baseUrl": ".",
+    "incremental": true,
+    "strictNullChecks": true
   },
-  "types": ["./blitz-patch.d.ts"],
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules", "**/*.e2e.ts", "cypress"]
+  "types": [
+    "./blitz-patch.d.ts"
+  ],
+  "include": [
+    "next-env.d.ts",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "**/*.e2e.ts",
+    "cypress"
+  ]
 }

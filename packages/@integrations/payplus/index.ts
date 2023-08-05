@@ -186,9 +186,8 @@ const PayplusService = Effect.gen(function*($) {
       pipe(
         Schema.decode(FullOrder)(orderId),
         Effect.flatMap(toPayload),
-        parseIntegration,
-        Effect.map(JSON.stringify),
         Effect.tap(Effect.log),
+        Effect.map(JSON.stringify),
         Effect.flatMap((body) =>
           Client.request("/api/v1.0/PaymentPages/generateLink", {
             method: "POST",
@@ -205,12 +204,13 @@ const PayplusService = Effect.gen(function*($) {
         Effect.map((link) => new URL(link)),
         breaker((e) => e instanceof Http.HttpRequestError || e instanceof Http.HttpResponseError),
         provideHttpConfig,
+        parseIntegration,
         Effect.mapError((cause) => {
           if (cause instanceof Clearing.ClearingError) return cause;
 
           return new Clearing.ClearingError("could not generate payment link", {
             cause,
-            provider: "GAMA",
+            provider: "PAY_PLUS",
           });
         }),
       ),

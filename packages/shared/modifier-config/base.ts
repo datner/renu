@@ -29,7 +29,6 @@ export const ManagementRepresentationSchema = Schema.union(
 
 export type ManagementRepresentation = TaggedEnum.Infer<typeof ManagementRepresentation>;
 
-
 export const Option = S.struct({
   managementRepresentation: ManagementRepresentationSchema,
   identifier: S.string,

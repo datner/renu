@@ -11,4 +11,3 @@ export interface GetItemsByVenue extends Request.Request<GetItemsByVenueError, M
 }
 
 export const GetItemsByVenue = Request.tagged<GetItemsByVenue>("GetItemsByVenue");
-

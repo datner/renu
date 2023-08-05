@@ -25,7 +25,7 @@ export const ExtrasSchema = Schema.struct({
   min: Schema.number,
   max: Schema.number,
 });
-export interface ExtrasSchema extends Schema.From<typeof ExtrasSchema> { }
+export interface ExtrasSchema extends Schema.From<typeof ExtrasSchema> {}
 
 export const OneOfOption = Schema.struct({
   identifier: Common.Slug,
@@ -41,7 +41,7 @@ export const OneOfSchema = Schema.struct({
   content: Content,
   options: Schema.nonEmptyArray(OneOfOption),
 });
-export interface OneOfSchema extends Schema.From<typeof OneOfSchema> { }
+export interface OneOfSchema extends Schema.From<typeof OneOfSchema> {}
 
 export const ModifierSchema = Schema.struct({
   modifierId: Schema.optional(Schema.number),
@@ -50,7 +50,7 @@ export const ModifierSchema = Schema.struct({
     ExtrasSchema,
   ),
 });
-export interface ModifierSchema extends Schema.From<typeof ModifierSchema> { }
+export interface ModifierSchema extends Schema.From<typeof ModifierSchema> {}
 
 export const ItemFormSchema = Schema.struct({
   identifier: Common.Slug,
@@ -68,16 +68,16 @@ export const ItemFormSchema = Schema.struct({
   ),
   modifiers: Schema.array(ModifierSchema),
 });
-export interface ItemFormSchema extends Schema.From<typeof ItemFormSchema> { }
+export interface ItemFormSchema extends Schema.From<typeof ItemFormSchema> {}
 
 export const CreateItemPayload = pipe(
   Schema.to(ItemFormSchema),
   Schema.omit("imageFile"),
 );
-export interface CreateItemPayload extends Schema.From<typeof CreateItemPayload> { }
+export interface CreateItemPayload extends Schema.From<typeof CreateItemPayload> {}
 
 export const UpdateItemPayload = pipe(
   CreateItemPayload,
   Schema.extend(Schema.struct({ id: Schema.number })),
 );
-export interface UpdateItemPayload extends Schema.From<typeof UpdateItemPayload> { }
+export interface UpdateItemPayload extends Schema.From<typeof UpdateItemPayload> {}

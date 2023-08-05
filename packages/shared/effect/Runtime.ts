@@ -1,9 +1,9 @@
+import { pipe } from "@effect/data/Function";
 import * as Effect from "@effect/io/Effect";
 import * as Exit from "@effect/io/Exit";
 import * as Layer from "@effect/io/Layer";
 import * as Runtime from "@effect/io/Runtime";
 import * as Scope from "@effect/io/Scope";
-import { pipe } from "@effect/data/Function";
 
 export const makeRuntime = <R, E, A>(layer: Layer.Layer<R, E, A>) =>
   Effect.gen(function*($) {

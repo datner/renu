@@ -40,9 +40,9 @@ declare global {
   ): void;
 }
 
-class NoPayment extends Data.TaggedClass("NoPayment")<{}> { }
-class PaymentClosed extends Data.TaggedClass("PaymentClosed")<{ session: Branded<string, "GamaSession"> }> { }
-class PaymentOpen extends Data.TaggedClass("PaymentOpen")<{ session: Branded<string, "GamaSession"> }> { }
+class NoPayment extends Data.TaggedClass("NoPayment")<{}> {}
+class PaymentClosed extends Data.TaggedClass("PaymentClosed")<{ session: Branded<string, "GamaSession"> }> {}
+class PaymentOpen extends Data.TaggedClass("PaymentOpen")<{ session: Branded<string, "GamaSession"> }> {}
 
 type Payment = NoPayment | PaymentClosed | PaymentOpen;
 
@@ -141,7 +141,7 @@ export function OrderModal(props: Props) {
   const amount = OrderState.getOrderAmount(order);
   const cost = OrderState.getOrderCost(order);
   const items = OrderState.getOrderItems(order);
-  const valid = OrderState.getOrderValidity(order)
+  const valid = OrderState.getOrderValidity(order);
 
   const listItems = HashMap.map(
     items,

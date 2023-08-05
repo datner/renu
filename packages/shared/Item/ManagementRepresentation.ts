@@ -21,7 +21,7 @@ export const ModifierRepresentation = {
     id: Schema.number,
   }),
   Unknown: Schema.struct({}),
-}
+};
 
 export const ManagementRepresentationSchema = Schema.union(
   Representation.Presto,

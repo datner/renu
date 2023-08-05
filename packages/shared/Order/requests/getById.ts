@@ -10,5 +10,3 @@ export interface GetOrderById extends Request.Request<GetOrderByIdError, Models.
 }
 
 export const GetOrderById = Request.tagged<GetOrderById>("GetOrderById");
-
-

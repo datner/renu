@@ -200,8 +200,8 @@ const WaitForPayment = (props: { id: number }) => {
     onSuccess: (state) => {
       switch (state) {
         case "Init":
-          return /* wait.. */;
-          
+          return; /* wait.. */
+
         case "Dead":
         case "PaidFor":
         case "Unconfirmed":
@@ -210,7 +210,7 @@ const WaitForPayment = (props: { id: number }) => {
         case "Refunded":
         case "Delivered":
           return router.push(Routes.OrderId({ id }));
-          
+
         default: {
           throw absurd(state);
         }

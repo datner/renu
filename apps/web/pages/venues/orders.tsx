@@ -169,14 +169,14 @@ function OrderList(props: { state: OrderState }) {
           {state === OrderState.Init
             ? <ConfirmOrders orderId={order.id} />
             : state === OrderState.Unconfirmed
-              ? <ConfirmOrders orderId={order.id} />
-              : state === OrderState.Confirmed
-                ? <DeliverOrder orderId={order.id} />
-                : state === OrderState.Delivered
-                  ? <RestoreOrder orderId={order.id} />
-                  : state === OrderState.Cancelled
-                    ? <RestoreOrder orderId={order.id} />
-                    : null}
+            ? <ConfirmOrders orderId={order.id} />
+            : state === OrderState.Confirmed
+            ? <DeliverOrder orderId={order.id} />
+            : state === OrderState.Delivered
+            ? <RestoreOrder orderId={order.id} />
+            : state === OrderState.Cancelled
+            ? <RestoreOrder orderId={order.id} />
+            : null}
         </div>
       ))}
     </div>

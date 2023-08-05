@@ -123,7 +123,7 @@ export const getServerSideProps = gSSP(async (context) => {
       "Cache-Control",
       "public, s-maxage=3600, stale-while-revalidate=10800",
     );
-    
+
     return {
       props: {
         menu,

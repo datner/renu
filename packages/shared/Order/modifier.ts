@@ -16,4 +16,4 @@ export const Schema = S.struct({
 });
 export interface Decoded extends S.To<typeof Schema> {}
 
-export const getCost = (i: Decoded) => i.price * i.amount
+export const getCost = (i: Decoded) => i.price * i.amount;

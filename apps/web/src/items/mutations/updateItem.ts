@@ -144,7 +144,7 @@ export default resolver.pipe(
                             managementRepresentation: encodeRep(o.managementRepresentation),
                           }
                       )),
-                  )
+                  ),
                 },
               } satisfies Prisma.ItemModifierCreateWithoutItemInput),
             ),

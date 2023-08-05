@@ -8,7 +8,7 @@ const getOrderStatus = resolver.pipe(
   Resolver.schema(Order.Id),
   Effect.flatMap(Order.getById),
   Effect.map(_ => _.state),
-  Renu.runPromise$
+  Renu.runPromise$,
 );
 
-export default getOrderStatus
+export default getOrderStatus;

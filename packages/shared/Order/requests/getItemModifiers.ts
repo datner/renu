@@ -10,5 +10,3 @@ export interface GetOrderItemModifiers extends Request.Request<GetOrderItemModif
 }
 
 export const GetOrderItemModifiers = Request.tagged<GetOrderItemModifiers>("GetOrderItemModifiers");
-
-

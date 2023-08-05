@@ -1,3 +1,4 @@
+import { AuthenticatedSessionContext } from "@blitzjs/auth";
 import { BlitzPage, Routes } from "@blitzjs/next";
 import { LoadingOverlay } from "@mantine/core";
 import { Suspense } from "react";
@@ -5,7 +6,6 @@ import { Aside } from "src/admin/components/Aside";
 import { Content } from "src/admin/components/Content";
 import { gSSP } from "src/blitz-server";
 import AdminMenusMenu from "./[identifier]";
-import { AuthenticatedSessionContext } from "@blitzjs/auth";
 
 const AdminMenusNew: BlitzPage = () => {
   return (
@@ -29,7 +29,7 @@ AdminMenusNew.authenticate = AdminMenusMenu.authenticate;
 AdminMenusNew.getLayout = AdminMenusMenu.getLayout;
 
 export const getServerSideProps = gSSP(async (context) => {
-  const { locale, ctx} = context;
+  const { locale, ctx } = context;
 
   //  because we specify authenticate this is safe
   const session = ctx.session as AuthenticatedSessionContext;

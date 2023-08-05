@@ -26,12 +26,11 @@ export const Item = S.struct({
   venueId: S.optionFromNullable(Venue.Id),
   managementRepresentation: Common.fromPrisma(ManagementRepresentationSchema),
 });
-export interface Decoded extends S.To<typeof Item> { }
+export interface Decoded extends S.To<typeof Item> {}
 
-export const fromProvider =
-  <A extends S.Schema<any, any>>(managementRepresentation: A) => (schema: typeof Item) =>
-    pipe(
-      schema,
-      S.omit("managementRepresentation"),
-      S.extend(S.struct({ managementRepresentation: Common.fromPrisma(managementRepresentation) })),
-    );
+export const fromProvider = <A extends S.Schema<any, any>>(managementRepresentation: A) => (schema: typeof Item) =>
+  pipe(
+    schema,
+    S.omit("managementRepresentation"),
+    S.extend(S.struct({ managementRepresentation: Common.fromPrisma(managementRepresentation) })),
+  );

@@ -1,5 +1,5 @@
-import * as Effect from '@effect/io/Effect'
-import * as Context from '@effect/data/Context'
+import * as Context from "@effect/data/Context";
+import * as Effect from "@effect/io/Effect";
 import { Prisma } from "database";
 import { Order } from "shared";
 
@@ -11,4 +11,3 @@ export interface OrderRepository {
   readonly setTransactionId: (orderId: Order.Id, txId: Order.TxId) => Effect.Effect<never, never, Order.Decoded>;
 }
 export const OrderRepository = Context.Tag<OrderRepository>("OrderRepository");
-

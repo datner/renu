@@ -25,11 +25,10 @@ const setPrestoId = resolver.pipe(
           data: { managementRepresentation: { _tag: "PrestoRepresentation", id: input.prestoId } },
         }),
       catch: prismaError("Item"),
-    }
-    )
+    })
   ),
   Session.authorizeResolver,
   Renu.runPromise$,
 );
 
-export default setPrestoId
+export default setPrestoId;

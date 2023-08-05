@@ -10,7 +10,7 @@ type Props = {
 
 export function ViewOrderButton(props: Props) {
   const { onClick } = props;
-  const {order} = useOrderState()
+  const { order } = useOrderState();
   const show = Order.isActiveOrder(order);
   const t = useTranslations("menu.Components.ViewOrderButton");
   const transition = useTransition(show, {

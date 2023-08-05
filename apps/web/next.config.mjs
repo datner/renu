@@ -44,8 +44,8 @@ const config = {
         },
         {
           source: "/kiosk/:identifier",
-          destination: "/menu/:identifier"
-        }
+          destination: "/menu/:identifier",
+        },
       ],
       afterFiles: [],
       fallback: [],

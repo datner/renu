@@ -58,11 +58,10 @@ const handler = resolver.pipe(
               where,
               orderBy,
             }),
-          catch:prismaError("Category"),
-        }
-        ),
+          catch: prismaError("Category"),
+        }),
       Effect.map(
-        Effect.tryPromise({try: () => db.category.count({ where }), catch: prismaError("Category")}),
+        Effect.tryPromise({ try: () => db.category.count({ where }), catch: prismaError("Category") }),
         Number.NonNegativeInt,
       ),
     )(skip, take)

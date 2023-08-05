@@ -4,11 +4,11 @@ import * as O from "@effect/data/Option";
 import * as Str from "@effect/data/String";
 import * as S from "@effect/schema/Schema";
 import { Order, OrderItem, OrderState } from "database";
+import { Number } from "../schema";
 import * as Common from "../schema/common";
 import * as Venue from "../Venue/venue";
-import { Number } from "../schema";
-import { ExtraSchema as ManagementExtraSchema } from "./management";
 import { ExtraSchema as ClearingExtraSchema } from "./clearing";
+import { ExtraSchema as ManagementExtraSchema } from "./management";
 
 export const Id = Common.Id("OrderId");
 export type Id = S.To<typeof Id>;
@@ -37,7 +37,6 @@ export const Schema = S.struct({
   totalCost: Number.Cost,
   managementExtra: pipe(ManagementExtraSchema, Common.fromPrisma, S.optionFromNullable),
   clearingExtra: pipe(ClearingExtraSchema, Common.fromPrisma, S.optionFromNullable),
-
 });
 export interface Decoded extends S.To<typeof Schema> {}
 

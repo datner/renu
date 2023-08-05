@@ -1,8 +1,8 @@
 import { useQuery } from "@blitzjs/rpc";
+import * as Equivalence from "@effect/data/Equivalence";
 import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as S from "@effect/data/String";
-import * as Equivalence from "@effect/data/Equivalence";
 import * as Parser from "@effect/schema/Parser";
 import * as Optic from "@fp-ts/optic";
 import * as Management from "@integrations/management";

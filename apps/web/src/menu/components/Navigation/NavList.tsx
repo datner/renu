@@ -1,8 +1,8 @@
 import clsx from "clsx";
+import { Venue } from "shared";
+import { useTitle } from "src/menu/hooks/useTitle";
 import * as _Menu from "src/menu/schema";
 import { useNavContext } from "./context";
-import { useTitle } from "src/menu/hooks/useTitle";
-import { Venue } from "shared";
 
 interface NavListProps {
   readonly categories: ReadonlyArray<Venue.Menu.MenuCategory>;
@@ -11,7 +11,7 @@ interface NavListProps {
 export const NavList = (props: NavListProps) => {
   const { categories } = props;
   const { attachNav, setActive, active } = useNavContext();
-  const title = useTitle()
+  const title = useTitle();
 
   return (
     <div

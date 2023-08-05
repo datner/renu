@@ -74,7 +74,7 @@ export const CreateSessionInput = S.struct({
   orderId: Order.Id,
   venueName: S.string,
 });
-export interface CreateSessionInput extends S.To<typeof CreateSessionInput> { }
+export interface CreateSessionInput extends S.To<typeof CreateSessionInput> {}
 export const CreateSessionPayload = S.struct({
   clientId: S.number,
   clientSecret: S.string,
@@ -97,14 +97,14 @@ export const CreateSessionPayload = S.struct({
     callbackUrl: S.optional(S.string),
   }),
 });
-export interface CreateSessionPayload extends S.To<typeof CreateSessionPayload> { }
+export interface CreateSessionPayload extends S.To<typeof CreateSessionPayload> {}
 
 export const PaymentResponse = S.struct({
   transactionStatus: S.literal("approved"),
   issuerAuthorizationNumber: AuthorizationNumber,
   cardNumber: CardNumber,
 });
-interface PaymentResponse extends S.To<typeof PaymentResponse> { }
+interface PaymentResponse extends S.To<typeof PaymentResponse> {}
 
 export const PaymentResponseOption = pipe(
   S.union(
@@ -155,4 +155,4 @@ export const CreateSessionSuccess = pipe(
     }),
   ),
 );
-export interface CreateSessionSuccess extends S.To<typeof CreateSessionSuccess> { }
+export interface CreateSessionSuccess extends S.To<typeof CreateSessionSuccess> {}

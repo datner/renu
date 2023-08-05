@@ -33,11 +33,11 @@ export const Description = pipe(
 export const Content = S.struct({
   locale: S.enums(Locale),
   name: Name,
-  description: S.optionFromNullable(Description)
+  description: S.optionFromNullable(Description),
 });
 
-export interface Content extends S.To<typeof Content> { }
-export interface ContentFrom extends S.From<typeof Content> { }
+export interface Content extends S.To<typeof Content> {}
+export interface ContentFrom extends S.From<typeof Content> {}
 
 export const PrismaJson = S.unknown as S.Schema<Prisma.JsonValue, Prisma.JsonValue>;
 

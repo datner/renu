@@ -14,7 +14,7 @@ export const getById = (id: number) =>
     VenueResolver,
   ));
 
-Effect.withRequestBatching
+Effect.withRequestBatching;
 export const getByIdentifier = (identifier: Slug) =>
   Effect.withRequestCaching(true)(Effect.request(
     GetVenueByIdentifier({ identifier }),

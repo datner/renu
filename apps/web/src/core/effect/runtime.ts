@@ -1,4 +1,5 @@
 /* eslint-disable react-hooks/rules-of-hooks */
+import { pipe } from "@effect/data/Function";
 import * as ConfigProvider from "@effect/io/Config/Provider";
 import * as Effect from "@effect/io/Effect";
 import * as Exit from "@effect/io/Exit";
@@ -6,11 +7,10 @@ import * as Layer from "@effect/io/Layer";
 import * as Logger from "@effect/io/Logger";
 import * as Runtime from "@effect/io/Runtime";
 import * as Scope from "@effect/io/Scope";
-import { pipe } from "@effect/data/Function";
 import { Http } from "@integrations/core";
 import * as Gama from "@integrations/gama";
-import * as Payplus from "@integrations/payplus";
 import * as Management from "@integrations/management";
+import * as Payplus from "@integrations/payplus";
 import * as Presto from "@integrations/presto";
 import * as Db from "db";
 import * as Telegram from "integrations/telegram";

@@ -1,12 +1,12 @@
 import { clsx } from "@mantine/core";
-import { ReactNode, forwardRef, memo } from "react";
+import { forwardRef, memo, ReactNode } from "react";
 import * as _Menu from "src/menu/schema";
 import { useTitle } from "../hooks/useTitle";
 import { useNavContext } from "./Navigation";
 
 type Props = {
   category: _Menu.Category;
-  children?: ReactNode
+  children?: ReactNode;
 };
 
 export const CategoryHeader = memo(

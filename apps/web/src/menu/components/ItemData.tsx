@@ -1,11 +1,11 @@
+import * as O from "@effect/data/Option";
 import clsx from "clsx";
-import * as O from '@effect/data/Option'
 import { useTranslations } from "next-intl";
 import { PropsWithChildren, ReactNode } from "react";
+import { Common } from "shared/schema";
 import { toShekel } from "src/core/helpers/content";
 import * as _Menu from "src/menu/schema";
 import { AmountCounter } from "./AmountCounter";
-import { Common } from "shared/schema";
 
 type Props = {
   price: number;

@@ -1,13 +1,13 @@
 import { clsx } from "@mantine/core";
-import { ReactNode, forwardRef, memo } from "react";
+import { forwardRef, memo, ReactNode } from "react";
+import { Venue } from "shared";
 import { useTitle } from "src/menu/hooks/useTitle";
 import * as _Menu from "src/menu/schema";
 import { useNavContext } from "../Navigation";
-import { Venue } from "shared";
 
 type Props = {
   category: Venue.Menu.MenuCategory;
-  children?: ReactNode
+  children?: ReactNode;
 };
 
 export const Section = memo(
@@ -61,4 +61,3 @@ export const Section = memo(
 );
 
 Section.displayName = "Category.memo(Section)";
-

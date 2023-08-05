@@ -35,7 +35,7 @@ export class ClearingError extends Error {
   }
 }
 export interface ClearingSettings {
-  readonly _: unique symbol
+  readonly _: unique symbol;
 }
 export const IntegrationSettingsService = Context.Tag<ClearingSettings, ClearingIntegration>();
 export const Settings = IntegrationSettingsService;

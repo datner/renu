@@ -12,7 +12,7 @@ export const ManagementServiceLayer = Layer.effect(
     const services: Record<ManagementProvider, M.ManagementService> = {
       DORIX: yield* $(Dorix.Dorix),
       RENU: yield* $(Dorix.Dorix),
-      PRESTO: yield* $(Dorix.Dorix)
+      PRESTO: yield* $(Dorix.Dorix),
     };
 
     return {

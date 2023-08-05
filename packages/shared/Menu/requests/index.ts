@@ -1,1 +1,1 @@
-export * from "./getByVenue"
+export * from "./getByVenue";

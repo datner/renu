@@ -10,5 +10,3 @@ export interface CreateOrder extends Request.Request<CreateOrderError, Models.Or
 }
 
 export const CreateOrder = Request.tagged<CreateOrder>("CreateOrder");
-
-

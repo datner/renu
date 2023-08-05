@@ -108,7 +108,10 @@ export const ListItem = memo(
               className="object-cover"
               fill
               src={`${item.image}?cs=strip`}
-              placeholder={O.match(item.blurDataUrl, { onNone: () => "empty", onSome: () => "blur" })}
+              placeholder={O.match(O.filter(item.blurDataUrl, _ => _ !== ""), {
+                onNone: () => "empty",
+                onSome: () => "blur",
+              })}
               blurDataURL={O.getOrUndefined(item.blurDataUrl)}
               quality={45}
               alt={item.identifier}

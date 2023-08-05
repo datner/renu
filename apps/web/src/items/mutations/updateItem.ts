@@ -36,7 +36,7 @@ const getItem = (id: number, org: Organization) =>
       }),
   });
 
-const encodeRep = Schema.encode(ModifierConfig.Base.ManagementRepresentationSchema);
+const encodeRep = Schema.encodeSync(ModifierConfig.Base.ManagementRepresentationSchema);
 
 export default resolver.pipe(
   Resolver.schema(UpdateItemPayload),
@@ -112,7 +112,7 @@ export default resolver.pipe(
                         : o
                     ),
                   ),
-                } as any,
+                },
               },
             })),
           ),
@@ -124,6 +124,7 @@ export default resolver.pipe(
                 position: p,
                 config: {
                   ...m.config,
+                  content: RR.collect(m.config.content, (locale, _) => ({ locale, ..._ })),
                   options: pipe(
                     m.config.options,
                     a =>
@@ -143,7 +144,7 @@ export default resolver.pipe(
                             managementRepresentation: encodeRep(o.managementRepresentation),
                           }
                       )),
-                  ) as unknown as Prisma.InputJsonValue,
+                  )
                 },
               } satisfies Prisma.ItemModifierCreateWithoutItemInput),
             ),

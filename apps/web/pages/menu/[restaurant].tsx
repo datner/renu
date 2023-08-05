@@ -5,13 +5,12 @@ import * as A from "@effect/data/ReadonlyArray";
 import * as Str from "@effect/data/String";
 import * as Parser from "@effect/schema/Parser";
 import { NotFoundError } from "blitz";
-import db, { Locale } from "db";
-import { GetStaticPaths, InferGetStaticPropsType } from "next";
+import { InferGetServerSidePropsType } from "next";
 import dynamic from "next/dynamic";
 import Head from "next/head";
 import { Fragment, useMemo, useState } from "react";
 import { Venue } from "shared";
-import { gSP } from "src/blitz-server";
+import { gSSP } from "src/blitz-server";
 import { titleFor } from "src/core/helpers/content";
 import { useLocale } from "src/core/hooks/useLocale";
 import MenuLayout from "src/core/layouts/MenuLayout";
@@ -29,13 +28,13 @@ const LazyViewOrderButton = dynamic(() => import("src/menu/components/ViewOrderB
 const LazyItemModal = dynamic(() => import("src/menu/components/ItemModal"), {
   loading: () => <Fragment />,
 });
-const LazyOrderModal = dynamic(() => import("src/menu/components/OrderModal"), {
+const LazyOrderModal = dynamic(() => import("src/menu/components/PayPlusOrderModal"), {
   loading: () => <Fragment />,
 });
 
 const CategoryOrder = Order.mapInput(Str.Order, (b: Venue.Menu.Category) => b.identifier);
 
-export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (props) => {
+export const Menu: BlitzPage<InferGetServerSidePropsType<typeof getServerSideProps>> = (props) => {
   const { menu } = props;
   const restaurant = useMemo(() => Parser.decodeSync(Venue.Menu.Menu)(menu), [menu]);
   const { categories } = restaurant;
@@ -45,7 +44,6 @@ export const Menu: BlitzPage<InferGetStaticPropsType<typeof getStaticProps>> = (
   const locale = useLocale();
   const [reviewOrder, setReviewOrder] = useState(false);
 
-  const getTitle = titleFor(locale);
   const venueTitle = O.map(A.findFirst(restaurant.content, _ => _.locale === locale), _ => _.name);
   const orUnknown = O.getOrElse(() => "unknown");
 
@@ -114,23 +112,18 @@ Menu.getLayout = (comp) => <MenuLayout>{comp}</MenuLayout>;
 
 export default Menu;
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  const venues = await db.venue.findMany();
-
-  const locales = Object.values(Locale);
-  return {
-    fallback: "blocking",
-    paths: locales.flatMap((locale) => venues.map((it) => ({ params: { restaurant: it.identifier }, locale }))),
-  };
-};
-
-export const getStaticProps = gSP(async (context) => {
+export const getServerSideProps = gSSP(async (context) => {
   const { restaurant: identifier } = Query.parse(context.params);
 
   try {
     const menu = await getMenu({ identifier }, context.ctx);
     context.ctx.prefetchQuery(getVenueClearingProvider, { identifier });
 
+    context.res.setHeader(
+      "Cache-Control",
+      "public, s-maxage=3600, stale-while-revalidate=10800",
+    );
+    
     return {
       props: {
         menu,

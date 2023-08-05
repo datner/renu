@@ -1,4 +1,5 @@
 import * as S from "@effect/schema/Schema";
+import { Order, Venue } from "shared";
 
 const TransactionType = {
   charge: "Charge",
@@ -7,7 +8,7 @@ const TransactionType = {
 export const PayPlusCallback = S.struct({
   transaction_type: S.enums(TransactionType),
   transaction: S.struct({
-    uid: S.string,
+    uid: Order.TxId,
     payment_request_uid: S.optional(S.string),
     number: S.string,
     type: S.string,
@@ -27,8 +28,8 @@ export const PayPlusCallback = S.struct({
     }),
     approval_number: S.string, // not actually a number, can start with 0
     voucher_number: S.string, // again not number, a code XX-XXX-XX
-    more_info: S.numberFromString(S.string),
-    more_info_1: S.numberFromString(S.string),
+    more_info: S.compose(S.NumberFromString, Order.Id),
+    more_info_1: S.compose(S.NumberFromString, Venue.Id),
     more_info_2: S.optional(S.string),
     more_info_3: S.optional(S.string),
     more_info_4: S.optional(S.string),

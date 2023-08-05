@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 import * as ConfigProvider from "@effect/io/Config/Provider";
 import * as Effect from "@effect/io/Effect";
 import * as Exit from "@effect/io/Exit";
@@ -5,10 +6,10 @@ import * as Layer from "@effect/io/Layer";
 import * as Logger from "@effect/io/Logger";
 import * as Runtime from "@effect/io/Runtime";
 import * as Scope from "@effect/io/Scope";
-import { pipe } from "@fp-ts/core/Function";
-import * as Clearing from "@integrations/clearing";
+import { pipe } from "@effect/data/Function";
 import { Http } from "@integrations/core";
 import * as Gama from "@integrations/gama";
+import * as Payplus from "@integrations/payplus";
 import * as Management from "@integrations/management";
 import * as Presto from "@integrations/presto";
 import * as Db from "db";
@@ -18,14 +19,14 @@ const provider = ConfigProvider.constantCase(ConfigProvider.fromEnv());
 
 const serverLayer = pipe(
   Logger.logFmt,
-  Layer.merge(Effect.setConfigProvider(provider)),
-  Layer.merge(Http.layer),
-  Layer.merge(Db.layer),
   Layer.merge(Telegram.layer),
-  Layer.provideMerge(Management.layer),
-  Layer.provideMerge(Clearing.layer),
-  Layer.provideMerge(Gama.layer),
-  Layer.provideMerge(Presto.layer),
+  Layer.merge(Management.layer),
+  Layer.merge(Gama.layer),
+  Layer.merge(Presto.layer),
+  Layer.merge(Payplus.layer),
+  Layer.merge(Effect.setConfigProvider(provider)),
+  Layer.useMerge(Db.layer),
+  Layer.useMerge(Http.layer),
 );
 
 export const makeRuntime = <R, E, A>(layer: Layer.Layer<R, E, A>) =>

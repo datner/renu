@@ -1,17 +1,16 @@
 import { Routes } from "@blitzjs/next";
-import { useMutation } from "@blitzjs/rpc";
-import { Branded } from "@effect/data/Brand";
-import * as Data from "@effect/data/Data";
+import { useMutation, useQuery } from "@blitzjs/rpc";
 import { absurd, pipe } from "@effect/data/Function";
 import * as HashMap from "@effect/data/HashMap";
 import * as A from "@effect/data/ReadonlyArray";
+import * as Match from "@effect/match";
+import { TaggedEnum, taggedEnum } from "@effect/match/TaggedEnum";
 import { LoadingOverlay } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { a, useSpring } from "@react-spring/web";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
-import Script from "next/script";
-import { useEffect, useState } from "react";
+import { Suspense, useState } from "react";
 import useMeasure from "react-use-measure";
 import { Order, Venue } from "shared";
 import { Number } from "shared/schema";
@@ -19,9 +18,9 @@ import { toShekel } from "src/core/helpers/content";
 import { useLocale } from "src/core/hooks/useLocale";
 import { usePrevious } from "src/core/hooks/usePrevious";
 import * as OrderState from "src/menu/hooks/useOrder";
-import confirmGamaTransaction from "../mutations/confirmGamaTransaction";
+import getPayplusUrl from "src/orders/mutations/getPayplusUrl";
+import getOrderStatus from "src/orders/queries/getOrderStatus";
 import sendOrder from "../mutations/sendOrder";
-import { ErrorModal } from "./ErrorModal";
 import { Modal } from "./Modal";
 import { useOrderContext } from "./OrderContext";
 import { OrderModalItem } from "./OrderModalItem";
@@ -32,21 +31,27 @@ type Props = {
   onClose(): void;
 };
 
-declare global {
-  function gamapayInit(
-    sessionId: Branded<string, "GamaSession">,
-    containerId?: string,
-    callbackFunction?: (payload: { url: false; confirmation: string }) => void,
-  ): void;
-}
+const Payment = taggedEnum<{
+  Init: {};
+  Open: { url: string };
+  Closed: { url: string };
+}>();
 
-class NoPayment extends Data.TaggedClass("NoPayment")<{}> { }
-class PaymentClosed extends Data.TaggedClass("PaymentClosed")<{ session: Branded<string, "GamaSession"> }> { }
-class PaymentOpen extends Data.TaggedClass("PaymentOpen")<{ session: Branded<string, "GamaSession"> }> { }
+const PaymentInit = Payment("Init");
+const PaymentOpen = Payment("Open");
+const PaymentClosed = Payment("Closed");
 
-type Payment = NoPayment | PaymentClosed | PaymentOpen;
+const matchPayment = Match.typeTags<Payment>();
+const matchUrl = <A, B>(f: (url: string) => A, orElse: () => B) =>
+  matchPayment({
+    Open: _ => f(_.url),
+    Closed: _ => f(_.url),
+    Init: orElse,
+  });
 
-export function OrderModal(props: Props) {
+type Payment = TaggedEnum.Infer<typeof Payment>;
+
+export function PayPlusOrderModal(props: Props) {
   const { onClose, open, venueId } = props;
   const t = useTranslations("menu.Components.OrderModal");
   const [errorOpen, setErrorOpen] = useState(false);
@@ -56,47 +61,24 @@ export function OrderModal(props: Props) {
   const isNoHeight = usePrevious(height) === 0;
   const { h } = useSpring({ h: height, immediate: isNoHeight });
   const [phoneNumber] = useLocalStorage({ key: "phone-number" });
-  const router = useRouter();
-  const [confirmTx, tx] = useMutation(confirmGamaTransaction, {
-    onSuccess() {
-      router.push(Routes.OrderSuccess());
-    },
-  });
-  const [payment, setPayment] = useState<Payment>(new NoPayment());
-  const [sendOrderMutation, { isLoading, isSuccess, reset }] = useMutation(sendOrder, {
+  const [getUrl, url] = useMutation(getPayplusUrl);
+  const [payment, setPayment] = useState<Payment>(PaymentInit());
+  const [sendOrderMutation, { isLoading, isSuccess, reset, data: newOrder }] = useMutation(sendOrder, {
     onSuccess: (_) => {
       reset();
     },
-    onError: () => {
-      setErrorOpen(true);
+    onError: (e) => {
+      console.error(e);
     },
   });
 
-  useEffect(() => {
-    const handlePayload = ({ data }: any) => {
-      if (data.action === "_gamapay_success") {
-        confirmTx({ jwt: data.payload.confirmation });
-        setPayment(new NoPayment());
-      }
-    };
-
-    if (payment._tag === "PaymentOpen") {
-      gamapayInit(payment.session, "payment");
-    }
-
-    window.addEventListener("message", handlePayload);
-    return () => {
-      window.removeEventListener("message", handlePayload);
-    };
-  }, [payment, confirmTx]);
-
-  const handleOrder = () => {
-    if (payment._tag !== "NoPayment") {
-      setPayment(new PaymentOpen(payment));
+  const handleOrder = async () => {
+    if (payment._tag !== "Init") {
+      setPayment(PaymentOpen(payment));
     }
     if (OrderState.isEmptyOrder(order)) return;
 
-    sendOrderMutation({
+    const newOrder = await sendOrderMutation({
       locale,
       clearingExtra: Order.Clearing.Extra("Gama")({ phoneNumber }),
       managementExtra: Order.Management.Extra("Presto")({ phoneNumber }),
@@ -136,12 +118,15 @@ export function OrderModal(props: Props) {
         A.fromIterable,
       ),
     });
+
+    const url = await getUrl({ venueId: newOrder.venueId, orderId: newOrder.id });
+    setPayment(PaymentOpen({ url }));
   };
 
   const amount = OrderState.getOrderAmount(order);
   const cost = OrderState.getOrderCost(order);
   const items = OrderState.getOrderItems(order);
-  const valid = OrderState.getOrderValidity(order)
+  const valid = OrderState.getOrderValidity(order);
 
   const listItems = HashMap.map(
     items,
@@ -151,7 +136,6 @@ export function OrderModal(props: Props) {
   return (
     <>
       <Modal open={open} onClose={onClose}>
-        <Script src="https://gpapi.gamaf.co.il/dist/gamapay-bundle.js" />
         <div className="pb-16 pt-3 bg-white rounded-t-xl overflow-auto">
           <h3 className="px-3 text-2xl rtl:mt-9">{t("yourOrder")}</h3>
           <div className="divider w-1/2 mt-1 mb-2" />
@@ -177,24 +161,64 @@ export function OrderModal(props: Props) {
         </div>
       </Modal>
       <Modal
-        open={payment._tag === "PaymentOpen"}
+        open={payment._tag === "Open"}
         onClose={() => {
-          if (payment._tag === "NoPayment") {
+          if (payment._tag === "Init") {
             return;
           }
-          setPayment(new PaymentClosed(payment));
+          setPayment(PaymentClosed(payment));
         }}
       >
         <div
           id="payment"
           className="pb-16 bg-white rounded-t-xl overflow-auto [&_iframe]:h-[600px] [&_iframe]:w-screen"
         >
+          {matchUrl(
+            url => <iframe src={url} />,
+            () => null,
+          )(payment)}
         </div>
       </Modal>
-      <ErrorModal show={errorOpen} onClose={() => setErrorOpen(false)} />
-      <LoadingOverlay pos="fixed" visible={isLoading || tx.isLoading} />
+      <LoadingOverlay pos="fixed" visible={isLoading || url.isLoading} />
+      <Suspense>
+        {newOrder && <WaitForPayment id={newOrder.id} />}
+      </Suspense>
     </>
   );
 }
 
-export default OrderModal;
+const WaitForPayment = (props: { id: number }) => {
+  const { id } = props;
+  const router = useRouter();
+  const [status] = useQuery(getOrderStatus, id, {
+    refetchInterval: (state) => {
+      if (!state || ["PaidFor", "Confirmed", "Unconfirmed"].includes(state)) {
+        return 700;
+      }
+      return false;
+    },
+    onSuccess: (state) => {
+      switch (state) {
+        case "Init":
+          return /* wait.. */;
+          
+        case "Dead":
+        case "PaidFor":
+        case "Unconfirmed":
+        case "Confirmed":
+        case "Cancelled":
+        case "Refunded":
+        case "Delivered":
+          return router.push(Routes.OrderId({ id }));
+          
+        default: {
+          throw absurd(state);
+        }
+      }
+    },
+  });
+
+  return <LoadingOverlay pos="fixed" visible />;
+};
+
+export default PayPlusOrderModal;

@@ -1,18 +1,17 @@
 import { Ctx } from "@blitzjs/next";
 import { resolver } from "@blitzjs/rpc";
+import * as Data from "@effect/data/Data";
 import { pipe } from "@effect/data/Function";
 import * as N from "@effect/data/Number";
 import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as Cause from "@effect/io/Cause";
 import * as Effect from "@effect/io/Effect";
-import * as Match from "@effect/match";
 import { ParseError } from "@effect/schema/ParseResult";
 import * as S from "@effect/schema/Schema";
-import * as Gama from "@integrations/gama";
 import { Prisma } from "database";
 import * as Telegram from "integrations/telegram/sendMessage";
-import { Order, Venue } from "shared";
+import { Order } from "shared";
 import * as Renu from "src/core/effect/runtime";
 import * as _Item from "src/core/prisma/item";
 import { getItemCost, SendOrder, SendOrderItem, SendOrderModifiers } from "src/menu/validations/order";
@@ -89,68 +88,47 @@ const createNewOrder = (input: SendOrder) =>
     Effect.flatMap(S.decode(Order.Schema)),
   );
 
-const matchProvider = Match.discriminator("provider");
+// const matchProvider = Match.discriminator("provider");
 
-export default resolver.pipe(
-  anonymous(SendOrder),
-  Effect.tap((order) =>
-    Telegram.notify(`
+const notifyAboutNewOrder = (order: SendOrder) =>
+  Telegram.notify(`
 New Order received for ${order.venueId}!
 
 Customer ordered:
 ${
-      A.join(
-        A.map(
-          order.orderItems,
-          (oi) =>
-            `${oi.amount} x ${oi.item.identifier} for ${
-              N.divide(oi.cost, 100).toLocaleString("us-IL", {
-                style: "currency",
-                currency: "ILS",
-              })
-            }`,
-        ),
-        `\n`,
-      )
-    }
-`)
-  ),
-  Effect.flatMap(order =>
-    Effect.zip(
-      createNewOrder(order),
-      S.decode(Venue.Clearing.fromVenue)(order.venueId),
-      { concurrent: true },
+    A.join(
+      A.map(
+        order.orderItems,
+        (oi) =>
+          `${oi.amount} x ${oi.item.identifier} for ${
+            N.divide(oi.cost, 100).toLocaleString("us-IL", {
+              style: "currency",
+              currency: "ILS",
+            })
+          }`,
+      ),
+      `\n`,
     )
-  ),
-  Effect.tap(o => Effect.sync(() => console.log(inspect(o, false, null, true)))),
-  Effect.flatMap(([o, clearing]) =>
-    pipe(
-      Match.value(clearing),
-      matchProvider("GAMA", (_) =>
-        Effect.flatMap(Gama.Gama, gama => {
-          if (o.clearingExtra._tag !== "Some") {
-            return Effect.dieMessage("Could not find phone number");
-          }
-          const phone = o.clearingExtra.value.phoneNumber;
-          return gama.createSession({
-            orderId: o.id,
-            payerName: Gama.Schema.Name("לקוח רניו"),
-            venueName: Gama.Schema.Name("Papa"),
-            paymentAmount: o.totalCost,
-            payerPhoneNumber: Gama.Schema.PhoneNumber(phone),
-          }, _);
-        })),
-      Match.orElse(() => Effect.dieMessage("No support yet, sorry")),
-    )
-  ),
-  Effect.tapErrorCause((cause) =>
-    Telegram.alertDatner(`
+  }
+`);
+
+const notifyDatnerAboutError = <E>(cause: Cause.Cause<E>) =>
+  Telegram.alertDatner(`
 Send Order Failed!
 
 pretty cause:
 ${Format.pre("logs")(Cause.pretty(cause))}
 
-`)
-  ),
+`);
+
+class Dev extends Data.TaggedClass("Dev")<{}> {}
+export default resolver.pipe(
+  anonymous(SendOrder),
+  Effect.filterOrFail(() => process.env.NODE_ENV !== "development", () => new Dev()),
+  Effect.tap(notifyAboutNewOrder),
+  Effect.flatMap(createNewOrder),
+  Effect.tap(o => Effect.sync(() => console.log(inspect(o, false, null, true)))),
+  Effect.tapErrorCause(notifyDatnerAboutError),
+  Effect.catchTag("Dev", () => Effect.flatMap(Order.getById(553), S.decode(Order.Schema))),
   Renu.runPromise$,
 );

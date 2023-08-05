@@ -34,8 +34,10 @@ export class ClearingError extends Error {
     this.provider = options.provider;
   }
 }
-
-export const IntegrationSettingsService = Context.Tag<ClearingIntegration>();
+export interface ClearingSettings {
+  readonly _: unique symbol
+}
+export const IntegrationSettingsService = Context.Tag<ClearingSettings, ClearingIntegration>();
 export const Settings = IntegrationSettingsService;
 
 export type TxId = string & Brand.Brand<"TxId">;

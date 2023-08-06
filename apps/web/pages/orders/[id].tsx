@@ -1,16 +1,19 @@
 import { invoke, useQuery } from "@blitzjs/rpc";
 import { absurd } from "@effect/data/Function";
+import * as Option from "@effect/data/Option";
 import * as Effect from "@effect/io/Effect";
+import * as Match from "@effect/match";
 import * as Schema from "@effect/schema/Schema";
 import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { CheckIcon, ExclamationCircleIcon } from "@heroicons/react/24/solid";
+import * as Presto from "@integrations/presto";
 import { Button, Textarea } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
 import { InferGetServerSidePropsType } from "next";
 import { ReactNode, Suspense } from "react";
 import ReactConfetti from "react-confetti";
 import { useForm } from "react-hook-form";
-import { Order } from "shared";
+import { Order, Venue } from "shared";
 import { schemaResolver } from "shared/effect/Schema";
 import { gSSP } from "src/blitz-server";
 import { Renu } from "src/core/effect";
@@ -213,8 +216,34 @@ function OrderId(props: Props) {
 }
 
 export const getServerSideProps = gSSP((ctx) =>
-  Schema.parse(Schema.NumberFromString)(ctx.params?.["id"]).pipe(
+  Option.fromNullable(ctx.params?.["id"]).pipe(
+    Option.filter(_ => _ === ctx.query["more_info"]),
+    Effect.flatMap(Schema.parse(Schema.NumberFromString)),
     Effect.flatMap(Order.getById),
+    Effect.flatMap(Schema.decode(Order.Schema)),
+    Effect.tap(Effect.log),
+    Effect.tap(() => Effect.log(ctx.query)),
+    Effect.tap((_) =>
+      Effect.if(
+        Option.isSome(_.txId),
+        {
+          onTrue: Effect.unit,
+          onFalse: Option.fromNullable(ctx.query["transaction_uid"]).pipe(
+            Effect.tap(() => Effect.log("updating transaction_uid")),
+            Effect.flatMap(Schema.parse(Order.TxId)),
+            Effect.flatMap(txId => Order.setTransactionId(_.id, txId)),
+            Effect.flatMap(_ => Venue.getManagement(_.venueId)),
+            Effect.map(_ => _.provider),
+            Effect.flatMap(provider =>
+              Match.value(provider).pipe(
+                Match.when("PRESTO", () => Effect.flatMap(Presto.Presto, p => p.postOrder(_.id))),
+                Match.orElse(() => Effect.dieMessage("unsupported")),
+              )
+            ),
+          ),
+        },
+      )
+    ),
     Effect.tap(() =>
       Effect.sync(() => {
         ctx.res.setHeader(
@@ -223,6 +252,7 @@ export const getServerSideProps = gSSP((ctx) =>
         );
       })
     ),
+    Effect.flatMap(Schema.encode(Order.Schema)),
     Effect.match({
       onSuccess: order => ({
         props: { order },

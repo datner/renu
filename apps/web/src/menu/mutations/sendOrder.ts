@@ -124,11 +124,9 @@ ${Format.pre("logs")(Cause.pretty(cause))}
 class Dev extends Data.TaggedClass("Dev")<{}> {}
 export default resolver.pipe(
   anonymous(SendOrder),
-  Effect.filterOrFail(() => process.env.NODE_ENV !== "development", () => new Dev()),
   Effect.tap(notifyAboutNewOrder),
   Effect.flatMap(createNewOrder),
   Effect.tap(o => Effect.sync(() => console.log(inspect(o, false, null, true)))),
   Effect.tapErrorCause(notifyDatnerAboutError),
-  Effect.catchTag("Dev", () => Effect.flatMap(Order.getById(553), S.decode(Order.Schema))),
   Renu.runPromise$,
 );

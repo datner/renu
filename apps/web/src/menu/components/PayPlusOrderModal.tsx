@@ -54,7 +54,6 @@ type Payment = TaggedEnum.Infer<typeof Payment>;
 export function PayPlusOrderModal(props: Props) {
   const { onClose, open, venueId } = props;
   const t = useTranslations("menu.Components.OrderModal");
-  const [errorOpen, setErrorOpen] = useState(false);
   const locale = useLocale();
   const [{ order }, dispatch] = useOrderContext();
   const [ref, { height }] = useMeasure();
@@ -63,14 +62,7 @@ export function PayPlusOrderModal(props: Props) {
   const [phoneNumber] = useLocalStorage({ key: "phone-number" });
   const [getUrl, url] = useMutation(getPayplusUrl);
   const [payment, setPayment] = useState<Payment>(PaymentInit());
-  const [sendOrderMutation, { isLoading, isSuccess, reset, data: newOrder }] = useMutation(sendOrder, {
-    onSuccess: (_) => {
-      reset();
-    },
-    onError: (e) => {
-      console.error(e);
-    },
-  });
+  const [sendOrderMutation, { isLoading, isSuccess, data: newOrder }] = useMutation(sendOrder);
 
   const handleOrder = async () => {
     if (payment._tag !== "Init") {
@@ -180,7 +172,7 @@ export function PayPlusOrderModal(props: Props) {
         </div>
       </Modal>
       <LoadingOverlay pos="fixed" visible={isLoading || url.isLoading} />
-      <Suspense>
+      <Suspense fallback={null}>
         {newOrder && <WaitForPayment id={newOrder.id} />}
       </Suspense>
     </>
@@ -190,7 +182,7 @@ export function PayPlusOrderModal(props: Props) {
 const WaitForPayment = (props: { id: number }) => {
   const { id } = props;
   const router = useRouter();
-  const [status] = useQuery(getOrderStatus, id, {
+  useQuery(getOrderStatus, id, {
     refetchInterval: (state) => {
       if (!state || ["PaidFor", "Confirmed", "Unconfirmed"].includes(state)) {
         return 700;
@@ -218,7 +210,7 @@ const WaitForPayment = (props: { id: number }) => {
     },
   });
 
-  return <LoadingOverlay pos="fixed" visible />;
+  return null;
 };
 
 export default PayPlusOrderModal;

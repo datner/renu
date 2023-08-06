@@ -1,4 +1,3 @@
-import { pipe } from "@effect/data/Function";
 import * as Str from "@effect/data/String";
 import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";

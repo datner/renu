@@ -43,9 +43,9 @@ const toPayload = ({ items, id, venueId }: FullOrder) =>
   Effect.gen(function*($) {
     const integration = yield* $(IntegrationService);
     const { host } = yield* $(Effect.config(Common.config));
-    const successUrl = new URL(`payments/success`, host);
-    const errorUrl = new URL(`payments/error`, host);
-    const callbackUrl = new URL(`payments/callback`, host);
+    const successUrl = new URL(`orders/${id}`, host);
+    const errorUrl = new URL(`order/${id}`, host);
+    const callbackUrl = new URL(`api/payments/payplus`, host);
 
     // to satisfy typescript I need the double negative
     if (!A.isNonEmptyReadonlyArray(items)) return yield* $(Effect.die(new Error("order has no items")));
@@ -58,7 +58,7 @@ const toPayload = ({ items, id, venueId }: FullOrder) =>
             price: divide(100)(it.price),
             quantity: it.quantity,
             name: it.name,
-            image_url: `http://renu.imgix.net${it.item.image}?auto=format&fix=max&w=256&q=20`,
+            image_url: `http://renu.imgix.net${it.item.image}?auto=format,compress,enhance&fix=max&w=256&q=20`,
             product_invoice_extra_details: it.comment,
             vat_type: 0,
           }),

@@ -102,8 +102,8 @@
       },
       "PhoneModal": {
         "title": "לפני שאנחנו ממשיכים...",
-        "please give phone number": "בבקשה תן לנו את את מספר הפלאפון שלך, אנחנו מבטיחים לא לשלוח כלום 💚",
-        "phone label": "יאללה נו, הנה המספר שלי:",
+        "please give phone number": "אנחנו צריכים את המספר שלך כדי לעקוב אחרי ההזמנה, לא נשלח לך שום דבר לא רצוי 💚",
+        "phone label": "הנה המספר שלי:",
         "required": "בבקשה מלא את מספר הפלאפון!",
         "pattern": "בבקשה מלא מספר פלאפון חוקי 🙏",
         "maxLength": "זה נראה מעט ארוך.. 🤔"

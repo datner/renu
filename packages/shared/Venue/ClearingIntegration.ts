@@ -15,6 +15,7 @@ export type Id = Schema.To<typeof Id>;
 const PayPlusData = Schema.struct({
   api_key: Schema.string,
   secret_key: Schema.string,
+  service_charge: Schema.optional(Schema.number).toOption(),
   isQA: Schema.optional(Schema.boolean),
 });
 

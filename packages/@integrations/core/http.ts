@@ -91,8 +91,7 @@ export type HttpRequest = (
   init?: RequestInit | undefined,
 ) => Effect.Effect<never, HttpError, Response>;
 
-export const request = (...args: Parameters<HttpRequest>) => Effect.flatMap(HttpService, (s) => s.request(...args));
-
+export const request = Effect.serviceFunctionEffect(HttpService, _ => _.request)
 export const toJson = (res: Response) =>
   Effect.tryPromise({
     try: () => res.json() as Promise<unknown>,

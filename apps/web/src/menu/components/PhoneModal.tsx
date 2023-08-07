@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 
 const PHONE_REGEX = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
 
-export function FeedbackModal() {
+export function PhoneModal() {
   const [show, setShow] = useState(false);
   const t = useTranslations("menu.Components.PhoneModal");
   const [phone, setPhoneNumber] = useLocalStorage({ key: "phone-number" });

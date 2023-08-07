@@ -33,9 +33,11 @@ export const modifierFromId = Schema.transformResult(
   it => ParseResult.success(it.id),
 );
 
+export const ItemWithContent = Schema.extend(Item.Item, Schema.struct({ content: Schema.array(Content) }));
+
 export const withContent = Schema.transformResult(
   Schema.from(Item.Item),
-  Schema.extend(Schema.struct({ content: Schema.array(Content) }))(Item.Item),
+  ItemWithContent,
   (i) =>
     pipe(
       Requests.getContent(i.id),

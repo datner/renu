@@ -3,10 +3,11 @@ import type { NonEmptyReadonlyArray } from "@effect/data/ReadonlyArray";
 export interface PaymentItem {
   readonly name: string;
   readonly product_invoice_extra_details?: string | null | undefined;
-  readonly image_url: string;
+  readonly image_url?: string;
   readonly quantity: number;
   readonly price: number;
   readonly vat_type: 0;
+  readonly shipping?: boolean;
 }
 
 export interface GeneratePaymentLinkBody {

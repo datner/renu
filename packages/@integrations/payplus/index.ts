@@ -1,7 +1,9 @@
 import * as Context from "@effect/data/Context";
 import { pipe } from "@effect/data/Function";
 import { divide } from "@effect/data/Number";
+import * as Option from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
+import * as Config from "@effect/io/Config";
 import * as Effect from "@effect/io/Effect";
 import * as Layer from "@effect/io/Layer";
 import * as P from "@effect/schema/Parser";
@@ -10,12 +12,19 @@ import { CircuitBreaker, Clearing, Common, Http } from "@integrations/core";
 import { ClearingError } from "@integrations/core/clearing";
 import crypto from "crypto";
 import { ClearingProvider } from "database";
-import { Order } from "shared";
+import { Order, Venue } from "shared";
 import { FullOrder } from "shared/Order/fullOrder";
 import { GeneratePaymentLinkResponse, GetStatusResponse, StatusSuccess } from "./responses";
-import { Integration, IntegrationService, PayPlusConfig } from "./settings";
 import { GeneratePaymentLinkBody, PaymentItem } from "./types";
 
+export const PayPlusConfig = Config.all({
+  qa: Config.all({
+    url: Config.string(`payPlusQaApiUrl`),
+  }),
+  url: Config.string(`payPlusApiUrl`),
+});
+
+export const IntegrationService = Context.Tag<Venue.Clearing.PayPlusIntegration>();
 export interface PayPlus {
   readonly _: unique symbol;
 }
@@ -39,6 +48,18 @@ const provideHttpConfig = Effect.provideServiceEffect(
   }),
 );
 
+const ServiceCharge = IntegrationService.pipe(
+  Effect.map(_ => _.vendorData.service_charge),
+  Effect.map(Option.toArray),
+  Effect.map(A.map((_): PaymentItem => ({
+    price: divide(100)(_),
+    quantity: 1,
+    name: "דמי שירות",
+    shipping: true,
+    vat_type: 0,
+  }))),
+);
+
 const toPayload = ({ items, id, venueId }: FullOrder) =>
   Effect.gen(function*($) {
     const integration = yield* $(IntegrationService);
@@ -50,31 +71,32 @@ const toPayload = ({ items, id, venueId }: FullOrder) =>
     // to satisfy typescript I need the double negative
     if (!A.isNonEmptyReadonlyArray(items)) return yield* $(Effect.die(new Error("order has no items")));
 
-    return {
-      items: pipe(
-        items,
-        A.mapNonEmpty(
-          (it): PaymentItem => ({
-            price: divide(100)(it.price),
-            quantity: it.quantity,
-            name: it.name,
-            image_url: `http://renu.imgix.net${it.item.image}?auto=format,compress,enhance&fix=max&w=256&q=20`,
-            product_invoice_extra_details: it.comment,
-            vat_type: 0,
-          }),
-        ),
+    const serviceCharge = yield* $(ServiceCharge);
+
+    const paymentItems = pipe(
+      items,
+      A.mapNonEmpty(
+        (it): PaymentItem => ({
+          price: divide(100)(it.price),
+          quantity: it.quantity,
+          name: it.name,
+          image_url: `http://renu.imgix.net${it.item.image}?auto=format,compress,enhance&fix=max&w=256&q=20`,
+          product_invoice_extra_details: it.comment,
+          vat_type: 0,
+        }),
       ),
+      A.appendAllNonEmpty(serviceCharge),
+    );
+
+    return {
+      items: paymentItems,
       payment_page_uid: integration.terminal,
       more_info: String(id),
       more_info_1: String(venueId),
 
-      amount: pipe(
-        items,
-        A.reduce(0, (sum, item) => sum + item.quantity * item.price),
-        divide(100),
-      ),
+      amount: A.reduce(paymentItems, 0, (sum, item) => sum + item.quantity * item.price),
       customer: {
-        customer_name: "",
+        customer_name: "Renu",
         email: "",
         phone: "",
         vat_number: 0,
@@ -124,7 +146,7 @@ const authorizeResponse = (res: Response) =>
 
 const parseIntegration = Effect.provideServiceEffect(
   IntegrationService,
-  Effect.flatMap(Clearing.Settings, P.parse(Integration)),
+  Effect.flatMap(Clearing.Settings, P.parse(Venue.Clearing.PayPlusIntegration)),
 );
 
 const PayplusService = Effect.gen(function*($) {
@@ -180,6 +202,7 @@ const PayplusService = Effect.gen(function*($) {
           },
           onSuccess: (r) => Clearing.TxId(r.data.transaction_uid),
         }),
+        Effect.withLogSpan("PayPlus|getClearingPageLink"),
       ),
 
     getClearingPageLink: (orderId: Order.Id) =>
@@ -199,6 +222,7 @@ const PayplusService = Effect.gen(function*($) {
         ),
         Effect.flatMap(authorizeResponse),
         Effect.flatMap(Http.toJson),
+        Effect.tap(Effect.log),
         Effect.flatMap(P.parse(GeneratePaymentLinkResponse)),
         Effect.map((r) => r.data.payment_page_link),
         Effect.map((link) => new URL(link)),
@@ -213,6 +237,7 @@ const PayplusService = Effect.gen(function*($) {
             provider: "PAY_PLUS",
           });
         }),
+        Effect.withLogSpan("PayPlus|getClearingPageLink"),
       ),
   };
 });

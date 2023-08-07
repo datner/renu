@@ -11,7 +11,6 @@ import Head from "next/head";
 import { Fragment, useMemo, useState } from "react";
 import { Venue } from "shared";
 import { gSSP } from "src/blitz-server";
-import { titleFor } from "src/core/helpers/content";
 import { useLocale } from "src/core/hooks/useLocale";
 import MenuLayout from "src/core/layouts/MenuLayout";
 import * as Category from "src/menu/components/Category";
@@ -20,7 +19,7 @@ import * as Navigation from "src/menu/components/Navigation";
 import getMenu from "src/menu/queries/getMenu";
 import * as _Menu from "src/menu/schema";
 import { Query } from "src/menu/validations/page";
-import getVenueClearingProvider from "src/venues/queries/getVenueClearingType";
+import getVenueClearingIntegration from "src/venues/queries/getVenueClearingIntegration";
 
 const LazyViewOrderButton = dynamic(() => import("src/menu/components/ViewOrderButton"), {
   loading: () => <Fragment />,
@@ -117,7 +116,7 @@ export const getServerSideProps = gSSP(async (context) => {
 
   try {
     const menu = await getMenu({ identifier }, context.ctx);
-    context.ctx.prefetchQuery(getVenueClearingProvider, { identifier });
+    context.ctx.prefetchQuery(getVenueClearingIntegration, menu.id);
 
     context.res.setHeader(
       "Cache-Control",

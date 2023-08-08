@@ -13,6 +13,7 @@ import { a, useSpring } from "@react-spring/web";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
+import Script from "next/script";
 import { Fragment, Suspense, useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { Order, Venue } from "shared";
@@ -142,6 +143,7 @@ export function PayPlusOrderModal(props: Props) {
   return (
     <>
       <Modal open={open} onClose={onClose}>
+        <Script src="https://payments.payplus.co.il/statics/applePay/script.js" />
         <div className="pb-16 pt-3 bg-white rounded-t-xl overflow-auto">
           <h3 className="px-3 text-2xl rtl:mt-9">{t("yourOrder")}</h3>
           <div className="divider w-1/2 mt-1 mb-2" />
@@ -187,7 +189,7 @@ export function PayPlusOrderModal(props: Props) {
           className="pb-16 bg-white rounded-t-xl overflow-auto [&_iframe]:h-[600px] [&_iframe]:w-screen"
         >
           {matchUrl(
-            url => <iframe src={url} />,
+            url => <iframe id="pp_iframe" src={url} />,
             () => null,
           )(payment)}
         </div>

@@ -24,7 +24,7 @@ export interface PrestoService {
 }
 export const Presto = Context.Tag<Presto, PrestoService>("Presto");
 
-const toPrestoOrder = (o: FullOrder) =>
+const toPrestoOrder = (o: FullOrder, serviceCharge: number) =>
   Schema.encode(PrestoOrder)({
     id: o.id,
     contact: {
@@ -120,18 +120,6 @@ const toPrestoOrder = (o: FullOrder) =>
         ...i,
         childrencount: i.children.length,
       })),
-    comment: "Sent from Renu",
-    price: o.totalCost / 100,
-    delivery_fee: 0,
-    orderCharges: [{ amount: 0 }],
-    payments: [
-      {
-        type: "costtiket",
-        amount: o.totalCost / 100,
-        card: { number: "10", expireMonth: 1, expireYear: 1, holderId: "", holderName: "" },
-      },
-    ],
-    takeoutPacks: 1,
     delivery: {
       type: "delivery",
       address: {
@@ -144,10 +132,22 @@ const toPrestoOrder = (o: FullOrder) =>
         apt: "",
         comment: "",
       },
-      charge: 0,
+      charge: serviceCharge / 100,
       numppl: 1,
       workercode: 1,
     },
+    comment: "Sent from Renu",
+    price: (o.totalCost + serviceCharge) / 100,
+    delivery_fee: serviceCharge / 100,
+    orderCharges: [{ amount: 0 }],
+    payments: [
+      {
+        type: "costtiket",
+        amount: (o.totalCost + serviceCharge) / 100,
+        card: { number: "10", expireMonth: 1, expireYear: 1, holderId: "", holderName: "" },
+      },
+    ],
+    takeoutPacks: 1,
   });
 
 export const layer = Layer.effect(
@@ -168,11 +168,17 @@ export const layer = Layer.effect(
           Effect.gen(function*(_) {
             const o = yield* _(Schema.decode(FullOrder)(orderId));
             const mgmt = yield* _(Schema.decode(Venue.Management.fromVenue)(o.venueId));
+            const clearing = yield* _(Schema.decode(Venue.Clearing.fromVenue)(o.venueId));
             if (mgmt.provider !== "PRESTO") {
               throw yield* _(Effect.dieMessage("Wrong integration"));
             }
 
-            const prestoOrder = yield* _(toPrestoOrder(o));
+            const serviceCharge = (clearing.provider === "PAY_PLUS"
+              ? clearing.vendorData.service_charge
+              : O.none())
+              .pipe(O.getOrElse(() => 0));
+
+            const prestoOrder = yield* _(toPrestoOrder(o, serviceCharge));
 
             if (process.env.NODE_ENV === "production") {
               yield* _(

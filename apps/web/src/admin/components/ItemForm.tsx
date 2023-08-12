@@ -15,7 +15,6 @@ import { Item, ModifierConfig } from "shared";
 import { Schema as SchemaUtils } from "shared/effect";
 import { shekelFormatter, shekelParser } from "src/core/helpers/form";
 import { FullItem } from "src/items/hooks/form";
-import { match } from "ts-pattern";
 import { ExtrasSchema, ItemFormSchema, ModifierSchema, OneOfSchema } from "../validations/item-form";
 import { DeleteButton } from "./DeleteButton";
 import { FormCategoryCombobox } from "./FormCategoryCombobox";
@@ -123,7 +122,7 @@ export function ItemForm(props: Props) {
   const t = useTranslations("admin.Components.ItemForm");
   const isEdit = O.isSome(item);
   const form = useForm({
-    resolver: SchemaUtils.schemaResolver(ItemFormSchema),
+    resolver: SchemaUtils.schemaResolver(Schema.from(ItemFormSchema)),
     defaultValues: async (_) => {
       return toDefault(item);
     },
@@ -153,12 +152,13 @@ export function ItemForm(props: Props) {
     isSubmitting,
   };
 
-  const message = match(result)
-    .with({ isEdit: false, isSubmitting: true }, () => t("create.item"))
-    .with({ isEdit: true, isSubmitting: true }, () => t("update.item"))
-    .with({ isEdit: false }, () => t("create.initial"))
-    .with({ isEdit: true }, () => t("update.initial"))
-    .exhaustive();
+  const message = Match.value(result).pipe(
+    Match.when({ isEdit: false, isSubmitting: true }, _ => t("create.item")),
+    Match.when({ isEdit: true, isSubmitting: true }, _ => t("update.item")),
+    Match.when({ isEdit: false, isSubmitting: false }, _ => t("create.initial")),
+    Match.when({ isEdit: true, isSubmitting: false }, _ => t("update.initial")),
+    Match.exhaustive,
+  );
 
   const title = pipe(
     item,

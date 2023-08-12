@@ -1,180 +1,114 @@
 import { resolver } from "@blitzjs/rpc";
-import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as RR from "@effect/data/ReadonlyRecord";
 import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
 import * as TreeFormatter from "@effect/schema/TreeFormatter";
-import db, { Organization, Prisma } from "db";
-import { ModifierConfig } from "shared";
+import db, { Organization } from "db";
 import { UpdateItemPayload } from "src/admin/validations/item-form";
 import { Resolver } from "src/auth";
 import * as Renu from "src/core/effect/runtime";
 import { getBlurHash } from "src/core/helpers/plaiceholder";
-import { PrismaError, prismaError } from "src/core/helpers/prisma";
-import { inspect } from "util";
+import { prismaError } from "src/core/helpers/prisma";
 import { FullItem, toFullItem } from "../queries/getItemNew";
-
-const getItem = (id: number, org: Organization) =>
-  Effect.tryPromise({
-    try: () =>
-      db.item.findFirstOrThrow({
-        where: { id, organizationId: org.id },
-        select: {
-          image: true,
-          blurHash: true,
-          categoryId: true,
-          content: true,
-          categoryItems: { select: { id: true, categoryId: true } },
-        },
-      }),
-    catch: (cause) =>
-      new PrismaError("Didn't find the specified item within the organization", {
-        cause,
-        resource: "Item",
-      }),
-  });
-
-const encodeRep = Schema.encodeSync(ModifierConfig.Base.ManagementRepresentationSchema);
 
 export default resolver.pipe(
   Resolver.schema(UpdateItemPayload),
   Effect.tap((it) => Effect.log("getting item with id " + it.id)),
   Resolver.authorize(),
-  Resolver.flatMap((i, ctx) => Effect.zip(Effect.succeed(i), getItem(i.id, ctx.session.organization))),
-  Effect.flatMap(([input, item]) =>
-    pipe(
-      Effect.sync(() => ({
-        id: input.id,
-        image: input.image,
-        identifier: input.identifier,
-        price: input.price,
-        category: { connect: { id: input.categoryId } },
-        content: {
-          update: [
-            {
-              where: { id: item.content.find(_ => _.locale === "en")!.id },
-              data: { locale: "en", ...input.content.en },
+  Resolver.flatMap((input, ctx) =>
+    Effect.tryPromise({
+      try: () =>
+        db.$transaction(async tx => {
+          const item = await tx.item.upsert({
+            where: { id: input.id, venueId: ctx.session.venue.id },
+            update: {
+              image: input.image,
+              identifier: input.identifier,
+              price: input.price,
+              category: { connect: { id: input.categoryId } },
             },
-            {
-              where: { id: item.content.find(_ => _.locale === "he")!.id },
-              data: { locale: "he", ...input.content.he },
+            create: {
+              image: input.image,
+              identifier: input.identifier,
+              price: input.price,
+              category: { connect: { id: input.categoryId } },
             },
-          ],
-        },
-        categoryItems: pipe(
-          A.findFirst(
-            item.categoryItems,
-            (ci) => ci.categoryId === item.categoryId,
-          ),
-          O.map(
-            (catItem) => ({
+            include: {
+              categoryItems: true,
+              content: true,
+            },
+          });
+
+          const ops = [];
+
+          for (const { locale, description, name } of input.content) {
+            const id = item.content.find(_ => _.locale === locale)?.id;
+            ops.push(tx.itemI18L.upsert({
+              where: { id, locale },
+              create: { name, description, locale, item: { connect: { id: input.id } } },
+              update: { name, description },
+            }));
+          }
+
+          const categoryItem = item.categoryItems.find(_ => _.categoryId === item.categoryId);
+          if (categoryItem) {
+            const menuCategory = await tx.categoryItem.count({ where: { categoryId: item.categoryId } });
+            ops.push(tx.categoryItem.upsert({
+              where: { id: categoryItem.id },
               update: {
-                where: {
-                  id: catItem.id,
-                },
-                data: {
-                  Category: { connect: { id: input.categoryId } },
-                  position: 100,
-                },
+                Category: { connect: { id: input.categoryId } },
               },
-            } satisfies Prisma.CategoryItemUpdateManyWithoutItemNestedInput),
-          ),
-          O.getOrUndefined,
-        ),
-        modifiers: {
-          update: pipe(
-            input.modifiers,
-            A.filter((m) => m.modifierId != null),
-            A.map(({ config, modifierId }, p) => ({
-              where: { id: modifierId! },
-              data: {
-                position: p,
-                config: {
-                  ...config,
-                  content: RR.collect(config.content, (locale, _) => ({ locale, ..._ })),
-                  options: pipe(
-                    // @ts-expect-error
-                    config.options,
-                    A.map((o, i) => ({
-                      ...o,
-                      content: RR.collect(o.content, (locale, _) => ({ locale, ..._ })),
-                      position: i,
-                      managementRepresentation: encodeRep(o.managementRepresentation),
-                    })),
-                    A.map((o, i) =>
-                      config._tag === "oneOf"
-                        ? {
-                          ...o,
-                          default: config.defaultOption === String(i),
-                        }
-                        : o
-                    ),
-                  ),
-                },
+              create: {
+                Category: { connect: { id: input.categoryId } },
+                Item: { connect: { id: input.id } },
+                position: menuCategory,
               },
-            })),
-          ),
-          create: pipe(
-            input.modifiers,
-            A.filter((m) => m.modifierId == null),
-            A.map(
-              (m, p) => ({
-                position: p,
-                config: {
-                  ...m.config,
-                  content: RR.collect(m.config.content, (locale, _) => ({ locale, ..._ })),
-                  options: pipe(
-                    m.config.options,
-                    a =>
-                      a.map((o, i) => (
-                        m.config._tag === "oneOf"
-                          ? {
-                            ...o,
-                            content: RR.collect(o.content, (locale, _) => ({ locale, ..._ })),
-                            position: i,
-                            default: m.config.defaultOption === o.identifier,
-                            managementRepresentation: encodeRep(o.managementRepresentation),
-                          }
-                          : {
-                            ...o,
-                            content: RR.collect(o.content, (locale, _) => ({ locale, ..._ })),
-                            position: i,
-                            managementRepresentation: encodeRep(o.managementRepresentation),
-                          }
-                      )),
-                  ),
-                },
-              } satisfies Prisma.ItemModifierCreateWithoutItemInput),
-            ),
-          ),
-        } satisfies Prisma.ItemModifierUncheckedUpdateManyWithoutItemNestedInput,
-      } satisfies Prisma.ItemUpdateInput & { id: any })),
-      Effect.zipWith(
-        Effect.if(
-          item.image === input.image,
-          {
-            onTrue: Effect.succeed(item.blurHash),
-            onFalse: getBlurHash(input.image!),
-          },
-        ),
-        (data, blurHash) => ({ ...data, blurHash }),
-      ),
-      Effect.tap(() => Effect.log("updating item with following body")),
-      Effect.tap((body) => Effect.sync(() => console.log(inspect(body, false, null, true)))),
-      Effect.flatMap(({ id, ...data }) =>
-        Effect.tryPromise({
-          try: () =>
-            db.item.update({
-              where: { id },
-              data,
-            }),
-          catch: prismaError("Item"),
-        })
-      ),
-      Effect.tap(() => Effect.log("successfully updated item")),
-    )
+            }));
+          }
+
+          // wew, haven't written one of these in years
+          for (let i = 0; i < input.modifiers.length; i++) {
+            const mod = input.modifiers[i]!;
+            let config = {
+              ...mod.config,
+              options: mod.config.options.map((_, i) => ({
+                ..._,
+                position: i + 1,
+              })),
+            };
+            if (config._tag === "oneOf") {
+              const o = config.defaultOption;
+              config.options = config.options.map((_, i) => ({
+                ..._,
+                default: i === Number(o),
+              }));
+            }
+            ops.push(tx.itemModifier.upsert({
+              where: { id: mod.modifierId },
+              update: {
+                position: i + 1,
+                config,
+              },
+              create: {
+                position: i + 1,
+                item: { connect: { id: input.id } },
+                config,
+              },
+            }));
+          }
+
+          if (item.image !== input.image) {
+            const blurHash = await Renu.runPromise$(getBlurHash(input.image));
+            ops.push(tx.item.update({
+              where: { id: item.id },
+              data: { blurHash },
+            }));
+          }
+
+          await Promise.all(ops);
+          return item;
+        }),
+      catch: prismaError("Item"),
+    })
   ),
   Effect.flatMap(Schema.decode(toFullItem)),
   Effect.flatMap(Schema.encode(FullItem)),

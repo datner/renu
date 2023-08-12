@@ -1,20 +1,35 @@
 import { pipe } from "@effect/data/Function";
+import * as RR from "@effect/data/ReadonlyRecord";
 import * as Schema from "@effect/schema/Schema";
 import { Category, ModifierConfig } from "shared";
 import { Common, Number } from "shared/schema";
 
-const Content_ = Schema.struct({ name: Common.Name, description: Common.Description });
-const Content = Schema.struct({
+Common.Content;
+const Content_ = Schema.struct({
+  name: Common.Name,
+  description: Common.Description,
+});
+const ContentStruct = Schema.struct({
   en: Content_,
   he: Content_,
 });
+const ContentTuple = Schema.tuple(
+  Schema.attachPropertySignature("locale", "en")(Content_),
+  Schema.attachPropertySignature("locale", "he")(Content_),
+);
+const Content = Schema.transformResult(
+  ContentStruct,
+  Schema.to(ContentTuple),
+  _ => Schema.parseResult(ContentTuple)(RR.collect(_, (locale, value) => ({ ...value, locale }))),
+  _ => Schema.parseResult(ContentStruct)(RR.fromIterable(_, _ => [_.locale, _])),
+);
 
 export const ExtrasOption = Schema.struct({
   identifier: Common.Slug,
   price: Number.Price,
   multi: Schema.boolean,
   content: Content,
-  managementRepresentation: ModifierConfig.Base.ManagementRepresentationSchema,
+  managementRepresentation: Schema.from(ModifierConfig.Base.ManagementRepresentationSchema),
 });
 
 export const ExtrasSchema = Schema.struct({
@@ -31,7 +46,7 @@ export const OneOfOption = Schema.struct({
   identifier: Common.Slug,
   price: Number.Price,
   content: Content,
-  managementRepresentation: ModifierConfig.Base.ManagementRepresentationSchema,
+  managementRepresentation: Schema.from(ModifierConfig.Base.ManagementRepresentationSchema),
 });
 
 export const OneOfSchema = Schema.struct({
@@ -43,12 +58,14 @@ export const OneOfSchema = Schema.struct({
 });
 export interface OneOfSchema extends Schema.From<typeof OneOfSchema> {}
 
+export const ModifierConfigSchema = Schema.union(
+  OneOfSchema,
+  ExtrasSchema,
+);
+
 export const ModifierSchema = Schema.struct({
   modifierId: Schema.optional(Schema.number),
-  config: Schema.union(
-    OneOfSchema,
-    ExtrasSchema,
-  ),
+  config: ModifierConfigSchema,
 });
 export interface ModifierSchema extends Schema.From<typeof ModifierSchema> {}
 
@@ -71,8 +88,9 @@ export const ItemFormSchema = Schema.struct({
 export interface ItemFormSchema extends Schema.From<typeof ItemFormSchema> {}
 
 export const CreateItemPayload = pipe(
-  Schema.to(ItemFormSchema),
-  Schema.omit("imageFile"),
+  ItemFormSchema,
+  Schema.omit("imageFile", "image"),
+  Schema.extend(Schema.struct({ image: Schema.string })),
 );
 export interface CreateItemPayload extends Schema.From<typeof CreateItemPayload> {}
 

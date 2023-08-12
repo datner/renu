@@ -21,7 +21,7 @@ export const getBlurHash = (image: string) =>
     Effect.filterOrFail(
       // TODO: Find where the null leak is coming from
       (img) => typeof img === "string" && img !== "",
-      () => EmptyImageError({} as unknown as void),
+      () => EmptyImageError(),
     ),
     Effect.flatMap((img) => Http.request(`${img}?fm=blurhash&w=30`)),
     Effect.flatMap(Http.toText),

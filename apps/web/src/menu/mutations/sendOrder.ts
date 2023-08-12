@@ -121,10 +121,11 @@ ${Format.pre("logs")(Cause.pretty(cause))}
 
 `);
 
-class Dev extends Data.TaggedClass("Dev")<{}> {}
 export default resolver.pipe(
   anonymous(SendOrder),
   Effect.tap(notifyAboutNewOrder),
+  // TODO: support updating the order instead
+  // TODO: or instead just destroy the previous order.
   Effect.flatMap(createNewOrder),
   Effect.tap(o => Effect.sync(() => console.log(inspect(o, false, null, true)))),
   Effect.tapErrorCause(notifyDatnerAboutError),

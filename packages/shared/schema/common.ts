@@ -31,6 +31,7 @@ export const Description = pipe(
 );
 
 export const Content = S.struct({
+  id: S.number,
   locale: S.enums(Locale),
   name: Name,
   description: S.optionFromNullable(Description),

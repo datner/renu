@@ -7,12 +7,16 @@ import { Item } from "shared";
 import { Session } from "src/auth";
 import { Renu } from "src/core/effect";
 
+const includeContent = Schema.decode(Item.withContent)
+const encodeItemWithContent = Schema.encode(Schema.array(Item.ItemWithContent))
+
 const getCurrentVenueItems = (_: void, ctx: Ctx) =>
   pipe(
     Session.ensureOrgVenueMatch,
     Effect.zipRight(Session.Session),
     Effect.flatMap((sess) => Item.getByVenue(sess.venue.id, sess.organization.id)),
-    Effect.flatMap(Effect.forEach(_ => Schema.decode(Item.withContent)(_), { batching: true })),
+    Effect.flatMap(Effect.forEach(_ => includeContent(_), { batching: true })),
+    Effect.flatMap(encodeItemWithContent),
     Session.authorize(ctx),
     Effect.catchTag("ParseError", _ => Effect.fail(TreeFormatter.formatErrors(_.errors))),
     Renu.runPromise$,

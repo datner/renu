@@ -65,13 +65,14 @@ const useCreate = (redirect = false) => {
   const router = useRouter();
 
   const onSubmit = useCallback(
-    (data: Schema.To<typeof ItemFormSchema>) => {
+    (data: Schema.From<typeof ItemFormSchema>) => {
       return pipe(
         Effect.succeed(data.imageFile),
         Effect.flatMap(O.fromNullable),
         Effect.flatMap(uploadImage(data.identifier)),
-        Effect.catchAll(() => Effect.succeed(data.image ?? "")),
-        Effect.flatMap((image) => Effect.promise(() => invoke(createDbItem, { ...data, image }))),
+        Effect.catchAll(() => Effect.succeed(data.image.src ?? "")),
+        Effect.flatMap((image) => Effect.promise(() => invoke(updateItem, { ...data, image }))),
+        // TODO: change update to upsert, consolidate flows
         Effect.tap(() => revalidate),
         Effect.tap((item) => Effect.sync(() => setQueryData(getItem, { identifier: item.identifier }, item))),
         Effect.tap(() => invalidateQueries),
@@ -98,12 +99,12 @@ const useUpdate = (identifier: string) => {
 
   const [item, { setQueryData }] = useQuery(getItemNew, identifier, { select: Schema.decodeSync(FullItem) });
 
-  const onSubmit = (data: Schema.To<typeof ItemFormSchema>) =>
+  const onSubmit = (data: Schema.From<typeof ItemFormSchema>) =>
     pipe(
       Effect.succeed(data.imageFile),
       Effect.flatMap(O.fromNullable),
       Effect.flatMap(uploadImage(data.identifier)),
-      Effect.catchAll(() => Effect.succeed(data.image ?? "")),
+      Effect.catchAll(() => Effect.succeed(data.image.src ?? "")),
       Effect.flatMap((image) => Effect.promise(() => invoke(updateItem, { id: item.id, ...data, image }))),
       Effect.tap((item) =>
         Effect.all([

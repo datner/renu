@@ -34,13 +34,13 @@ export const Option = S.struct({
   identifier: S.string,
   position: pipe(S.number, S.int()),
   price: S.number,
-  content: S.nonEmptyArray(Common.Content),
+  content: Common.Content.pipe(S.omit("id"), S.nonEmptyArray),
 });
 export interface Option extends S.To<typeof Option> {}
 
 export const Modifier = S.struct({
   identifier: S.string,
-  content: S.nonEmptyArray(Common.Content),
+  content: Common.Content.pipe(S.omit("id"), S.nonEmptyArray),
   options: S.nonEmptyArray(Option),
 });
 export interface Modifier extends S.To<typeof Modifier> {}

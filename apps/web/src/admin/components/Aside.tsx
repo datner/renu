@@ -2,20 +2,24 @@ import { Routes } from "@blitzjs/next";
 import { useQuery } from "@blitzjs/rpc";
 import { pipe } from "@effect/data/Function";
 import * as Option from "@effect/data/Option";
+import * as Schema from "@effect/schema/Schema";
 import { Loader, LoadingOverlay } from "@mantine/core";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { Blurhash } from "react-blurhash";
+import { Item } from "shared";
 import getCurrentVenueCategories from "src/categories/queries/getCurrentVenueCategories";
 import { priceShekel, titleFor } from "src/core/helpers/content";
 import { useLocale } from "src/core/hooks/useLocale";
 import getCurrentVenueItems from "src/items/queries/current/getVenueItems";
 
+const includeContent = Schema.decodeSync(Schema.array(Item.ItemWithContent));
+
 function AsideDirectory() {
   const locale = useLocale();
   const t = useTranslations("admin.Components.Aside");
-  const [items, { isLoading, isRefetching }] = useQuery(getCurrentVenueItems, undefined);
+  const [items, { isLoading, isRefetching }] = useQuery(getCurrentVenueItems, undefined, { select: includeContent });
 
   const title = titleFor(locale);
 

@@ -1,6 +1,6 @@
 import * as Context from "@effect/data/Context";
 import { pipe } from "@effect/data/Function";
-import { divide } from "@effect/data/Number";
+import * as Number from "@effect/data/Number";
 import * as Option from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as Config from "@effect/io/Config";
@@ -52,7 +52,7 @@ const ServiceCharge = IntegrationService.pipe(
   Effect.map(_ => _.vendorData.service_charge),
   Effect.map(Option.toArray),
   Effect.map(A.map((_): PaymentItem => ({
-    price: divide(100)(_),
+    price: agorot(_),
     quantity: 1,
     name: "דמי שירות",
     shipping: true,
@@ -60,7 +60,9 @@ const ServiceCharge = IntegrationService.pipe(
   }))),
 );
 
-const toPayload = ({ items, id, venueId }: FullOrder) =>
+const agorot = Number.divide(100);
+
+const toPayload = ({ items, id, venueId, totalCost }: FullOrder) =>
   Effect.gen(function*($) {
     const integration = yield* $(IntegrationService);
     const { host } = yield* $(Effect.config(Common.config));
@@ -77,7 +79,7 @@ const toPayload = ({ items, id, venueId }: FullOrder) =>
       items,
       A.mapNonEmpty(
         (it): PaymentItem => ({
-          price: divide(100)(it.price),
+          price: agorot(Number.sumAll([it.price, ...A.map(it.modifiers, _ => _.price * _.amount)])),
           quantity: it.quantity,
           name: it.name,
           image_url: `http://renu.imgix.net${it.item.image}?auto=format,compress,enhance&fix=max&w=256&q=20`,
@@ -94,7 +96,12 @@ const toPayload = ({ items, id, venueId }: FullOrder) =>
       more_info: String(id),
       more_info_1: String(venueId),
 
-      amount: A.reduce(paymentItems, 0, (sum, item) => sum + item.quantity * item.price),
+      amount: agorot(
+        Number.sum(
+          totalCost,
+          Option.getOrElse(integration.vendorData.service_charge, () => 0),
+        ),
+      ),
       customer: {
         customer_name: "Renu",
         email: "",

@@ -10,10 +10,11 @@ type Props = {
   label: ReactNode;
   amount: number;
   className?: string;
+  hideAmount?: boolean;
 };
 
 export const AmountCounter = memo((props: Props) => {
-  const { label, amount, className = "text-emerald-600" } = props;
+  const { label, amount, className = "text-emerald-600", hideAmount } = props;
   const [ref, { width }] = useMeasure({ polyfill: ResizeObserver });
   const isRtl = useIsRtl();
   const rtlWidth = isRtl ? width : -width;
@@ -44,7 +45,7 @@ export const AmountCounter = memo((props: Props) => {
           className,
         )}
       >
-        x{amount || prevAmount}
+        {!hideAmount && <>x{amount || prevAmount}</>}
       </animated.span>
       <span className="block truncate rtl:pr-1.5 px-1 ltr:pl-1.5 ">{label}</span>
     </animated.div>

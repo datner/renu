@@ -10,7 +10,7 @@ import { AmountCounter } from "./AmountCounter";
 type Props = {
   price: number;
   content: Common.Content;
-  amount: number;
+  amount: number | "active";
 };
 
 const StaticData = (
@@ -53,6 +53,7 @@ export const ItemData = (props: Props) => {
   return (
     <StaticData content={content} price={price === 0 ? t("priced by choice") : toShekel(price)}>
       <AmountCounter
+        hideAmount={amount === "active"}
         className={clsx([
           "group-5nth-1:text-emerald-600",
           "group-5nth-2:text-ocre-600",
@@ -61,7 +62,7 @@ export const ItemData = (props: Props) => {
           "group-5nth-5:text-blush-600",
         ])}
         label={content.name}
-        amount={amount}
+        amount={amount === "active" ? 1 : amount}
       />
     </StaticData>
   );

@@ -73,12 +73,16 @@ export function OrderModalItem(props: Props) {
           </div>
         </div>
         <div className="basis-32 shrink-0">
-          <Thing
-            minimum={0}
-            amount={amount}
-            onIncrement={() => dispatch(Order.incrementItem(key))}
-            onDecrement={() => dispatch(Order.decrementItem(key))}
-          />
+          {item.price > 0
+            ? (
+              <Thing
+                minimum={0}
+                amount={amount}
+                onIncrement={() => dispatch(Order.incrementItem(key))}
+                onDecrement={() => dispatch(Order.decrementItem(key))}
+              />
+            )
+            : <button onClick={() => dispatch(Order.setExistingActiveItem(key))} className="btn w-full">Edit</button>}
         </div>
       </div>
     </li>

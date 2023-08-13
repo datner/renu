@@ -248,15 +248,17 @@ export function ItemModalForm(props: ItemModalFormProps) {
         {containerEl
           && createPortal(
             <div className="mt-6 z-20 sticky bottom-4 mx-4 flex gap-2">
-              <div className="basis-32">
-                <AmountButtons
-                  // Number(true) === 1, Number(false) === 0
-                  minimum={Number(O.isNone(order))}
-                  amount={amount}
-                  onIncrement={() => field.onChange(amount + 1)}
-                  onDecrement={() => field.onChange(amount - 1)}
-                />
-              </div>
+              {item.price !== 0 && (
+                <div className="basis-32">
+                  <AmountButtons
+                    // Number(true) === 1, Number(false) === 0
+                    minimum={Number(O.isNone(order))}
+                    amount={amount}
+                    onIncrement={() => field.onChange(amount + 1)}
+                    onDecrement={() => field.onChange(amount - 1)}
+                  />
+                </div>
+              )}
               <SubmitButton
                 isCreate={O.isNone(order)}
                 onRemove={handleRemove}
@@ -324,12 +326,13 @@ function SubmitButton(props: SubmitButtonProps) {
   // upgrade to something like
   // sequenceT(O.Apply)([markupOneOf, markupExtras, markupNewOne])
   const total = N.sumAll([price, ...oneOf, ...extras]) * amount;
+  const isEmptySelection = price === 0 && total === 0;
 
   switch (orderState) {
     case OrderState.NEW:
       return (
         <button
-          disabled={RR.isEmptyRecord(errors) ? false : !isValid}
+          disabled={RR.isEmptyRecord(errors) ? isEmptySelection : !isValid}
           form="item-form"
           type="submit"
           className="btn grow px-2 btn-primary"
@@ -345,12 +348,19 @@ function SubmitButton(props: SubmitButtonProps) {
       );
 
     case OrderState.UPDATE:
-      return (
-        <button disabled={!isValid} form="item-form" type="submit" className="btn grow px-2 btn-primary">
-          <span className="inline-block rtl:text-right flex-grow">{t("update")}</span>
-          <span className="tracking-wider font-light">{toShekel(total)}</span>
-        </button>
-      );
+      if (!isEmptySelection) {
+        return (
+          <button
+            disabled={!isValid || isEmptySelection}
+            form="item-form"
+            type="submit"
+            className="btn grow px-2 btn-primary"
+          >
+            <span className="inline-block rtl:text-right flex-grow">{t("update")}</span>
+            <span className="tracking-wider font-light">{toShekel(total)}</span>
+          </button>
+        );
+      }
 
     case OrderState.REMOVE:
       return (

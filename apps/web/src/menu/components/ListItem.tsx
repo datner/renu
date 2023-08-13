@@ -98,7 +98,7 @@ export const ListItem = memo(
           />
         </a.div>
         <div className="grow w-40 overflow-hidden">
-          <ItemData content={content} price={cost} amount={amount} />
+          <ItemData content={content} price={cost} amount={item.price === 0 && cost > 0 ? "active" : amount} />
         </div>
         <div className="w-32 relative xs:w-48 m-2 rounded-md overflow-hidden h-32">
           {pipe(O.map(item.blurHash, hash => <Blurhash hash={hash} width={192} height={128} />), O.getOrNull)}

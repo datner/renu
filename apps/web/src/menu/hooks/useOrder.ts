@@ -213,6 +213,7 @@ export const addEmptyItem = (item: Venue.Menu.MenuItem): Action => (state) => {
   const valid = pipe(
     A.filterMap(item.modifiers, refineTag("Extras")),
     A.every(_ => O.isNone(_.config.min)),
+    B.and(item.price !== 0),
   );
 
   const orderItem = SingleOrderItem({
@@ -294,6 +295,7 @@ const incrementOrderItem = MatchOrderItem({
       ..._,
       amount: Number.Multiple(2),
       cost: Number.Cost(_.cost * 2),
+      valid: _.valid && _.item.price !== 0,
     }),
   MultiOrderItem: (_) =>
     MultiOrderItem({
@@ -311,8 +313,15 @@ export const incrementItem = (key: OrderItemKey): Action => (state) =>
       ActiveOrder: _ =>
         pipe(
           HashMap.get(_.items, key),
-          O.map(incrementOrderItem),
-          O.map((multiItem) => {
+          O.map((orderItem) => {
+            const multiItem = incrementOrderItem(orderItem);
+            const becameInvalid = !multiItem.valid && orderItem.valid;
+            if (becameInvalid) {
+              return State({
+                ...state,
+                activeItem: O.some(ExistingActiveItem({ key, item: orderItem })),
+              });
+            }
             const items = HashMap.set(_.items, key, multiItem);
             return State({
               ...state,

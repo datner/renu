@@ -41,7 +41,7 @@
     "@mantine/hooks": "6.0.19",
     "@mantine/next": "6.0.19",
     "@mantine/nprogress": "6.0.19",
-    "@next/bundle-analyzer": "13.4.18",
+    "@next/bundle-analyzer": "13.4.19",
     "@plaiceholder/next": "3.0.0",
     "@react-spring/web": "9.7.3",
     "@tailwindcss/forms": "0.5.4",
@@ -68,7 +68,7 @@
     "match-sorter": "6.3.1",
     "monocle-ts": "2.3.13",
     "nanoid": "4.0.2",
-    "next": "13.4.18",
+    "next": "13.4.19",
     "next-intl": "2.19.1",
     "plaiceholder": "3.0.0",
     "postcss": "~8.4.28",
@@ -89,7 +89,7 @@
     "telegraf": "4.12.2",
     "ts-pattern": "5.0.5",
     "tslog": "4.9.1",
-    "zod": "3.22.1"
+    "zod": "3.22.2"
   },
   "devDependencies": {
     "@babel/core": "7.22.10",
@@ -98,7 +98,7 @@
     "@testing-library/react": "14.0.0",
     "@types/node": "20.5.1",
     "@vitejs/plugin-react": "4.0.4",
-    "eslint-config-next": "13.4.18",
+    "eslint-config-next": "13.4.19",
     "preview-email": "3.0.19",
     "stylis": "4.3.0",
     "tsconfig": "workspace:*",

@@ -1,9 +1,9 @@
+import { pipe } from "@effect/data/Function";
 import * as A from "@effect/data/ReadonlyArray";
 import * as Schema from "@effect/schema/Schema";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { ActionIcon, Button, NumberInput, Select, TextInput } from "@mantine/core";
-import { pipe } from "fp-ts/function";
 import { useEffect } from "react";
 import { Control, Controller, useFieldArray, UseFieldArrayUpdate, useForm } from "react-hook-form";
 import { schemaResolver } from "shared/effect/Schema";

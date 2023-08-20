@@ -1,11 +1,11 @@
 import { AuthServerPlugin, PrismaStorage } from "@blitzjs/auth";
 import { simpleRolesIsAuthorized } from "@blitzjs/auth";
 import { setupBlitzServer } from "@blitzjs/next";
-import { BlitzLogger } from "blitz";
 import db from "db";
+import { ILogObj, Logger } from "tslog";
 import { authConfig } from "./blitz-client";
 
-export const defaultLogger = BlitzLogger({
+export const logger = new Logger<ILogObj>({
   prettyLogTemplate: "{{logLevelName}}\t[{{name}}]\t",
   type: process.env.NODE_ENV === "production" ? "json" : "pretty",
 });
@@ -18,5 +18,5 @@ export const { gSSP, gSP, api } = setupBlitzServer({
       isAuthorized: simpleRolesIsAuthorized,
     }),
   ],
-  logger: defaultLogger as any,
+  logger,
 });

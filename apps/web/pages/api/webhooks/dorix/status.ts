@@ -1,105 +1,73 @@
+import * as Effect from "@effect/io/Effect";
+import * as Match from "@effect/match";
+import * as Schema from "@effect/schema/Schema";
 import { ORDER_STATUS } from "@integrations/dorix/types";
 import { OrderState } from "database";
-import * as E from "fp-ts/Either";
-import { pipe } from "fp-ts/function";
-import * as TE from "fp-ts/TaskEither";
-import { sendMessage } from "integrations/telegram/sendMessage";
 import { NextApiRequest, NextApiResponse } from "next";
-import { ensureType } from "src/core/helpers/zod";
-import { updateOrder } from "src/orders/helpers/prisma";
-import { Format } from "telegraf";
-import { match, P } from "ts-pattern";
-import { z } from "zod";
+import { Order } from "shared";
+import { Renu } from "src/core/effect";
 
-const DorixSuccess = z.object({
-  endpoint: z.string().url(),
-  action: z.string(),
-  order: z.object({
-    status: z.nativeEnum(ORDER_STATUS),
-    id: z.string(),
-    externalId: z.coerce.number(),
-    source: z.literal("RENU"),
-    metadata: z.record(z.string()),
-    estimatedTime: z.number(),
+const DorixSuccess = Schema.struct({
+  endpoint: Schema.string,
+  action: Schema.string,
+  order: Schema.struct({
+    status: Schema.enums(ORDER_STATUS),
+    id: Schema.string,
+    externalId: Schema.NumberFromString.pipe(Schema.compose(Order.Id)),
+    source: Schema.literal("RENU"),
+    metadata: Schema.record(Schema.string, Schema.string),
+    estimatedTime: Schema.number,
   }),
-  branch: z.object({
-    id: z.string(),
-    name: z.string(),
+  branch: Schema.struct({
+    id: Schema.string,
+    name: Schema.string,
   }),
 });
 
-const DorixFailure = z.object({
-  endpoint: z.string().url(),
-  action: z.string(),
-  order: z.object({
-    status: z.nativeEnum(ORDER_STATUS),
-    externalId: z.coerce.number(),
-    source: z.literal("RENU"),
-    metadata: z.record(z.any()),
+const DorixFailure = Schema.struct({
+  endpoint: Schema.string,
+  action: Schema.string,
+  order: Schema.struct({
+    status: Schema.enums(ORDER_STATUS),
+    externalId: Schema.NumberFromString,
+    source: Schema.literal("RENU"),
+    metadata: Schema.record(Schema.string, Schema.any),
   }),
-  branch: z.object({
-    id: z.string(),
+  branch: Schema.struct({
+    id: Schema.string,
   }),
-  error: z
-    .object({
-      message: z.string(),
-      stack: z.string(),
-    })
-    .optional(),
+  error: Schema.optional(Schema.struct({
+    message: Schema.string,
+    stack: Schema.string,
+  })),
 });
 
-const DorixResponse = z.union([DorixSuccess, DorixFailure]);
+const DorixResponse = Schema.union(
+  DorixSuccess.pipe(Schema.attachPropertySignature("_tag", "DorixSuccess")),
+  DorixFailure.pipe(Schema.attachPropertySignature("_tag", "DorixFailure")),
+);
 
-const ensureSuccess = (response: z.infer<typeof DorixResponse>) =>
-  pipe(
-    response,
-    E.fromPredicate(
-      (r): r is z.infer<typeof DorixSuccess> => !("error" in r),
-      (r) => ({
-        tag: "DorixError",
-        error: new Error((r as z.infer<typeof DorixFailure>).error?.message),
-      }),
-    ),
-  );
+const getNextState = Match.type<Schema.To<typeof DorixSuccess>["order"]["status"]>().pipe(
+  Match.whenOr("FAILED", "UNREACHABLE", _ => OrderState.Cancelled),
+  Match.when("AWAITING_TO_BE_RECEIVED", _ => OrderState.Unconfirmed),
+  Match.orElse(_ => OrderState.Confirmed),
+);
 
-const handler = async (req: NextApiRequest, res: NextApiResponse) =>
-  pipe(
-    req,
-    E.fromPredicate(req => req.method?.toUpperCase() === "POST", () =>
+const handler = (req: NextApiRequest, res: NextApiResponse) =>
+  Effect.succeed(req).pipe(
+    Effect.filterOrFail(req => req.method?.toUpperCase() === "POST", () =>
       new Error("this endpoint only supports POST requests")),
-    E.map((req) =>
-      req.body
+    Effect.map(_ =>
+      _.body
     ),
-    E.chainW(ensureType(DorixResponse)),
-    E.chainW(ensureSuccess),
-    TE.fromEither,
-    TE.chainW((ds) =>
-      updateOrder({
-        where: { id: ds.order.externalId },
-        data: {
-          state: match(ds.order.status)
-            .with(P.union("FAILED", "UNREACHABLE"), () => OrderState.Cancelled)
-            .with("AWAITING_TO_BE_RECEIVED", () => OrderState.Unconfirmed)
-            .otherwise(() => OrderState.Confirmed),
-        },
-      })
-    ),
-    TE.orElseFirstTaskK((e) =>
-      sendMessage(
-        Format.fmt(
-          `Error in dorix callback\n\n`,
-          Format.pre("none")(
-            "error" in e && e.error instanceof Error
-              ? e.error.message
-              : "too complicated for me to unfurl",
-          ),
-        ),
-      )
-    ),
-    TE.bimap(
-      (e) => res.status(500).json(e),
-      () => res.status(200).json({ success: true }),
-    ),
-  )();
+    Effect.flatMap(Schema.parse(DorixResponse)),
+    Effect.filterOrFail(Schema.is(DorixSuccess), _ => _ as Schema.To<typeof DorixFailure>),
+    Effect.flatMap(_ => Order.setOrderState(_.order.externalId, getNextState(_.order.status))),
+    Effect.match({
+      onFailure: (e) => res.status(500).json(e),
+      onSuccess: () => res.status(200).json({ success: true }),
+    }),
+    Renu.runPromise$,
+  );
 
 export default handler;

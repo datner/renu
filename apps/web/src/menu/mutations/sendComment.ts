@@ -1,9 +1,11 @@
 import { resolver } from "@blitzjs/rpc";
-import { sendMessage } from "integrations/telegram/sendMessage";
+import * as Telegram from "integrations/telegram/sendMessage";
+import { Renu } from "src/core/effect";
 import { Format } from "telegraf";
 import { z } from "zod";
 
 export default resolver.pipe(
   resolver.zod(z.object({ comment: z.string() })),
-  ({ comment }) => sendMessage(Format.fmt("A Cusomer sent the following feedback:\n\n", comment))(),
+  ({ comment }) => Telegram.notify(Format.fmt("A Cusomer sent the following feedback:\n\n", comment)),
+  Renu.runPromise$,
 );

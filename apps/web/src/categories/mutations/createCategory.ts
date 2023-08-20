@@ -9,8 +9,7 @@ import { CreateCategory } from "../validations";
 
 export const handler = resolver.pipe(
   Resolver.schema(CreateCategory),
-  Resolver.authorize(),
-  Effect.map(
+  Resolver.map(
     ({ identifier, en, he }) => ({
       identifier,
       content: {
@@ -20,7 +19,8 @@ export const handler = resolver.pipe(
       },
     } satisfies Prisma.CategoryCreateInput),
   ),
-  Resolver.flatMapAuthorized((data, { session }) =>
+  Resolver.authorize(),
+  Resolver.flatMap((data, { session }) =>
     Effect.flatMap(Database, db =>
       Effect.tryPromise({
         try: () =>

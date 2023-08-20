@@ -1,8 +1,8 @@
 import { useMutation } from "@blitzjs/rpc";
 import { Button, Container, LoadingOverlay, Paper, PasswordInput, Stepper, TextInput } from "@mantine/core";
 import { Dropzone, FileWithPath, IMAGE_MIME_TYPE } from "@mantine/dropzone";
-import { pipe } from "fp-ts/function";
-import * as O from "fp-ts/Option";
+import { pipe } from "@effect/data/Function";
+import * as O from "@effect/data/Option";
 import { nanoid } from "nanoid";
 import Image from "next/image";
 import { Suspense, useState } from "react";
@@ -128,7 +128,7 @@ function CreateVenueForm(props: FormProps<z.infer<typeof NoOrgInfo>>) {
         onLoad={() => URL.revokeObjectURL(src)}
       />
     )),
-    O.getOrElseW(() => null),
+    O.getOrElse(() => null),
   );
 
   return (

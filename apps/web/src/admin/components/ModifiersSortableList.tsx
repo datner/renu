@@ -11,13 +11,12 @@ import {
 } from "@dnd-kit/core";
 import { rectSortingStrategy, SortableContext, sortableKeyboardCoordinates, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import { constNull, pipe } from "@effect/data/Function";
+import * as O from "@effect/data/Option";
+import * as A from "@effect/data/ReadonlyArray";
 import { EllipsisVerticalIcon, PlusIcon } from "@heroicons/react/24/outline";
 import { Badge, Card } from "@mantine/core";
-import { useStableO } from "fp-ts-react-stable-hooks";
-import * as A from "fp-ts/Array";
-import { constNull, pipe } from "fp-ts/function";
-import * as O from "fp-ts/Option";
-import { ComponentPropsWithoutRef, ComponentPropsWithRef, forwardRef, PropsWithChildren, Ref } from "react";
+import { ComponentPropsWithoutRef, ComponentPropsWithRef, forwardRef, PropsWithChildren, Ref, useState } from "react";
 import { FieldArrayWithId } from "react-hook-form";
 import { ItemFormSchema } from "../validations/item-form";
 
@@ -147,7 +146,7 @@ type Props = {
 
 export function ModifiersSortableList(props: Props) {
   const { fields, move, onClick, onAddModifier } = props;
-  const [draggedField, setDraggedField] = useStableO<ModifierField>(O.none);
+  const [draggedField, setDraggedField] = useState<O.Option<ModifierField>>(O.none());
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
@@ -167,12 +166,12 @@ export function ModifiersSortableList(props: Props) {
     if (over && active.id !== over.id) {
       const from = pipe(
         fields,
-        A.findIndex((f) => f.id === active.id),
+        A.findFirstIndex((f) => f.id === active.id),
         O.getOrElse(() => -1),
       );
       const to = pipe(
         fields,
-        A.findIndex((f) => f.id === over.id),
+        A.findFirstIndex((f) => f.id === over.id),
         O.getOrElse(() => -1),
       );
       move(from, to);
@@ -191,7 +190,7 @@ export function ModifiersSortableList(props: Props) {
         <ul className="flex flex-col gap-3">
           {pipe(
             fields,
-            A.mapWithIndex((i, f) => (
+            A.map((f, i) => (
               <ListItem key={f.id} position={i}>
                 <SortableModifierCard field={f} onClick={() => onClick(i)} />
               </ListItem>
@@ -203,9 +202,12 @@ export function ModifiersSortableList(props: Props) {
         </ul>
       </SortableContext>
       <DragOverlay>
-        {pipe(
+        {O.match(
           draggedField,
-          O.match(constNull, (field) => <ModifierCard field={field} />),
+          {
+            onNone: constNull,
+            onSome: (field) => <ModifierCard field={field} />,
+          },
         )}
       </DragOverlay>
     </DndContext>

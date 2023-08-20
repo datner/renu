@@ -3,24 +3,23 @@ import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import * as Effect from "@effect/io/Effect";
-import { ModifierEnum } from "db/itemModifierConfig";
+import * as Schema from "@effect/schema/Schema";
 import * as L from "monocle-ts/Lens";
 import { useState } from "react";
 import { useFieldArray, useFormContext } from "react-hook-form";
 import { ModifierField } from "src/items/helpers/form";
-import { ExtrasSchemaInput, OneOfSchemaInput } from "src/items/validations";
 import { match } from "ts-pattern";
 import { ExtrasForm } from "../modifier-forms/ExtrasForm";
 import { OneOfForm } from "../modifier-forms/OneOfForm";
-import { ItemFormSchema, ModifierSchema } from "../validations/item-form";
+import { ItemFormSchema, ModifierConfigSchema, ModifierSchema } from "../validations/item-form";
 import { ModifiersSortableList } from "./ModifiersSortableList";
 import { NewModifierModal } from "./NewModiferModal";
 
 const getInitialModifierValues = (mod: {
-  _tag: ModifierEnum;
-}): OneOfSchemaInput | ExtrasSchemaInput => {
+  _tag: "oneOf" | "extras";
+}): Schema.From<typeof ModifierConfigSchema> => {
   switch (mod._tag) {
-    case ModifierEnum.enum.oneOf:
+    case "oneOf":
       return {
         _tag: "oneOf",
         identifier: "",
@@ -40,7 +39,7 @@ const getInitialModifierValues = (mod: {
           managementRepresentation: null,
         }),
       };
-    case ModifierEnum.enum.extras:
+    case "extras":
       return {
         _tag: "extras",
         identifier: "",
@@ -83,7 +82,7 @@ export function ModifierPanel() {
   };
 
   const handleAddModifier = pipe(
-    Effect.promise(() => modal.show() as Promise<{ _tag: ModifierEnum } | undefined>),
+    Effect.promise(() => modal.show() as Promise<{ _tag: "oneOf" | "extras" } | undefined>),
     Effect.flatMap(O.fromNullable),
     Effect.map(getInitialModifierValues),
     Effect.bindTo("config"),

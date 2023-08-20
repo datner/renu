@@ -12,7 +12,6 @@ import { useCallback, useMemo, useState } from "react";
 import { Blurhash } from "react-blurhash";
 import { Number } from "shared/schema";
 import { descriptionFor, priceShekel, titleFor } from "src/core/helpers/content";
-import { clamp } from "src/core/helpers/number";
 import { useLocale } from "src/core/hooks/useLocale";
 import * as Order from "../hooks/useOrder";
 import * as _Menu from "../schema";
@@ -27,8 +26,8 @@ const ImageBasis = {
 
 const THREE_QUATERS_PROGRESS = ImageBasis.Min * 1.5;
 
-const clampImgHeight = clamp(ImageBasis.Min, ImageBasis.Max);
-const clampBinary = clamp(0, 1);
+const clampImgHeight = N.clamp(ImageBasis.Min, ImageBasis.Max);
+const clampBinary = N.clamp(0, 1);
 
 export function ItemModal() {
   const [{ activeItem }, dispatch] = useOrderContext();

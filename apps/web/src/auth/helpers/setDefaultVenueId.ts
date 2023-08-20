@@ -1,8 +1,8 @@
-import { AuthenticatedMiddlewareCtx } from "blitz";
+import { AuthenticatedCtx } from "blitz";
 
 export function setDefaultVenueId<T extends object>(
   input: T,
-  { session }: AuthenticatedMiddlewareCtx,
+  { session }: AuthenticatedCtx,
 ): T & { venueId: number } {
   if ("venueId" in input) {
     // Pass through the input

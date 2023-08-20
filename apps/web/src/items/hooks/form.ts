@@ -13,7 +13,6 @@ import { Common } from "shared/schema";
 import getUploadUrl from "src/admin/mutations/getUploadUrl";
 import { ItemFormSchema } from "src/admin/validations/item-form";
 import getCurrentVenueCategories from "src/categories/queries/getCurrentVenueCategories";
-import createDbItem from "../mutations/createItem";
 import updateItem from "../mutations/updateItem";
 import getItem from "../queries/getItem";
 import getItemNew from "../queries/getItemNew";

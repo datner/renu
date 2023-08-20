@@ -1,5 +1,8 @@
 import { Routes } from "@blitzjs/next";
 import { useMutation, useQuery } from "@blitzjs/rpc";
+import { pipe } from "@effect/data/Function";
+import * as O from "@effect/data/Option";
+import * as A from "@effect/data/ReadonlyArray";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import {
   Alert,
@@ -13,9 +16,6 @@ import {
   TextInput,
 } from "@mantine/core";
 import { Prisma } from "database";
-import * as A from "fp-ts/Array";
-import { pipe } from "fp-ts/function";
-import * as O from "fp-ts/Option";
 import { forwardRef, Suspense, useDeferredValue } from "react";
 import { useController } from "react-hook-form";
 import { useZodForm } from "src/core/hooks/useZodForm";

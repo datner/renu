@@ -1,18 +1,18 @@
 import { useQuery } from "@blitzjs/rpc";
 import { useModal } from "@ebay/nice-modal-react";
+import { pipe } from "@effect/data/Function";
+import * as O from "@effect/data/Option";
+import * as A from "@effect/data/ReadonlyArray";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { Loader, Select } from "@mantine/core";
 import { Category } from "database";
-import * as A from "fp-ts/Array";
-import { pipe } from "fp-ts/function";
-import * as O from "fp-ts/Option";
 import { useTranslations } from "next-intl";
 import { useMemo } from "react";
 import { useController } from "react-hook-form";
 import getCurrentVenueCategories from "src/categories/queries/getCurrentVenueCategories";
 import { titleFor } from "src/core/helpers/content";
 import { useLocale } from "src/core/hooks/useLocale";
-import { ItemSchema } from "src/items/validations";
+import { ItemFormSchema } from "../validations/item-form";
 import { CreateCategoryModal } from "./CreateCategoryModal";
 
 export function FormCategoryCombobox() {
@@ -21,13 +21,13 @@ export function FormCategoryCombobox() {
   const t = useTranslations("admin.Components.FormCategoryCombobox");
   const [queryBag, { isRefetching }] = useQuery(getCurrentVenueCategories, {});
 
-  const { field } = useController<ItemSchema, "categoryId">({
+  const { field } = useController<ItemFormSchema, "categoryId">({
     name: "categoryId",
     defaultValue: pipe(
       queryBag.categories,
       A.head,
       O.map((c) => c.id),
-      O.getOrElseW(() => undefined),
+      O.getOrUndefined,
     ),
   });
 

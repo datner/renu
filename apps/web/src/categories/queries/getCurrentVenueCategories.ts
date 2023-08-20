@@ -21,7 +21,7 @@ const Max250Int = pipe(
 const handler = resolver.pipe(
   ({ skip = 0, take = 50, ..._ }: GetCategoriesArgs) => Effect.succeed({ skip, take, ..._ }),
   Resolver.authorize(),
-  Resolver.flatMapAuthorized(Resolver.esnureOrgVenueMatch),
+  Resolver.flatMap(Resolver.esnureOrgVenueMatch),
   Resolver.map(({ where, ..._ }, ctx) => ({
     ..._,
     where: {

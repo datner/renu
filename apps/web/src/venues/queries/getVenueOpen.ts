@@ -1,7 +1,7 @@
 import { resolver } from "@blitzjs/rpc";
+import { pipe } from "@effect/data/Function";
 import * as Effect from "@effect/io/Effect";
 import db from "db";
-import { pipe } from "fp-ts/function";
 import { prismaError } from "src/core/helpers/prisma";
 import { belongsToOrg, isVenue } from "../helpers/queryFilters";
 

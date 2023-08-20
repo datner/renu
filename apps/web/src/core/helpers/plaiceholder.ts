@@ -1,7 +1,6 @@
 import * as Data from "@effect/data/Data";
 import * as Effect from "@effect/io/Effect";
 import { Http } from "@integrations/core";
-import { pipe } from "fp-ts/function";
 
 interface GetBlurHashError extends Data.Case {
   readonly _tag: "GetBlurHashError";
@@ -16,14 +15,18 @@ interface EmptyImageError extends Data.Case {
 const EmptyImageError = Data.tagged<EmptyImageError>("EmptyImageError");
 
 export const getBlurHash = (image: string) =>
-  pipe(
-    Effect.succeed(image),
+  Effect.succeed(image).pipe(
     Effect.filterOrFail(
       // TODO: Find where the null leak is coming from
       (img) => typeof img === "string" && img !== "",
       () => EmptyImageError(),
     ),
-    Effect.flatMap((img) => Http.request(`${img}?fm=blurhash&w=30`)),
+    Effect.flatMap((img) =>
+      Effect.promise(
+        signal => fetch(`https://renu.imgix.net${img}?fm=blurhash&w=30`, { signal }),
+      )
+    ),
+    // Effect.flatMap((img) => Http.request(`${img}?fm=blurhash&w=30`)),
     Effect.flatMap(Http.toText),
     Effect.catchTag("EmptyImageError", (_) => Effect.succeed(null)),
     Effect.mapError((error) => GetBlurHashError({ mesasge: "Could not get blurhash", error })),
@@ -32,14 +35,3 @@ export const getBlurHash = (image: string) =>
     }),
   );
 
-// TODO: remove or restore. Just don't keep
-// export async function getBlurDataUrl(image?: string) {
-//   if (!image) return undefined;
-//
-//   console.log("Creating new plaiceholder");
-//   const url = new URL(`https://renu.imgix.net/${image}`);
-//   url.searchParams.append("fm", "blurhash"); // quality = 5
-//   url.searchParams.append("auto", "compress");
-//   const { base64: blurDataUrl } = await getPlaiceholder(url.toString(), { size: 10 });
-//   return blurDataUrl;
-// }

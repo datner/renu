@@ -1,10 +1,10 @@
-import { AuthenticatedMiddlewareCtx } from "blitz";
+import { AuthenticatedCtx } from "blitz";
 import { GlobalRole, Prisma } from "db";
 import { assert } from "./assert";
 
 export function setDefaultOrganizationId<T extends object>(
   input: T,
-  { session }: AuthenticatedMiddlewareCtx,
+  { session }: AuthenticatedCtx,
 ): T & { organizationId: Prisma.IntFilter | number } {
   assert(session.organization, "Missing session.organization in setDefaultOrganizationId");
   if ("organizationId" in input) {
@@ -21,7 +21,7 @@ export function setDefaultOrganizationId<T extends object>(
 
 export function setDefaultOrganizationIdNoFilter<T extends object>(
   input: T,
-  { session }: AuthenticatedMiddlewareCtx,
+  { session }: AuthenticatedCtx,
 ): T & { organizationId: number } {
   assert(session.organization, "Missing session.organization in setDefaultOrganizationId");
   if ("organizationId" in input) {

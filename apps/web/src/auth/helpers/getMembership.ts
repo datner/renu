@@ -1,9 +1,8 @@
+import * as Either from "@effect/data/Either";
+import { pipe } from "@effect/data/Function";
+import * as A from "@effect/data/ReadonlyArray";
 import { NotFoundError } from "blitz";
 import { Affiliation, GlobalRole, Membership, Organization, Venue } from "db";
-import { head } from "fp-ts/Array";
-import * as E from "fp-ts/Either";
-import { pipe } from "fp-ts/function";
-import { IO } from "fp-ts/lib/IO";
 
 export const getMembership = (user: {
   id: number;
@@ -12,17 +11,14 @@ export const getMembership = (user: {
     affiliations: (Affiliation & { Venue: Venue })[];
     organization: Organization;
   })[];
-}) => {
-  const noOrg: IO<NotFoundError> = () => new NotFoundError(`User ${user.id} is not associated with any organizations`);
-
-  const noVenue: IO<NotFoundError> = () => new NotFoundError(`User ${user.id} is not affiliated with any venues`);
-
-  return pipe(
-    head(user.membership),
-    E.fromOption(noOrg),
-    E.bind(
-      "affiliation",
-      E.fromOptionK(noVenue)(({ affiliations }) => head(affiliations)),
+}) =>
+  pipe(
+    A.head(user.membership),
+    Either.fromOption(() => new NotFoundError(`User ${user.id} is not associated with any organizations`)),
+    Either.flatMap(({ affiliations, ...rest }) =>
+      A.head(affiliations).pipe(
+        Either.fromOption(() => new NotFoundError(`User ${user.id} is not affiliated with any venues`)),
+        Either.mapRight(affiliation => ({ ...rest, affiliation })),
+      )
     ),
   );
-};

@@ -1,5 +1,8 @@
 import { Routes } from "@blitzjs/next";
 import { getQueryClient, useMutation, useQuery } from "@blitzjs/rpc";
+import * as Data from "@effect/data/Data";
+import { pipe } from "@effect/data/Function";
+import * as A from "@effect/data/ReadonlyArray";
 import {
   Autocomplete,
   AutocompleteProps,
@@ -12,12 +15,6 @@ import {
   SegmentedControl,
 } from "@mantine/core";
 import { Prisma } from "database";
-import * as A from "fp-ts/Array";
-import * as Eq from "fp-ts/Eq";
-import { pipe } from "fp-ts/function";
-import * as NA from "fp-ts/NonEmptyArray";
-import * as O from "fp-ts/Option";
-import * as S from "fp-ts/string";
 import { useRouter } from "next/router";
 import { forwardRef, ForwardRefExoticComponent, RefAttributes, Suspense, useMemo } from "react";
 import { useController } from "react-hook-form";
@@ -31,11 +28,6 @@ import { z } from "zod";
  * You can delete everything in here and start from scratch if you like.
  */
 
-const eqThing = Eq.struct({
-  group: S.Eq,
-  value: S.Eq,
-});
-
 const UserAutocomplete: ForwardRefExoticComponent<
   & Omit<AutocompleteProps, "data">
   & RefAttributes<HTMLInputElement>
@@ -47,29 +39,23 @@ const UserAutocomplete: ForwardRefExoticComponent<
 
   const data = useMemo(() => {
     return pipe(
-      NA.fromArray(users),
-      O.map((users) =>
+      users,
+      A.flatMap((u) =>
         pipe(
-          users,
-          A.chain((u) =>
-            pipe(
-              u.membership,
-              groupBy === "venue"
-                ? A.chain((m) =>
-                  pipe(
-                    m.affiliations,
-                    A.map((a) => a.Venue.identifier),
-                  )
-                )
-                : A.map((m) => m.organization.identifier),
-              A.map((group) => ({ group, user: u })),
+          u.membership,
+          groupBy === "venue"
+            ? A.flatMap((m) =>
+              pipe(
+                m.affiliations,
+                A.map((a) => a.Venue.identifier),
+              )
             )
-          ),
-          A.map((datum) => ({ ...datum, value: datum.user.email })),
-          A.uniq(eqThing),
+            : A.map((m) => m.organization.identifier),
+          A.map((group) => Data.struct({ group, user: u })),
         )
       ),
-      O.getOrElseW(() => []),
+      A.map((datum) => Data.struct({ ...datum, value: datum.user.email })),
+      A.dedupe,
     );
   }, [groupBy, users]);
 

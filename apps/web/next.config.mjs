@@ -6,7 +6,10 @@ import { Locale } from "database";
  */
 const config = {
   reactStrictMode: true,
-  transpilePackages: ["ui", "@integrations/*", "shared"],
+  webpack: {
+    ignored: /node_modules/
+  },
+  transpilePackages: ["ui", "@integrations/*", "shared", "effect-tslog"],
   i18n: {
     locales: Object.values(Locale),
     defaultLocale: Locale.en,

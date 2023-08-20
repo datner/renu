@@ -8,7 +8,7 @@
     "react-library.json"
   ],
   "dependencies": {
-    "@effect/data": "0.17.1",
-    "@effect/schema": "0.33.0"
+    "@effect/data": "0.17.5",
+    "@effect/schema": "0.33.1"
   }
 }

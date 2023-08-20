@@ -1,5 +1,4 @@
-import db, { Prisma, PrismaClient } from "db";
-import * as TE from "fp-ts/TaskEither";
+import { Prisma } from "db";
 import { match, P } from "ts-pattern";
 
 export interface PrismaErrorOptions extends ErrorOptions {
@@ -46,36 +45,5 @@ export const prismaError = (resource: Prisma.ModelName) => (cause: unknown) => {
       : undefined,
   });
 };
-
-export const getVenueById = <Include extends Prisma.VenueInclude>(include: Include) => (id: number) =>
-  TE.tryCatch(
-    () =>
-      db.venue.findUniqueOrThrow({
-        where: { id },
-        include,
-      }),
-    prismaNotFound,
-  );
-
-type PrismaClientDelegates = {
-  [K in keyof PrismaClient]: K extends `\$${string}` ? never : K;
-}[keyof PrismaClient];
-
-type PrismaDelegates = PrismaClient[PrismaClientDelegates];
-
-export const delegate = <Delegate extends PrismaDelegates>(d: Delegate) =>
-<A extends unknown[], B>(
-  f: (d: Delegate) => (...opts: A) => Prisma.PrismaPromise<B>,
-) => TE.tryCatchK(f(d), prismaError("UNKNOWN" as Prisma.ModelName));
-
-export const getVenueByIdentifier = <Include extends Prisma.VenueInclude>(include?: Include) => (identifier: string) =>
-  TE.tryCatch(
-    () =>
-      db.venue.findUniqueOrThrow({
-        where: { identifier },
-        include,
-      }),
-    prismaNotFound,
-  );
 
 export type QueryFilter<T> = (...args: any[]) => T;

@@ -1,21 +1,23 @@
 import { resolver } from "@blitzjs/rpc";
-import db from "db";
-import { pipe } from "fp-ts/lib/function";
-import * as TE from "fp-ts/TaskEither";
-import { setDefaultOrganizationId } from "src/auth/helpers/setDefaultOrganizationId";
+import * as Effect from "@effect/io/Effect";
+import * as Schema from "@effect/schema/Schema";
+import { Venue } from "shared";
+import { Resolver } from "src/auth";
 import { prismaNotFound } from "src/core/helpers/prisma";
-import { z } from "zod";
 
-const ChangeVenue = z.number();
+const ChangeVenue = Schema.number;
 
 export default resolver.pipe(
-  resolver.zod(ChangeVenue),
-  resolver.authorize(),
-  (id) => ({ id }),
-  setDefaultOrganizationId,
-  (where, ctx) =>
-    pipe(
-      TE.tryCatch(() => db.venue.findFirstOrThrow({ where }), prismaNotFound),
-      TE.chainTaskK((venue) => () => ctx.session.$setPublicData({ venue: venue })),
-    )(),
+  Resolver.schema(ChangeVenue),
+  Resolver.authorize(),
+  Resolver.flatMap(Venue.getById),
+  Resolver.flatMap((_, ctx) =>
+    Effect.succeed(_).pipe(
+      Effect.filterOrFail(
+        _ => _.organizationId === ctx.session.orgId,
+        () => prismaNotFound("Venue does not belong to org"),
+      ),
+      Effect.flatMap(venue => Effect.promise(() => ctx.session.$setPublicData({ venue }))),
+    )
+  ),
 );

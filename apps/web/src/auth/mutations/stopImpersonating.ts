@@ -1,67 +1,57 @@
 import { resolver } from "@blitzjs/rpc";
+import { absurd } from "@effect/data/Function";
+import * as A from "@effect/data/ReadonlyArray";
+import * as Effect from "@effect/io/Effect";
+import * as Schema from "@effect/schema/Schema";
 import { NotFoundError } from "blitz";
-import db, { GlobalRole } from "db";
-import { constVoid, pipe } from "fp-ts/lib/function";
-import * as T from "fp-ts/Task";
-import * as TE from "fp-ts/TaskEither";
-import { getMembership } from "../helpers/getMembership";
+import { GlobalRole } from "db";
+import { Database } from "shared";
+import { Resolver } from "src/auth";
+import { Renu } from "src/core/effect";
 
-export default resolver.pipe(resolver.authorize(), async (_, ctx) => {
-  const userId = ctx.session.impersonatingFromUserId;
-
-  return pipe(
-    userId,
-    TE.fromNullable(() => "Already not impersonating anyone!"),
-    TE.chainW(
-      TE.tryCatchK(
-        (id) =>
-          db.user.findUniqueOrThrow({
-            where: { id },
-            include: {
-              membership: {
-                include: { affiliations: { include: { Venue: true } }, organization: true },
-              },
+const stopImpersonation = resolver.pipe(
+  Resolver.schema(Schema.void),
+  Resolver.authorize(),
+  Resolver.flatMap((_, ctx) => Effect.fromNullable(() => ctx.session.impersonatingFromUserId)),
+  Resolver.flatMap(Effect.serviceFunctionEffect(Database.Database, db => id =>
+    Effect.tryPromise({
+      try: () =>
+        db.user.findUniqueOrThrow({
+          where: { id },
+          include: {
+            membership: {
+              include: { affiliations: { include: { Venue: true } }, organization: true },
             },
-          }),
-        () => new NotFoundError(`Could not find user with id ${userId}`),
-      ),
-    ),
-    TE.chainW((user) =>
-      user.role === GlobalRole.SUPER
-        ? pipe(
-          TE.of(user),
-          TE.chainFirstTaskK(
-            (u) => () =>
-              ctx.session.$create({
-                userId: u.id,
-                roles: [u.role],
-                orgId: -1,
-              }),
-          ),
-        )
-        : pipe(
-          TE.of(user),
-          TE.bindTo("user"),
-          TE.bindW("membership", ({ user }) => TE.fromEither(getMembership(user))),
-          TE.chainFirstTaskK(
-            ({ membership: m, user }) => () =>
-              ctx.session.$create({
-                userId: user.id,
-                organization: m.organization,
-                venue: m.affiliation.Venue,
-                roles: [user.role, m.role],
-                orgId: m.organizationId,
-              }),
-          ),
-          TE.map(({ user }) => user),
-        )
-    ),
-    TE.getOrElseW((e) => {
-      if (typeof e === "string") {
-        console.log("You're not impersonating anyone!");
-        return T.of(constVoid());
-      }
-      throw e;
-    }),
-  )();
-});
+          },
+        }),
+      catch: () => new NotFoundError(`Could not find user with id ${id}`),
+    }))),
+  Resolver.flatMap((_, ctx) =>
+    Effect.if(
+      _.role === GlobalRole.SUPER,
+      {
+        onTrue: Effect.promise(() =>
+          ctx.session.$create({
+            userId: _.id,
+            roles: [_.role],
+            orgId: _.membership[0]?.organizationId ?? -1,
+          })
+        ),
+        onFalse: Effect.tryMapPromise(A.head(_.membership), {
+          try: (m) =>
+            ctx.session.$create({
+              userId: _.id,
+              organization: m.organization,
+              venue: m.affiliations[0]?.Venue,
+              roles: [_.role, m.role],
+              orgId: m.organizationId,
+            }),
+          catch: () => absurd,
+        }),
+      },
+    )
+  ),
+  Renu.runPromise$,
+);
+
+export default stopImpersonation;

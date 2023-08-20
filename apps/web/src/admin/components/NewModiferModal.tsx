@@ -1,8 +1,9 @@
 import { create, useModal } from "@ebay/nice-modal-react";
 import clsx from "clsx";
-import { ModifierEnum } from "db/itemModifierConfig";
 import { ComponentPropsWithoutRef } from "react";
 import { Modal, renuModal } from "./Modal";
+
+type ModifierEnum = "oneOf" | "extras";
 
 export const NewModifierModal = create(() => {
   const modal = useModal();
@@ -19,13 +20,13 @@ export const NewModifierModal = create(() => {
         <div>pick a modifier type</div>
         <div className="my-3 grid grid-cols-4 gap-4">
           <ModifierBox
-            onClick={handleModifierType(ModifierEnum.enum.oneOf)}
+            onClick={handleModifierType("oneOf")}
             className="border-pink-300 shadow-pink-300/50 bg-pink-50 text-pink-600"
           >
             One Of
           </ModifierBox>
           <ModifierBox
-            onClick={handleModifierType(ModifierEnum.enum.extras)}
+            onClick={handleModifierType("extras")}
             className="border-blue-300 shadow-blue-300/50 bg-blue-50 text-blue-600"
           >
             Extras

@@ -1,13 +1,14 @@
 import { useRouterQuery } from "@blitzjs/next";
+import { pipe } from "@effect/data/Function";
+import * as O from "@effect/data/Option";
+import * as Predicate from "@effect/data/Predicate";
 import { Container } from "@mantine/core";
-import { pipe } from "fp-ts/function";
-import * as O from "fp-ts/Option";
 
 export default function Closed() {
   const venue = pipe(
     useRouterQuery()["venue"],
     O.fromNullable,
-    O.chain((v) => (typeof v === "string" ? O.some(v) : O.none)),
+    O.filter(Predicate.isString),
     O.getOrElse(() => "the venue"),
   );
 

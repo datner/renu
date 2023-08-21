@@ -10,7 +10,7 @@ import { Resolver } from "src/auth";
 import { Renu } from "src/core/effect";
 
 const stopImpersonation = resolver.pipe(
-  Resolver.schema(Schema.void),
+  Resolver.schema(Schema.null),
   Resolver.authorize(),
   Resolver.flatMap((_, ctx) => Effect.fromNullable(() => ctx.session.impersonatingFromUserId)),
   Resolver.flatMap(Effect.serviceFunctionEffect(Database.Database, db => id =>

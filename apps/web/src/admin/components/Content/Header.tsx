@@ -50,7 +50,12 @@ export default function PhoneModal(props: PhoneModalProps) {
                 <Dialog.Panel className="mockup-phone transition-all">
                   <div className="camera"></div>
                   <div className="display bg-white pt-7">
-                    <iframe className="artboard phone-1" src={`https://renu.menu/kiosk/${session.venue.identifier}`} />
+                    {session.venue && (
+                      <iframe
+                        className="artboard phone-1"
+                        src={`https://renu.menu/kiosk/${session.venue.identifier}`}
+                      />
+                    )}
                   </div>
                 </Dialog.Panel>
               </Transition.Child>

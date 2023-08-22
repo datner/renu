@@ -3,6 +3,7 @@ import * as RR from "@effect/data/ReadonlyRecord";
 import * as Schema from "@effect/schema/Schema";
 import { Category, ModifierConfig } from "shared";
 import { Common, Number } from "shared/schema";
+import { Slug } from "shared/schema/common";
 
 Common.Content;
 const Content_ = Schema.struct({
@@ -87,15 +88,12 @@ export const ItemFormSchema = Schema.struct({
 });
 export interface ItemFormSchema extends Schema.From<typeof ItemFormSchema> {}
 
-export const CreateItemPayload = pipe(
+export const UpsertItemPayload = pipe(
   ItemFormSchema,
   Schema.omit("imageFile", "image"),
-  Schema.extend(Schema.struct({ image: Schema.string })),
+  Schema.extend(Schema.struct({
+    newIdentifier: Schema.optional(Slug),
+    image: Schema.string,
+  })),
 );
-export interface CreateItemPayload extends Schema.From<typeof CreateItemPayload> {}
-
-export const UpdateItemPayload = pipe(
-  CreateItemPayload,
-  Schema.extend(Schema.struct({ id: Schema.number })),
-);
-export interface UpdateItemPayload extends Schema.From<typeof UpdateItemPayload> {}
+export interface UpsertItemPayload extends Schema.From<typeof UpsertItemPayload> {}

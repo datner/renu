@@ -1,7 +1,6 @@
 import { useQuery } from "@blitzjs/rpc";
 import { useModal } from "@ebay/nice-modal-react";
 import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
 import * as A from "@effect/data/ReadonlyArray";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
 import { Loader, Select } from "@mantine/core";
@@ -23,12 +22,6 @@ export function FormCategoryCombobox() {
 
   const { field } = useController<ItemFormSchema, "categoryId">({
     name: "categoryId",
-    defaultValue: pipe(
-      queryBag.categories,
-      A.head,
-      O.map((c) => c.id),
-      O.getOrUndefined,
-    ),
   });
 
   const title = useMemo(() => titleFor(locale), [locale]);

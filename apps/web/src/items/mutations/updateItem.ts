@@ -2,27 +2,33 @@ import { resolver } from "@blitzjs/rpc";
 import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
 import * as TreeFormatter from "@effect/schema/TreeFormatter";
-import db, { Organization } from "db";
-import { UpdateItemPayload } from "src/admin/validations/item-form";
+import db from "db";
+import { UpsertItemPayload } from "src/admin/validations/item-form";
 import { Resolver } from "src/auth";
 import * as Renu from "src/core/effect/runtime";
 import { getBlurHash } from "src/core/helpers/plaiceholder";
 import { prismaError } from "src/core/helpers/prisma";
+import { inspect } from "util";
 import { FullItem, toFullItem } from "../queries/getItemNew";
 
 export default resolver.pipe(
-  Resolver.schema(UpdateItemPayload),
-  Effect.tap((it) => Effect.log("getting item with id " + it.id)),
+  Resolver.schema(UpsertItemPayload),
+  Effect.tap((it) => Effect.log("Upserting item " + it.identifier)),
   Resolver.authorize(),
   Resolver.flatMap((input, ctx) =>
     Effect.tryPromise({
       try: () =>
         db.$transaction(async tx => {
           const item = await tx.item.upsert({
-            where: { id: input.id, venueId: ctx.session.venue.id },
+            where: {
+              organizationId_identifier: {
+                identifier: input.identifier,
+                organizationId: ctx.session.organization.id,
+              },
+            },
             update: {
               image: input.image,
-              identifier: input.identifier,
+              identifier: input.newIdentifier,
               price: input.price,
               category: { connect: { id: input.categoryId } },
             },
@@ -31,6 +37,8 @@ export default resolver.pipe(
               identifier: input.identifier,
               price: input.price,
               category: { connect: { id: input.categoryId } },
+              Venue: { connect: { id: ctx.session.venue.id } },
+              organizationId: ctx.session.organization.id,
             },
             include: {
               categoryItems: true,
@@ -42,24 +50,32 @@ export default resolver.pipe(
 
           for (const { locale, description, name } of input.content) {
             const id = item.content.find(_ => _.locale === locale)?.id;
-            ops.push(tx.itemI18L.upsert({
-              where: { id, locale },
-              create: { name, description, locale, item: { connect: { id: input.id } } },
-              update: { name, description },
-            }));
+            if (id) {
+              ops.push(tx.itemI18L.update({
+                where: { id, locale },
+                data: { name, description },
+              }));
+            } else {
+              ops.push(tx.itemI18L.create({
+                data: { name, description, locale, item: { connect: { id: item.id } } },
+              }));
+            }
           }
 
           const categoryItem = item.categoryItems.find(_ => _.categoryId === item.categoryId);
+          const menuCategory = await tx.categoryItem.count({ where: { categoryId: item.categoryId } });
           if (categoryItem) {
-            const menuCategory = await tx.categoryItem.count({ where: { categoryId: item.categoryId } });
-            ops.push(tx.categoryItem.upsert({
+            ops.push(tx.categoryItem.update({
               where: { id: categoryItem.id },
-              update: {
-                Category: { connect: { id: input.categoryId } },
+              data: {
+                Category: { connect: { id: item.categoryId } },
               },
-              create: {
-                Category: { connect: { id: input.categoryId } },
-                Item: { connect: { id: input.id } },
+            }));
+          } else {
+            ops.push(tx.categoryItem.create({
+              data: {
+                Category: { connect: { id: item.categoryId } },
+                Item: { connect: { id: item.id } },
                 position: menuCategory,
               },
             }));
@@ -82,18 +98,23 @@ export default resolver.pipe(
                 default: i === Number(o),
               }));
             }
-            ops.push(tx.itemModifier.upsert({
-              where: { id: mod.modifierId },
-              update: {
-                position: i + 1,
-                config,
-              },
-              create: {
-                position: i + 1,
-                item: { connect: { id: input.id } },
-                config,
-              },
-            }));
+            if (mod.modifierId) {
+              ops.push(tx.itemModifier.update({
+                where: { id: mod.modifierId },
+                data: {
+                  position: i + 1,
+                  config,
+                },
+              }));
+            } else {
+              ops.push(tx.itemModifier.create({
+                data: {
+                  position: i + 1,
+                  item: { connect: { id: item.id } },
+                  config,
+                },
+              }));
+            }
           }
 
           if (item.image !== input.image) {
@@ -110,6 +131,8 @@ export default resolver.pipe(
       catch: prismaError("Item"),
     })
   ),
+  Effect.tapErrorTag("PrismaError", e => Effect.sync(() => console.log(inspect(e.cause)))),
+  Effect.tapErrorTag("PrismaError", e => Effect.sync(() => console.log(e.cause))),
   Effect.flatMap(Schema.decode(toFullItem)),
   Effect.flatMap(Schema.encode(FullItem)),
   Effect.catchTag("ParseError", _ => Effect.fail(TreeFormatter.formatErrors(_.errors))),

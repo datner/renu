@@ -44,7 +44,7 @@ export function FormDropzone() {
       </div>
 
       <div className="mt-2 relative grow">
-        {image.field.value && (
+        {image.field.value?.src && (
           <Image
             className="object-cover"
             unoptimized={fieldState.isDirty}

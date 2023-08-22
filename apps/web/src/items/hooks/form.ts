@@ -104,7 +104,9 @@ const useUpdate = (identifier: string) => {
       Effect.flatMap(O.fromNullable),
       Effect.flatMap(uploadImage(data.identifier)),
       Effect.catchAll(() => Effect.succeed(data.image.src ?? "")),
-      Effect.flatMap((image) => Effect.promise(() => invoke(updateItem, { id: item.id, ...data, image }))),
+      Effect.flatMap((image) =>
+        Effect.promise(() => invoke(updateItem, { ...data, newIdentifier: data.identifier, identifier, image }))
+      ),
       Effect.tap((item) =>
         Effect.all([
           // @ts-expect-error the types here are wrong. They use the select type instead of data type

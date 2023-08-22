@@ -174,6 +174,7 @@ export function PayPlusOrderModal(props: Props) {
             </button>
           </div>
         </div>
+        <LazyPhoneModal />
       </Modal>
       <Modal
         open={payment._tag === "Open"}
@@ -198,7 +199,6 @@ export function PayPlusOrderModal(props: Props) {
       <Suspense fallback={null}>
         {existingOrder && <WaitForPayment id={existingOrder.id} />}
       </Suspense>
-      <LazyPhoneModal />
     </>
   );
 }

@@ -93,6 +93,7 @@ model Affiliation {
 
 model Venue {
   id                    Int                    @id @default(autoincrement())
+  cuid                  String?                @unique @default(cuid())
   identifier            String                 @unique
   logo                  String
   createdAt             DateTime               @default(now())
@@ -305,6 +306,7 @@ model ShortenedUrl {
 
 model Order {
   id              Int         @id @default(autoincrement())
+  cuid            String?     @unique @default(cuid())
   venue           Venue       @relation(fields: [venueId], references: [id])
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @default(now()) @updatedAt
@@ -340,6 +342,13 @@ model OrderItemModifier {
   amount         Int
   price          Int
   referencedIn   OrderItem[]
+}
+
+model ApiKey {
+  id             String  @id @default(cuid())
+  hash           String  @unique
+  active         Boolean @default(true)
+  associatedWith String
 }
 
 enum TokenType {

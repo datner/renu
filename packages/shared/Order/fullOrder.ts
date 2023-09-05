@@ -52,11 +52,10 @@ export const FullOrder = Schema.transformResult(
   pipe(Schema.to(Order.Schema), Schema.extend(Schema.struct({ items: Schema.array(OrderItem) }))),
   (id) =>
     pipe(
-      Effect.zip(
+      Effect.all([
         Effect.flatMap(OrderRequest.getById(id), Schema.decode(Order.Schema)),
         Effect.flatMap(OrderRequest.getItems(id), Schema.decode(Schema.array(OrderItem))),
-        { concurrent: true },
-      ),
+      ], { batching: true }),
       Effect.map(([order, items]) => ({ ...order, items })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
       accessing(Database),

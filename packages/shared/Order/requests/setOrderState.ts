@@ -9,12 +9,12 @@ import * as Order from "../order";
 export class SetOrderStateError extends Data.TaggedClass("SetOrderStateError")<{ error: unknown }> {}
 
 export interface SetOrderState extends Request.Request<SetOrderStateError, Models.Order> {
-  readonly _tag: "SetOrderState";
+  readonly _tag: "Order.SetOrderState";
   readonly id: Order.Id;
   readonly state: Models.OrderState;
 }
 
-export const SetOrderState = Request.tagged<SetOrderState>("SetOrderState");
+export const SetOrderState = Request.tagged<SetOrderState>("Order.SetOrderState");
 
 export const SetOrderStateResolver = RequestResolver.contextFromEffect(
   RequestResolver.fromFunctionEffect(

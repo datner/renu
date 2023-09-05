@@ -1,5 +1,5 @@
 import * as S from "@effect/schema/Schema";
-import * as Item from "../Item/item";
+import * as _Item from "../Item/item";
 import * as Common from "../schema/common";
 import * as Number from "../schema/number";
 import * as Order from "./order";
@@ -7,9 +7,19 @@ import * as Order from "./order";
 export const Id = Common.Id("OrderItemId");
 export type Id = S.To<typeof Id>;
 
+export class Item extends S.Class({
+  id: Id,
+  itemId: _Item.Id,
+  price: Number.Price,
+  quantity: Number.Amount,
+  comment: S.string,
+  name: S.string,
+  orderId: Order.Id,
+}) {}
+
 export const Schema = S.struct({
   id: Id,
-  itemId: Item.Id,
+  itemId: _Item.Id,
   price: Number.Price,
   quantity: Number.Amount,
   comment: S.string,

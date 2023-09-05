@@ -1,4 +1,4 @@
-import { identity, pipe } from "@effect/data/Function";
+import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
 import * as S from "@effect/data/String";
 import * as Schema from "@effect/schema/Schema";
@@ -36,7 +36,7 @@ export const Item = Schema.struct({
   categoryId: Category.Id,
   restaurantId: Schema.unknown,
   venueId: Schema.optionFromNullable(Venue.Id),
-  managementRepresentation: Common.fromPrisma(ManagementRepresentationSchema),
+  managementRepresentation: Schema.compose(Schema.unknown, ManagementRepresentationSchema),
 });
 export interface Decoded extends Schema.To<typeof Item> {}
 

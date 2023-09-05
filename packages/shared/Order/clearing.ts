@@ -1,11 +1,12 @@
+import { TaggedEnum, taggedEnum } from "@effect/data/Data";
 import { identity, pipe } from "@effect/data/Function";
 import * as Str from "@effect/data/String";
-import { TaggedEnum, taggedEnum } from "@effect/match/TaggedEnum";
 import * as Schema from "@effect/schema/Schema";
 
-export const Extra = taggedEnum<{
+export type Extra = TaggedEnum<{
   Gama: { phoneNumber: string };
-}>();
+}>;
+export const Extra = taggedEnum<Extra>();
 
 const GamaExtraSchema = Schema.data(Schema.struct({
   _tag: Schema.literal("Gama"),
@@ -20,4 +21,3 @@ const GamaExtraSchema = Schema.data(Schema.struct({
 export const ExtraSchema = Schema.union(
   GamaExtraSchema,
 );
-export type Extra = TaggedEnum.Infer<typeof Extra>;

@@ -88,8 +88,8 @@ const VenueExtension = Schema.struct({
 });
 
 export const fromVenue = Schema.transformResult(
-  Schema.from(V.Venue),
-  Schema.extend(VenueExtension)(V.Venue),
+  Schema.from(V.Venue.schema()),
+  Schema.extend(VenueExtension)(V.Venue.schema()),
   v =>
     pipe(
       Effect.zip(
@@ -152,7 +152,7 @@ export const MenuCategory = pipe(
 export interface MenuCategory extends Schema.To<typeof MenuCategory> {}
 
 export const Menu = pipe(
-  V.Venue,
+  V.Venue.schemaStruct(),
   Schema.pick("id", "open", "simpleContactInfo"),
   Schema.extend(Schema.struct({
     content: pipe(Common.Content, Schema.omit("description"), Schema.array),

@@ -274,11 +274,10 @@ const handlers = Match.type<"GET" | "POST" | string>().pipe(
         Effect.map(_ => _.venueCuid),
         Effect.flatMap(Venue.service.getByCuid),
         Effect.flatMap(_ => _.orders),
-        Effect.flatMap(Effect.forEach(_ => Order.Order.full(_.cuid))),
+        Effect.flatMap(Effect.forEach(_ => Order.service.getFullOrder(_.id))),
         Effect.flatMap(Schema.decode(Schema.array(OrderToCaspitOrder))),
         Effect.flatMap(Schema.encode(Schema.array(CaspitOrder))),
-        Effect.flatMap(_ => Effect.map(NextResponse, res => res.json(_)) // should be 201 :|
-        ),
+        Effect.flatMap(_ => Effect.map(NextResponse, res => res.json(_))),
       ),
   ),
   Match.when("POST", () =>
@@ -290,14 +289,13 @@ const handlers = Match.type<"GET" | "POST" | string>().pipe(
       const res = yield* _(NextResponse);
 
       if (status > OrderStatus.Accepted) {
-        res.status(500).json({ error: "Unsupported. Why 500 though? I didn't error. You did...." }); // why???
         yield* _(Effect.fail(new BadRequestError()));
       }
 
       yield* _(
         order.getByCuid(orderId),
         Effect.filterOrFail(_ => _.venueId === venue.id, () => new ForbiddenError()),
-        Effect.flatMap(_ => order.setOrderState(_.id, "Confirmed")),
+        Effect.flatMap(_ => _.setState("Confirmed")),
       );
 
       res.status(200); // Should be 201. Come on.

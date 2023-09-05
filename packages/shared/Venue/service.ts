@@ -46,7 +46,12 @@ const VenuesService = Effect.gen(function*(_) {
         Effect.flatMap(Option.fromNullable),
         Effect.flatMap(Schema.decode(Venue.Venue.schema())),
         Effect.mapError(() => new VenuesError()),
-        Effect.tap(_ => Effect.cacheRequestResult(GetByCuid({ cuid: _.cuid }), Exit.succeed(_))),
+        Effect.tap(_ =>
+          Effect.fromNullable(_.cuid).pipe(
+            Effect.flatMap(cuid => Effect.cacheRequestResult(GetByCuid({ cuid }), Exit.succeed(_))),
+            Effect.ignore,
+          )
+        ),
         Effect.exit,
         Effect.flatMap(_ => Request.complete(req, _)),
       ), { concurrency: "inherit", discard: true }),

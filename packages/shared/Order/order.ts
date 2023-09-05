@@ -28,7 +28,7 @@ export type CustomerName = S.To<typeof CustomerName>;
 
 export class Order extends S.Class({
   id: Id,
-  cuid: CUID,
+  cuid: S.nullable(CUID),
   createdAt: S.DateFromSelf,
   updatedAt: S.DateFromSelf,
   venueId: Venue.Id,
@@ -46,14 +46,14 @@ export class Order extends S.Class({
   managementExtra: S.optionFromNullable(S.compose(S.unknown, ManagementExtraSchema)),
   clearingExtra: S.optionFromNullable(S.compose(S.unknown, ClearingExtraSchema)),
 }) {
-  static full = (cuid: string) => {
-    return Effect.flatMap(internal.tag, orders => orders.getFullOrder(cuid));
-  };
+  setState(state: OrderState) {
+    return Effect.flatMap(internal.tag, _ => _.setOrderState(this.id, state))
+  }
 }
 
 export const Schema = S.struct({
   id: Id,
-  cuid: CUID,
+  cuid: S.nullable(CUID),
   createdAt: S.DateFromSelf,
   updatedAt: S.DateFromSelf,
   venueId: Venue.Id,

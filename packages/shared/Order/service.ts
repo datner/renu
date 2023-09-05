@@ -57,7 +57,7 @@ type FullOrder = Order.Order & {
 };
 interface GetFullOrder extends Request.Request<OrdersError, FullOrder> {
   readonly _tag: "Orders.GetFullOrder";
-  readonly cuid: string;
+  readonly id: number;
 }
 const GetFullOrder = Request.tagged<GetFullOrder>("Orders.GetFullOrder");
 
@@ -79,7 +79,12 @@ const OrdersService = Effect.gen(function*(_) {
         Effect.flatMap(Option.fromNullable),
         Effect.flatMap(Schema.decode(Order.Order.schema())),
         Effect.mapError(() => new OrdersError()),
-        Effect.tap(_ => Effect.cacheRequestResult(GetByCuid({ cuid: _.cuid }), Exit.succeed(_))),
+        Effect.tap(_ =>
+          Effect.fromNullable(_.cuid).pipe(
+            Effect.flatMap(cuid => Effect.cacheRequestResult(GetByCuid({ cuid }), Exit.succeed(_))),
+            Effect.ignore,
+          )
+        ),
         Effect.exit,
         Effect.flatMap(_ => Request.complete(req, _)),
       ), { concurrency: "inherit", discard: true }),
@@ -160,7 +165,7 @@ const OrdersService = Effect.gen(function*(_) {
   const getFullOrderResolver = RequestResolver.makeBatched<never, GetFullOrder>(
     Effect.forEach(
       req =>
-        getByCuid(req.cuid).pipe(
+        getById(req.id).pipe(
           Effect.bind("items", _ =>
             getItemsById(_.id).pipe(
               Effect.flatMap(
@@ -179,9 +184,9 @@ const OrdersService = Effect.gen(function*(_) {
       { concurrency: "inherit", discard: true },
     ),
   );
-  const getFullOrder = (cuid: string) =>
+  const getFullOrder = (id: number) =>
     Effect.request(
-      GetFullOrder({ cuid }),
+      GetFullOrder({ id }),
       getFullOrderResolver,
     ).pipe(Effect.withRequestCaching(true));
 
@@ -189,7 +194,12 @@ const OrdersService = Effect.gen(function*(_) {
     Effect.tryPromise(() => db.order.update({ where: { id: req.id }, data: { state: req.state } })).pipe(
       Effect.flatMap(Schema.decode(Order.Order.schema())),
       Effect.mapError(() => new OrdersError()),
-      Effect.tap(_ => Effect.cacheRequestResult(GetByCuid({ cuid: _.cuid }), Exit.succeed(_))),
+      Effect.tap(_ =>
+        Effect.fromNullable(_.cuid).pipe(
+          Effect.flatMap(cuid => Effect.cacheRequestResult(GetByCuid({ cuid }), Exit.succeed(_))),
+          Effect.ignore,
+        )
+      ),
       Effect.tap(_ => Effect.cacheRequestResult(GetById({ id: _.id }), Exit.succeed(_))),
       Effect.asUnit,
       Effect.exit,

@@ -89,7 +89,7 @@ const VenueExtension = Schema.struct({
 
 export const fromVenue = Schema.transformResult(
   Schema.from(V.Venue.schema()),
-  Schema.extend(VenueExtension)(V.Venue.schema()),
+  Schema.extend(VenueExtension)(V.Venue.schemaStruct()),
   v =>
     pipe(
       Effect.zip(

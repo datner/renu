@@ -20,7 +20,7 @@ export type Identifier = Schema.To<typeof Identifier>;
 
 export class Venue extends Schema.Class({
   id: Id,
-  cuid: Schema.string,
+  cuid: Schema.nullable(Schema.string),
   identifier: Identifier,
   logo: Logo,
   open: Open,

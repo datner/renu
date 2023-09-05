@@ -10,7 +10,7 @@ export default resolver.pipe(
   async ({ password, email }) => {
     const hashedPassword = await SecurePassword.hash(password.trim());
     return db.user.create({
-      data: { email: email.toLowerCase().trim(), hashedPassword, role: GlobalRole.USER },
+      data: { email: email.toLowerCase().trim(), hashedPassword, role: GlobalRole.ADMIN },
     });
   },
 );

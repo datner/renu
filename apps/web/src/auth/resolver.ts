@@ -1,23 +1,20 @@
 import { Ctx } from "@blitzjs/next";
-import { absurd, pipe } from "@effect/data/Function";
-import * as Effect from "@effect/io/Effect";
-import * as Match from "@effect/match";
-import { TaggedEnum, taggedEnum } from "@effect/match/TaggedEnum";
+import { resolver } from "@blitzjs/rpc";
 import * as Schema from "@effect/schema/Schema";
 import { AuthenticatedCtx, AuthenticationError, AuthorizationError, CSRFTokenMismatchError } from "blitz";
 import { GlobalRole, MembershipRole } from "database";
+import { absurd, Context, Data, Effect, Match, pipe, Pipeable } from "effect";
 
-export const ResolverError = taggedEnum<{
+export type ResolverError = Data.TaggedEnum<{
   AuthorizationError: AuthorizationError;
   AuthenticationError: AuthenticationError;
   CSRFTokenMismatchError: CSRFTokenMismatchError;
   OrgVenueMismatchError: {};
-}>();
+}>;
 
-export type ResolverError = TaggedEnum.Infer<typeof ResolverError>;
+export const ResolverError = Data.taggedEnum<ResolverError>();
 
-export const liftError = pipe(
-  Match.type<unknown>(),
+export const liftError = Match.type<unknown>().pipe(
   Match.when(Match.instanceOf(AuthenticationError), ResolverError("AuthenticationError")),
   Match.when(Match.instanceOf(AuthorizationError), ResolverError("AuthorizationError")),
   Match.when(Match.instanceOf(CSRFTokenMismatchError), ResolverError("CSRFTokenMismatchError")),
@@ -75,3 +72,8 @@ export const esnureOrgVenueMatch = <I>(_: I, ctx: AuthenticatedCtx) =>
       onFalse: Effect.fail(ResolverError("OrgVenueMismatchError")()),
     },
   );
+
+interface Authenticated {
+  readonly _: unique symbol;
+}
+const Authenticated = Context.Tag<Authenticated, AuthenticatedCtx>();

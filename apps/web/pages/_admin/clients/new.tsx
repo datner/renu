@@ -1,8 +1,9 @@
+import { useSession } from "@blitzjs/auth";
 import { useMutation } from "@blitzjs/rpc";
-import { Button, Container, LoadingOverlay, Paper, PasswordInput, Stepper, TextInput } from "@mantine/core";
-import { Dropzone, FileWithPath, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { pipe } from "@effect/data/Function";
 import * as O from "@effect/data/Option";
+import { Button, Container, LoadingOverlay, Paper, PasswordInput, Stepper, TextInput } from "@mantine/core";
+import { Dropzone, FileWithPath, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { nanoid } from "nanoid";
 import Image from "next/image";
 import { Suspense, useState } from "react";
@@ -23,6 +24,7 @@ interface FormProps<T extends FieldValues> {
 
 function CreateClientForm(props: FormProps<z.infer<typeof CreateClientSchema>>) {
   const { onSubmit } = props;
+  console.log(useSession({ suspense: true }));
   const form = useZodForm({
     schema: CreateClientSchema,
     defaultValues: {
@@ -237,8 +239,8 @@ function Forms() {
 
             return createVenueMutation({
               ...data,
-              memberId: 13,
-              organizationId: 9,
+              memberId: createOrgBag.data!.memberships[0]!.id,
+              organizationId: createOrgBag.data!.id,
             });
           }}
         />

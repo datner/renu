@@ -1,6 +1,6 @@
 /* eslint-disable react-hooks/rules-of-hooks */
 import { pipe } from "@effect/data/Function";
-import * as ConfigProvider from "@effect/io/Config/Provider";
+import * as ConfigProvider from "@effect/io/ConfigProvider";
 import * as Effect from "@effect/io/Effect";
 import * as Exit from "@effect/io/Exit";
 import * as Layer from "@effect/io/Layer";
@@ -14,16 +14,20 @@ import * as Payplus from "@integrations/payplus";
 import * as Presto from "@integrations/presto";
 import * as Db from "db";
 import * as Telegram from "integrations/telegram";
+import { Venue, Order } from "shared";
 
 const provider = ConfigProvider.constantCase(ConfigProvider.fromEnv());
 
 const serverLayer = pipe(
   Logger.logFmt,
   Layer.merge(Telegram.layer),
+  Layer.merge(Telegram.layer),
   Layer.merge(Management.layer),
   Layer.merge(Gama.layer),
   Layer.merge(Presto.layer),
   Layer.merge(Payplus.layer),
+  Layer.merge(Venue.service.layer),
+  Layer.merge(Order.service.layer),
   Layer.merge(Effect.setConfigProvider(provider)),
   Layer.useMerge(Db.layer),
   Layer.useMerge(Http.layer),

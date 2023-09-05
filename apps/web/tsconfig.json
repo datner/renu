@@ -4,7 +4,15 @@
   "compilerOptions": {
     "baseUrl": ".",
     "incremental": true,
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "plugins": [
+      {
+        "name": "@effect/language-service"
+      },
+      {
+        "name": "next"
+      }
+    ]
   },
   "types": [
     "./blitz-patch.d.ts"

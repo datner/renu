@@ -1,14 +1,7 @@
-import * as Data from "@effect/data/Data";
-import * as Equal from "@effect/data/Equal";
-import { identity, pipe } from "@effect/data/Function";
-import * as N from "@effect/data/Number";
-import * as O from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Str from "@effect/data/String";
-import { TaggedEnum, taggedEnum } from "@effect/match/TaggedEnum";
 import * as S from "@effect/schema/Schema";
 import { PAYMENT_TYPES } from "@integrations/dorix/types";
 import { Locale } from "database";
+import { Equal, Number as N, Option as O, pipe, ReadonlyArray as A } from "effect";
 import { Item, Order, Venue } from "shared";
 import { Common, Number } from "shared/schema";
 

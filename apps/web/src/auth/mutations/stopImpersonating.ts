@@ -1,10 +1,9 @@
 import { resolver } from "@blitzjs/rpc";
 import { absurd } from "@effect/data/Function";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
 import { NotFoundError } from "blitz";
 import { GlobalRole } from "db";
+import { Effect, ReadonlyArray as A } from "effect";
 import { Database } from "shared";
 import { Resolver } from "src/auth";
 import { Renu } from "src/core/effect";
@@ -12,7 +11,7 @@ import { Renu } from "src/core/effect";
 const stopImpersonation = resolver.pipe(
   Resolver.schema(Schema.null),
   Resolver.authorize(),
-  Resolver.flatMap((_, ctx) => Effect.fromNullable(() => ctx.session.impersonatingFromUserId)),
+  Resolver.flatMap((_, ctx) => Effect.fromNullable(ctx.session.impersonatingFromUserId)),
   Resolver.flatMap(Effect.serviceFunctionEffect(Database.Database, db => id =>
     Effect.tryPromise({
       try: () =>

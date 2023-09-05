@@ -1,11 +1,12 @@
+import { TaggedEnum, taggedEnum } from "@effect/data/Data";
 import { pipe } from "@effect/data/Function";
-import { TaggedEnum, taggedEnum } from "@effect/match/TaggedEnum";
 import * as Schema from "@effect/schema/Schema";
 
-const ManagementRepresentation = taggedEnum<{
+type ManagementRepresentation = TaggedEnum<{
   Presto: { id: number };
   Unknown: {};
-}>();
+}>;
+const ManagementRepresentation = taggedEnum<ManagementRepresentation>();
 
 export const Representation = {
   Presto: Schema.struct({
@@ -32,5 +33,3 @@ export const ModifierManagementRepresentationSchema = Schema.union(
   ModifierRepresentation.Presto,
   pipe(ModifierRepresentation.Unknown, Schema.attachPropertySignature("_tag", "Unknown")),
 );
-
-export type ManagementRepresentation = TaggedEnum.Infer<typeof ManagementRepresentation>;

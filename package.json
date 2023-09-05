@@ -18,23 +18,24 @@
   "devDependencies": {
     "@commitlint/cli": "17.7.1",
     "@commitlint/config-conventional": "17.7.0",
-    "@types/node": "20.5.1",
+    "@effect/language-service": "0.0.21",
+    "@types/node": "20.5.9",
     "dprint": "0.40.2",
-    "eslint": "8.47.0",
+    "eslint": "8.48.0",
     "eslint-config-custom": "workspace:*",
     "husky": "8.0.3",
-    "lint-staged": "14.0.0",
+    "lint-staged": "14.0.1",
     "next": "13.4.19",
-    "turbo": "1.10.12",
-    "typescript": "5.1.6"
+    "turbo": "1.10.13",
+    "typescript": "5.2.2"
   },
-  "packageManager": "pnpm@8.6.1",
+  "packageManager": "pnpm@8.6.12",
   "dependencies": {
-    "@effect/data": "0.17.5",
-    "@effect/io": "0.38.2",
-    "@effect/match": "0.33.0",
-    "@effect/schema": "0.33.1",
-    "@sqlfx/pg": "0.14.1"
+    "@effect/data": "0.18.3",
+    "@effect/io": "0.39.1",
+    "@effect/match": "0.35.1",
+    "@effect/schema": "0.34.0",
+    "@sqlfx/pg": "0.15.1"
   },
   "engines": {
     "node": "18"

@@ -1,15 +1,10 @@
 import { Routes } from "@blitzjs/next";
 import { useMutation, useQuery } from "@blitzjs/rpc";
-import { absurd, pipe } from "@effect/data/Function";
-import * as HashMap from "@effect/data/HashMap";
-import * as Option from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Match from "@effect/match";
-import { TaggedEnum, taggedEnum } from "@effect/match/TaggedEnum";
 import * as Schema from "@effect/schema/Schema";
 import { LoadingOverlay } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { a, useSpring } from "@react-spring/web";
+import { absurd, Data, HashMap, Match, Option, pipe, ReadonlyArray as A } from "effect";
 import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
@@ -40,11 +35,12 @@ type Props = {
   onClose(): void;
 };
 
-const Payment = taggedEnum<{
+type Payment = Data.TaggedEnum<{
   Init: {};
   Open: { url: string };
   Closed: { url: string };
-}>();
+}>;
+const Payment = Data.taggedEnum<Payment>();
 
 const PaymentInit = Payment("Init");
 const PaymentOpen = Payment("Open");
@@ -57,8 +53,6 @@ const matchUrl = <A, B>(f: (url: string) => A, orElse: () => B) =>
     Closed: _ => f(_.url),
     Init: orElse,
   });
-
-type Payment = TaggedEnum.Infer<typeof Payment>;
 
 const decodeClearing = Schema.decodeSync(Venue.Clearing.ClearingIntegration);
 

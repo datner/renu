@@ -1,5 +1,4 @@
-import * as Config from "@effect/io/Config";
-import * as ConfigProvider from "@effect/io/Config/Provider";
+import { Config, ConfigProvider } from "effect";
 
 export const ConstantCaseConfigProvider = ConfigProvider.constantCase(ConfigProvider.fromEnv());
 

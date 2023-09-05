@@ -1,8 +1,6 @@
-import * as Either from "@effect/data/Either";
-import { pipe } from "@effect/data/Function";
-import * as A from "@effect/data/ReadonlyArray";
 import { NotFoundError } from "blitz";
 import { Affiliation, GlobalRole, Membership, Organization, Venue } from "db";
+import { Either, pipe, ReadonlyArray as A } from "effect";
 
 export const getMembership = (user: {
   id: number;
@@ -18,7 +16,7 @@ export const getMembership = (user: {
     Either.flatMap(({ affiliations, ...rest }) =>
       A.head(affiliations).pipe(
         Either.fromOption(() => new NotFoundError(`User ${user.id} is not affiliated with any venues`)),
-        Either.mapRight(affiliation => ({ ...rest, affiliation })),
+        Either.map(affiliation => ({ ...rest, affiliation })),
       )
     ),
   );

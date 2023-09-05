@@ -1,8 +1,7 @@
 import { resolver } from "@blitzjs/rpc";
-import * as E from "@effect/data/Either";
-import * as A from "@effect/data/ReadonlyArray";
 import { NotFoundError } from "blitz";
 import db, { GlobalRole } from "db";
+import { Either as E, ReadonlyArray as A } from "effect";
 import { z } from "zod";
 import { getMembership } from "../helpers/getMembership";
 
@@ -26,7 +25,7 @@ export default resolver.pipe(
     }
 
     await getMembership(user).pipe(
-      E.mapRight((m) =>
+      E.map((m) =>
         ctx.session.$create({
           userId: user.id,
           organization: m.organization,

@@ -7,9 +7,9 @@ import { Locale } from "database";
 const config = {
   reactStrictMode: true,
   webpack: {
-    ignored: /node_modules/
+    ignored: /node_modules/,
   },
-  transpilePackages: ["ui", "@integrations/*", "shared", "effect-tslog"],
+  transpilePackages: ["ui", "@integrations/*", "shared"],
   i18n: {
     locales: Object.values(Locale),
     defaultLocale: Locale.en,

@@ -1,6 +1,6 @@
 import { resolver } from "@blitzjs/rpc";
-import * as Effect from "@effect/io/Effect";
 import db from "db";
+import * as Effect from "effect/Effect";
 import { prismaError } from "src/core/helpers/prisma";
 
 export default resolver.pipe(resolver.authorize(), (_, ctx) =>

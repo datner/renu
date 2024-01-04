@@ -1,5 +1,5 @@
-import * as Context from "@effect/data/Context";
 import { PrismaClient } from "database";
+import { Context } from "effect";
 
 export interface DB {
   readonly _: unique symbol;

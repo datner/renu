@@ -35,11 +35,11 @@ export const Option = S.struct({
   price: S.number,
   content: Common.Content.pipe(S.omit("id"), S.nonEmptyArray),
 });
-export interface Option extends S.To<typeof Option> {}
+export interface Option extends S.Schema.To<typeof Option> {}
 
 export const Modifier = S.struct({
   identifier: S.string,
   content: Common.Content.pipe(S.omit("id"), S.nonEmptyArray),
   options: S.nonEmptyArray(Option),
 });
-export interface Modifier extends S.To<typeof Modifier> {}
+export interface Modifier extends S.Schema.To<typeof Modifier> {}

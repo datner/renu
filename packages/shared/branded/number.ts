@@ -1,4 +1,4 @@
-import * as Brand from "@effect/data/Brand";
+import { Brand } from "effect";
 
 export type Int = number & Brand.Brand<"Int">;
 export const Int = Brand.refined<Int>(

@@ -1,12 +1,12 @@
-import { identity, pipe } from "@effect/data/Function";
 import * as S from "@effect/schema/Schema";
+import { pipe } from "effect";
 import * as ModifierConfig from "../modifier-config";
 import * as Common from "../schema/common";
 import * as Number from "../schema/number";
 import * as Item from "./item";
 
 export const Id = Common.Id("ItemModifierId");
-export type Id = S.To<typeof Id>;
+export type Id = S.Schema.To<typeof Id>;
 
 export const GenericModifier = S.struct({
   id: Id,
@@ -23,7 +23,7 @@ export const Modifier = S.union(
       position: Number.NonNegativeInt,
       itemId: Item.Id,
       deleted: S.optionFromNullable(S.DateFromSelf),
-      config: Common.fromPrisma(ModifierConfig.OneOf.Modifier),
+      config: ModifierConfig.OneOf.Modifier,
     }),
     S.attachPropertySignature("_tag", "OneOf"),
   ),
@@ -33,7 +33,7 @@ export const Modifier = S.union(
       position: Number.NonNegativeInt,
       itemId: Item.Id,
       deleted: S.optionFromNullable(S.DateFromSelf),
-      config: Common.fromPrisma(ModifierConfig.Extras.Modifier),
+      config: ModifierConfig.Extras.Modifier,
     }),
     S.attachPropertySignature("_tag", "Extras"),
   ),
@@ -43,16 +43,16 @@ export const Modifier = S.union(
       position: Number.NonNegativeInt,
       itemId: Item.Id,
       deleted: S.optionFromNullable(S.DateFromSelf),
-      config: Common.fromPrisma(ModifierConfig.Slider.Modifier),
+      config: ModifierConfig.Slider.Modifier,
     }),
     S.attachPropertySignature("_tag", "Slider"),
   ),
 );
 
-export type Modifier = S.To<typeof Modifier>;
+export type Modifier = S.Schema.To<typeof Modifier>;
 
 // export interface Modifier<Config extends ModifierConfig.Schema = ModifierConfig.Schema>
-//   extends Omit<S.To<typeof Modifier>, "config"> {
+//   extends Omit<S.Schema.To<typeof Modifier>, "config"> {
 //   config: Config;
 // }
 
@@ -66,13 +66,13 @@ export const isSlider = <M extends { config: ModifierConfig.Schema }>(
   mod: M,
 ): mod is M & { config: ModifierConfig.Slider.Slider } => mod.config._tag === "Slider";
 
-export const fromPrisma = pipe(
-  S.from(S.struct({
+export const fromPrisma = S.compose(
+  S.struct({
     id: Id,
-    position: Number.NonNegativeInt,
-    itemId: Item.Id,
-    deleted: S.optionFromNullable(S.DateFromSelf),
-    config: Common.fromPrisma(ModifierConfig.Schema),
-  })),
-  S.transform(Modifier, identity, identity),
+    position: S.number,
+    itemId: S.number,
+    deleted: S.nullable(S.DateFromSelf),
+    config: S.unknown,
+  }),
+  Modifier,
 );

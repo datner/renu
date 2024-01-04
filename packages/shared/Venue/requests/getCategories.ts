@@ -1,10 +1,9 @@
-import * as Data from "@effect/data/Data";
-import * as Request from "@effect/io/Request";
 import * as Models from "database";
+import { Data, Request } from "effect";
 
 export class GetVenueCategoriesError extends Data.TaggedClass("GetVenueCategoriesError")<{}> {}
 
-export interface GetVenueCategories extends Request.Request<GetVenueCategoriesError, Models.Category[]> {
+export interface GetVenueCategories extends Request.Request<GetVenueCategoriesError, ReadonlyArray<Models.Category>> {
   readonly _tag: "GetVenueCategories";
   readonly id: number;
 }

@@ -36,7 +36,7 @@ function CreateClientForm(props: FormProps<z.infer<typeof CreateClientSchema>>) 
 
   return (
     <Paper
-      sx={{ width: 460 }}
+      className="w-[460px]"
       component="form"
       withBorder
       mx="auto"
@@ -72,7 +72,7 @@ function CreateOrganizationForm(props: FormProps<z.infer<typeof NoUserId>>) {
 
   return (
     <Paper
-      sx={{ width: 460 }}
+      className="w-[460px]"
       component="form"
       withBorder
       mx="auto"
@@ -135,7 +135,7 @@ function CreateVenueForm(props: FormProps<z.infer<typeof NoOrgInfo>>) {
 
   return (
     <Paper
-      sx={{ width: 460 }}
+      className="w-[460px]"
       component="form"
       withBorder
       mx="auto"

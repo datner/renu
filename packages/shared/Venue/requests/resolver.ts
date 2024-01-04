@@ -1,16 +1,9 @@
-import { pipe } from "@effect/data/Function";
-import * as Option from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
-import * as Exit from "@effect/io/Exit";
-import * as Request from "@effect/io/Request";
-import * as RequestResolver from "@effect/io/RequestResolver";
 import * as Models from "database";
-import { inspect } from "util";
-import { Database } from "../../Database";
-import { filterRequestsByTag, resolveBatch, resolveSingle } from "../../effect/Request";
-import { GetVenueById, GetVenueByIdError } from "./getById";
-import { GetVenueByIdentifier, GetVenueByIdentifierError } from "./getByIdentifier";
+import { Console, Effect, Exit, Option, ReadonlyArray as A, Request, RequestResolver } from "effect";
+import { ReadonlyArray } from "effect";
+import { Database, DB } from "../../Database";
+import { GetVenueById } from "./getById";
+import { GetVenueByIdentifier } from "./getByIdentifier";
 import { GetVenueCategories } from "./getCategories";
 import { GetVenueClearingIntegration, GetVenueClearingIntegrationError } from "./getClearingIntegration";
 import { GetVenueContent } from "./getContent";
@@ -24,114 +17,95 @@ type VenueRequest =
   | GetVenueClearingIntegration
   | GetVenueManagementIntegration;
 
-export const VenueResolver = pipe(
-  RequestResolver.makeBatched((
-    requests: VenueRequest[],
-  ) =>
-    Effect.all([
-      Effect.sync(() => console.log(inspect(requests.map(r => r._tag), false, null, true))),
-      resolveBatch(
-        filterRequestsByTag(requests, "GetVenueCategories"),
-        (reqs, db) =>
-          db.category.findMany({
-            where: { venueId: { in: reqs.map(req => req.id) }, deleted: null },
-            orderBy: { venueId: "asc" },
-          }),
-        r => String(r.id),
-        d => String(d.venueId),
-      ),
-      resolveBatch(
-        filterRequestsByTag(requests, "GetVenueContent"),
-        (reqs, db) =>
-          db.restaurantI18L.findMany({
-            where: { venueId: { in: reqs.map(req => req.id) } },
-            orderBy: { venueId: "asc" },
-          }),
-        r => String(r.id),
-        d => String(d.venueId),
-      ),
-      resolveSingle(
-        filterRequestsByTag(requests, "GetVenueClearingIntegration"),
-        (reqs, db) =>
-          db.clearingIntegration.findMany({
-            where: { venueId: { in: reqs.map(_ => _.id) } },
-          }),
-        (req, integs) =>
-          Option.match(
-            A.findFirst(integs, _ => _.venueId === req.id),
-            {
-              onNone: () => Exit.fail(new GetVenueClearingIntegrationError()),
-              onSome: Exit.succeed,
-            },
+export const VenueResolver = RequestResolver.makeBatched<DB, VenueRequest>((
+  requests,
+) => {
+  const reqMap = ReadonlyArray.groupBy(requests, _ => _._tag);
+  const categories = reqMap.GetVenueCategories as GetVenueCategories[] ?? [];
+  const content = reqMap.GetVenueContent as GetVenueContent[] ?? [];
+  const clearing = reqMap.GetVenueClearingIntegration as GetVenueClearingIntegration[] ?? [];
+  const management = reqMap.GetVenueManagementIntegration as GetVenueManagementIntegration[] ?? [];
+  const byId = reqMap.GetVenueById as GetVenueById[] ?? [];
+  const byIdentifier = reqMap.GetVenueByIdentifier as GetVenueByIdentifier[] ?? [];
+  return Effect.andThen(Database, db =>
+    Effect.all({
+      GetVenueCategories: Effect.promise(() =>
+        Promise.all(
+          categories.map(_ =>
+            db.venue.findUniqueOrThrow({ where: { id: _.id } }).categories({
+              where: { deleted: null },
+            })
           ),
+        )
+      ).pipe(
+        Effect.tap(Console.log),
+        Effect.withLogSpan("GetVenueCategories"),
+        Effect.orDie,
+        Effect.map(ReadonlyArray.zip(categories)),
+        Effect.flatMap(Effect.forEach(([categories, req]) => Request.succeed(req, categories))),
       ),
-      resolveSingle(
-        filterRequestsByTag(requests, "GetVenueManagementIntegration"),
-        (reqs, db) =>
-          db.managementIntegration.findMany({
-            where: { venueId: { in: reqs.map(_ => _.id) } },
-          }),
-        (req, integs) =>
-          Option.match(
-            A.findFirst(integs, _ => _.venueId === req.id),
-            {
-              onNone: () => Exit.fail(new GetVenueManagementIntegrationError()),
-              onSome: Exit.succeed,
-            },
-          ),
+      GetVenueContent: Effect.promise(() =>
+        Promise.all(
+          content.map(_ => db.venue.findUniqueOrThrow({ where: { id: _.id } }).content()),
+        )
+      ).pipe(
+        Effect.orDie,
+        Effect.map(ReadonlyArray.zip(content)),
+        Effect.flatMap(Effect.forEach(([_, req]) => Request.succeed(req, _))),
       ),
-      pipe(
-        Effect.flatMap(Database, db =>
-          Effect.promise(
-            () =>
-              db.venue.findMany({
-                where: {
-                  OR: [
-                    idIn(requests),
-                    identifierIn(requests),
-                  ],
-                  deleted: null,
-                },
-              }),
-          )),
-        Effect.flatMap(venues =>
-          Effect.all([
-            Effect.forEach(getByIds(requests), req =>
-              Request.complete(
-                req,
-                Option.match(
-                  A.findFirst(venues, _ => _.id === req.id),
-                  {
-                    onNone: () => Exit.fail(new GetVenueByIdError()),
-                    onSome: Exit.succeed,
-                  },
-                ),
-              )),
-            Effect.forEach(getByIdentifiers(requests), req =>
-              Request.complete(
-                req,
-                Option.match(
-                  A.findFirst(venues, _ => _.identifier === req.identifier),
-                  {
-                    onNone: () => Exit.fail(new GetVenueByIdentifierError()),
-                    onSome: Exit.succeed,
-                  },
-                ),
-              )),
-          ])
-        ),
+      GetVenueClearingIntegration: Effect.promise(() =>
+        Promise.all(
+          clearing.map(_ => db.venue.findUniqueOrThrow({ where: { id: _.id } }).clearingIntegration()),
+        )
+      ).pipe(
+        Effect.orDie,
+        Effect.map(ReadonlyArray.zip(clearing)),
+        Effect.flatMap(Effect.forEach(([_, req]) =>
+          Request.complete(
+            req,
+            _
+              ? Exit.succeed(_)
+              : Exit.fail(new GetVenueClearingIntegrationError()),
+          )
+        )),
       ),
-    ], { concurrency: "unbounded" })
-  ),
+      GetVenueManagementIntegration: Effect.promise(() =>
+        Promise.all(
+          management.map(_ => db.venue.findUniqueOrThrow({ where: { id: _.id } }).managementIntegration()),
+        )
+      ).pipe(
+        Effect.orDie,
+        Effect.map(ReadonlyArray.zip(management)),
+        Effect.flatMap(Effect.forEach(([_, req]) =>
+          Request.complete(
+            req,
+            _
+              ? Exit.succeed(_)
+              : Exit.fail(new GetVenueManagementIntegrationError()),
+          )
+        )),
+      ),
+      GetVenueById: Effect.promise(() =>
+        db.venue.findMany({
+          where: idIn(byId),
+        })
+      ).pipe(
+        Effect.orDie,
+        Effect.map(ReadonlyArray.zip(byId)),
+        Effect.flatMap(Effect.forEach(([_, req]) => Request.succeed(req, _))),
+      ),
+      GetVenueByIdentifier: Effect.promise(() =>
+        db.venue.findMany({
+          where: identifierIn(byIdentifier),
+        })
+      ).pipe(
+        Effect.orDie,
+        Effect.map(ReadonlyArray.zip(byIdentifier)),
+        Effect.flatMap(Effect.forEach(([_, req]) => Request.succeed(req, _))),
+      ),
+    }, { concurrency: "unbounded" }));
+}).pipe(
   RequestResolver.contextFromServices(Database),
-);
-
-const getByIds = A.filterMap(
-  (_: VenueRequest) => _._tag === "GetVenueById" ? Option.some(_) : Option.none(),
-);
-
-const getByIdentifiers = A.filterMap(
-  (_: VenueRequest) => _._tag === "GetVenueByIdentifier" ? Option.some(_) : Option.none(),
 );
 
 const idIn = (reqs: VenueRequest[]) => ({

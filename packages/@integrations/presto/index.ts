@@ -1,13 +1,6 @@
-import * as Context from "@effect/data/Context";
-import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
-import * as Layer from "@effect/io/Layer";
-import * as Ref from "@effect/io/Ref";
-import * as Match from "@effect/match";
 import * as Schema from "@effect/schema/Schema";
 import * as FTP from "basic-ftp";
+import { Context, Effect, Layer, Match, Option, pipe, ReadonlyArray, Ref } from "effect";
 import { Database, Order, Venue } from "shared";
 import { refineTag } from "shared/effect/Refinement";
 import { FullOrder } from "shared/Order/fullOrder";
@@ -20,7 +13,7 @@ interface Presto {
 export interface PrestoService {
   readonly postOrder: (
     orderId: Order.Id,
-  ) => Effect.Effect<never, never, Schema.To<typeof PrestoOrder>>;
+  ) => Effect.Effect<never, never, Schema.Schema.To<typeof PrestoOrder>>;
 }
 export const Presto = Context.Tag<Presto, PrestoService>("Presto");
 
@@ -28,11 +21,11 @@ const toPrestoOrder = (o: FullOrder, serviceCharge: number) =>
   Schema.encode(PrestoOrder)({
     id: o.id,
     contact: {
-      firstName: O.getOrElse(o.customerName, () => "Anonymous"),
+      firstName: Option.getOrElse(o.customerName, () => "Anonymous"),
       lastName: "",
       phone: pipe(
-        O.map(o.managementExtra, _ => _.phoneNumber),
-        O.getOrElse(() => "0505555555"),
+        Option.map(o.managementExtra, _ => _.phoneNumber),
+        Option.getOrElse(() => "0505555555"),
       ),
     },
     orderItems: o.items.map(i => ({
@@ -46,17 +39,17 @@ const toPrestoOrder = (o: FullOrder, serviceCharge: number) =>
       childrencount: 0,
       children: pipe(
         i.modifiers,
-        A.map(i =>
+        ReadonlyArray.map(i =>
           pipe(
             Match.value(i.modifier.config),
             Match.tag("oneOf", o =>
               pipe(
                 o.options,
-                A.findFirst(_ => _.identifier === i.choice),
-                O.map(_ => _.managementRepresentation),
-                O.filterMap(refineTag("Presto")),
-                O.map(_ => _.id),
-                O.map(id => ({
+                ReadonlyArray.findFirst(_ => _.identifier === i.choice),
+                Option.map(_ => _.managementRepresentation),
+                Option.filterMap(refineTag("Presto")),
+                Option.map(_ => _.id),
+                Option.map(id => ({
                   type: "option" as const,
                   id,
                   price: i.price / 100,
@@ -68,11 +61,11 @@ const toPrestoOrder = (o: FullOrder, serviceCharge: number) =>
             Match.tag("extras", o =>
               pipe(
                 o.options,
-                A.findFirst(_ => _.identifier === i.choice),
-                O.map(_ => _.managementRepresentation),
-                O.filterMap(refineTag("Presto")),
-                O.map(_ => _.id),
-                O.map(id => ({
+                ReadonlyArray.findFirst(_ => _.identifier === i.choice),
+                Option.map(_ => _.managementRepresentation),
+                Option.filterMap(refineTag("Presto")),
+                Option.map(_ => _.id),
+                Option.map(id => ({
                   type: "option" as const,
                   id,
                   price: i.price / 100,
@@ -84,11 +77,11 @@ const toPrestoOrder = (o: FullOrder, serviceCharge: number) =>
             Match.tag("Slider", o =>
               pipe(
                 o.options,
-                A.findFirst(_ => _.identifier === i.choice),
-                O.map(_ => _.managementRepresentation),
-                O.filterMap(refineTag("Presto")),
-                O.map(_ => _.id),
-                O.map(id => ({
+                ReadonlyArray.findFirst(_ => _.identifier === i.choice),
+                Option.map(_ => _.managementRepresentation),
+                Option.filterMap(refineTag("Presto")),
+                Option.map(_ => _.id),
+                Option.map(id => ({
                   type: "option" as const,
                   id,
                   price: i.price / 100,
@@ -100,7 +93,7 @@ const toPrestoOrder = (o: FullOrder, serviceCharge: number) =>
             Match.exhaustive,
           )
         ),
-        A.compact,
+        ReadonlyArray.getSomes,
       ),
     }))
       .flatMap(i => (i.id === -1
@@ -175,8 +168,8 @@ export const layer = Layer.effect(
 
             const serviceCharge = (clearing.provider === "PAY_PLUS"
               ? clearing.vendorData.service_charge
-              : O.none())
-              .pipe(O.getOrElse(() => 0));
+              : Option.none())
+              .pipe(Option.getOrElse(() => 0));
 
             const prestoOrder = yield* _(toPrestoOrder(o, serviceCharge));
 

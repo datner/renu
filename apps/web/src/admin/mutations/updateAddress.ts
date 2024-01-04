@@ -1,9 +1,7 @@
 import { resolver } from "@blitzjs/rpc";
-import { pipe } from "@effect/data/Function";
-import * as S from "@effect/data/String";
-import * as Effect from "@effect/io/Effect";
 import { GlobalRole } from "database";
 import db from "db";
+import { Effect, pipe, String as S } from "effect";
 import { Settings } from "src/admin/validations/settings";
 import { setDefaultVenue } from "src/auth/helpers/setDefaultVenue";
 import { Renu } from "src/core/effect";

@@ -1,3 +1,4 @@
+import { ColorSchemeScript } from "@mantine/core";
 import { createGetInitialProps } from "@mantine/next";
 import { Locale } from "db";
 import Document, { Head, Html, Main, NextScript } from "next/document";
@@ -13,6 +14,7 @@ class MyDocument extends Document {
     return (
       <Html lang={locale} dir={dir} data-theme="renu" className="bg-white">
         <Head>
+          <ColorSchemeScript defaultColorScheme="auto" />
           <script
             async
             src="https://polyfill.io/v3/polyfill.min.js?features=IntersectionObserver,scrollIntoView"

@@ -1,7 +1,5 @@
-import * as Data from "@effect/data/Data";
-import * as Option from "@effect/data/Option";
-import * as Request from "@effect/io/Request";
 import * as Models from "database";
+import { Data, Option, Request } from "effect";
 
 export class GetItemByIdentifierError extends Data.TaggedClass("GetItemByIdentifierError")<{}> {}
 

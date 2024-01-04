@@ -1,10 +1,27 @@
-import { MantineProvider as MantineProvider_ } from "@mantine/core";
+import "@mantine/core/styles.css";
+import { createTheme, DirectionProvider, MantineProvider as MantineProvider_ } from "@mantine/core";
 import { Locale } from "database";
 import { ReactNode } from "react";
-import { RouterTransition } from "src/core/components/RouterTransition";
-import { getEmotionCache } from "src/core/helpers/rtl-cache";
 import { useIsomorphicLayoutEffect } from "src/core/hooks/useIsomorphicLayoutEffect";
 import { useLocale } from "src/core/hooks/useLocale";
+
+const theme = createTheme({
+  primaryColor: "teal",
+  colors: {
+    teal: [
+      "#70AD99",
+      "#CFE4DD",
+      "#BDDFD5",
+      "#A0C9BB",
+      "#70AD99",
+      "#419277",
+      "#117755",
+      "#0D5940",
+      "#093C2B",
+      "#041E15",
+    ],
+  },
+});
 
 export function MantineProvider({ children }: { children: ReactNode }) {
   const locale = useLocale();
@@ -17,31 +34,12 @@ export function MantineProvider({ children }: { children: ReactNode }) {
   }, [locale, dir]);
 
   return (
-    <MantineProvider_
-      withGlobalStyles
-      withNormalizeCSS
-      emotionCache={getEmotionCache(isRtl)}
-      theme={{
-        dir,
-        primaryColor: "teal",
-        colors: {
-          teal: [
-            "#70AD99",
-            "#CFE4DD",
-            "#BDDFD5",
-            "#A0C9BB",
-            "#70AD99",
-            "#419277",
-            "#117755",
-            "#0D5940",
-            "#093C2B",
-            "#041E15",
-          ],
-        },
-      }}
-    >
-      <RouterTransition />
-      {children}
-    </MantineProvider_>
+    <DirectionProvider>
+      <MantineProvider_
+        theme={theme}
+      >
+        {children}
+      </MantineProvider_>
+    </DirectionProvider>
   );
 }

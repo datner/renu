@@ -1,4 +1,4 @@
-import * as Effect from "@effect/io/Effect";
+import { Effect } from "effect";
 import { GetCategoryById } from "./getById";
 import { GetCategoryContent } from "./getContent";
 import { GetCategoryItems } from "./getItems";

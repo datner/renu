@@ -1,9 +1,8 @@
 import { Ctx } from "@blitzjs/next";
-import { resolver } from "@blitzjs/rpc";
 import * as Schema from "@effect/schema/Schema";
 import { AuthenticatedCtx, AuthenticationError, AuthorizationError, CSRFTokenMismatchError } from "blitz";
 import { GlobalRole, MembershipRole } from "database";
-import { absurd, Context, Data, Effect, Match, pipe, Pipeable } from "effect";
+import { absurd, Context, Data, Effect, Match } from "effect";
 
 export type ResolverError = Data.TaggedEnum<{
   AuthorizationError: AuthorizationError;
@@ -15,9 +14,9 @@ export type ResolverError = Data.TaggedEnum<{
 export const ResolverError = Data.taggedEnum<ResolverError>();
 
 export const liftError = Match.type<unknown>().pipe(
-  Match.when(Match.instanceOf(AuthenticationError), ResolverError("AuthenticationError")),
-  Match.when(Match.instanceOf(AuthorizationError), ResolverError("AuthorizationError")),
-  Match.when(Match.instanceOf(CSRFTokenMismatchError), ResolverError("CSRFTokenMismatchError")),
+  Match.when(Match.instanceOf(AuthenticationError), ResolverError.AuthenticationError),
+  Match.when(Match.instanceOf(AuthorizationError), ResolverError.AuthorizationError),
+  Match.when(Match.instanceOf(CSRFTokenMismatchError), ResolverError.CSRFTokenMismatchError),
   Match.orElse(_ => {
     throw absurd(_ as never);
   }),
@@ -69,7 +68,7 @@ export const esnureOrgVenueMatch = <I>(_: I, ctx: AuthenticatedCtx) =>
     ctx.session.venue.organizationId === ctx.session.organization.id,
     {
       onTrue: Effect.succeed(_),
-      onFalse: Effect.fail(ResolverError("OrgVenueMismatchError")()),
+      onFalse: Effect.fail(ResolverError.OrgVenueMismatchError()),
     },
   );
 

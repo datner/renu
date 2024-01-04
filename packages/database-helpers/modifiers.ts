@@ -1,8 +1,5 @@
-import { pipe } from "@effect/data/Function";
-import * as N from "@effect/data/Number";
-import * as O from "@effect/data/Option";
-import * as P from "@effect/data/Predicate";
 import * as S from "@effect/schema/Schema";
+import { Number as N, Option as O, pipe, Predicate as P } from "effect";
 import { Refinement } from "shared/effect";
 import { Common, Number } from "shared/schema";
 
@@ -19,19 +16,19 @@ export const BaseOption = S.struct({
   price: S.number,
   content: S.nonEmptyArray(Common.Content),
 });
-export interface BaseOption extends S.To<typeof BaseOption> {}
+export interface BaseOption extends S.Schema.To<typeof BaseOption> {}
 
 export const OneOfOption = pipe(
   BaseOption,
   S.extend(S.struct({ default: S.boolean })),
 );
-export interface OneOfOption extends S.To<typeof OneOfOption> {}
+export interface OneOfOption extends S.Schema.To<typeof OneOfOption> {}
 
 export const ExtrasOption = pipe(
   BaseOption,
   S.extend(S.struct({ multi: S.boolean })),
 );
-export interface ExtrasOption extends S.To<typeof ExtrasOption> {}
+export interface ExtrasOption extends S.Schema.To<typeof ExtrasOption> {}
 
 export const SliderOption = S.struct({
   managementRepresentation: S.optional(S.unknown),
@@ -46,7 +43,7 @@ export const BaseModifier = S.struct({
   content: S.nonEmptyArray(Common.Content),
   options: S.nonEmptyArray(BaseOption),
 });
-export interface BaseModifier extends S.To<typeof BaseModifier> {}
+export interface BaseModifier extends S.Schema.To<typeof BaseModifier> {}
 
 export const OneOf = pipe(
   BaseModifier,
@@ -59,7 +56,7 @@ export const OneOf = pipe(
     }),
   ),
 );
-export interface OneOf extends S.To<typeof OneOf> {}
+export interface OneOf extends S.Schema.To<typeof OneOf> {}
 
 const Quantity = pipe(
   S.number,
@@ -84,7 +81,7 @@ export const Extras = pipe(
     }),
   ),
 );
-export interface Extras extends S.To<typeof Extras> {}
+export interface Extras extends S.Schema.To<typeof Extras> {}
 
 export const Slider = pipe(
   BaseModifier,
@@ -96,7 +93,7 @@ export const Slider = pipe(
     }),
   ),
 );
-export interface Slider extends S.To<typeof Slider> {}
+export interface Slider extends S.Schema.To<typeof Slider> {}
 
 export const ModifierConfig = S.union(OneOf, Extras, Slider);
 export type ModifierConfig = OneOf | Extras | Slider;

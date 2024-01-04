@@ -1,3 +1,4 @@
+import "@mantine/dropzone/styles.css";
 import { BlitzLayout, Routes } from "@blitzjs/next";
 import NiceModal from "@ebay/nice-modal-react";
 import {
@@ -11,7 +12,7 @@ import {
   // PhotoIcon as PhotographIcon,
   // UserGroupIcon,
 } from "@heroicons/react/24/solid";
-import { Navbar } from "@mantine/core";
+import { AppShell, LoadingOverlay } from "@mantine/core";
 import clsx from "clsx";
 import { ReactNode, Suspense } from "react";
 import { ToastContainer } from "react-toastify";
@@ -20,9 +21,10 @@ import { useIsRtl } from "../hooks/useIsRtl";
 import Layout from "./Layout";
 
 import "react-toastify/dist/ReactToastify.css";
+import { Header } from "src/admin/components/Content/Header";
 import { ActiveLink } from "../components/ActiveLink";
 
-type Props = { children?: ReactNode };
+type Props = { children?: ReactNode; aside?: ReactNode };
 
 const sidebarNavigation = [
   { name: "Home", href: Routes.AdminHome(), icon: HomeIcon },
@@ -73,32 +75,42 @@ const navLinks = sidebarNavigation.map((item) => (
 ));
 
 const navigation = (
-  <Navbar
-    sx={(theme) => ({ backgroundColor: theme.colors.teal[7], border: 0 })}
-    width={{ sm: 112 }}
-  >
-    <Navbar.Section>
-      <div className="h-16"></div>
-    </Navbar.Section>
-    <Navbar.Section grow className="p-3 space-y-2">
+  <AppShell.Navbar bg="teal">
+    <AppShell.Section grow className="p-3 space-y-2">
       {navLinks}
-    </Navbar.Section>
-  </Navbar>
+    </AppShell.Section>
+  </AppShell.Navbar>
 );
 
-export const AdminLayout: BlitzLayout<Props> = ({ children }) => (
-  <Layout title="Renu | Admin">
-    <div className="flex grow min-h-0">
-      {navigation}
-      <div className="grow min-h-0 flex flex-col">
-        <Suspense>
-          <ImpersonationNotice />
-        </Suspense>
-        <NiceModal.Provider>
-          {children}
-          <ToastContainer rtl={useIsRtl()} autoClose={1500} position="bottom-right" />
-        </NiceModal.Provider>
-      </div>
-    </div>
-  </Layout>
+export const AdminLayout: BlitzLayout<Props> = ({ children, aside }) => (
+  <NiceModal.Provider>
+    <Layout title="Renu | Admin">
+      <AppShell
+        header={{ height: 65 }}
+        navbar={{ width: 112, breakpoint: 0 }}
+        aside={{ width: 300, breakpoint: 0, collapsed: { desktop: !aside } }}
+      >
+        <AppShell.Header>
+          <Header />
+        </AppShell.Header>
+        {navigation}
+        <AppShell.Main className="bg-gray-50">
+          <Suspense>
+            <ImpersonationNotice />
+          </Suspense>
+          <Suspense fallback={<LoadingOverlay visible />}>
+            {children}
+          </Suspense>
+        </AppShell.Main>
+        {aside && (
+          <AppShell.Aside>
+            <Suspense fallback={<LoadingOverlay visible />}>
+              {aside}
+            </Suspense>
+          </AppShell.Aside>
+        )}
+        <ToastContainer rtl={useIsRtl()} autoClose={1500} position="bottom-right" />
+      </AppShell>
+    </Layout>
+  </NiceModal.Provider>
 );

@@ -1,8 +1,7 @@
-import * as Effect from "@effect/io/Effect";
-import * as Match from "@effect/match";
 import * as Schema from "@effect/schema/Schema";
 import { ORDER_STATUS } from "@integrations/dorix/types";
 import { OrderState } from "database";
+import { Effect, Match } from "effect";
 import { NextApiRequest, NextApiResponse } from "next";
 import { Order } from "shared";
 import { Renu } from "src/core/effect";
@@ -47,7 +46,7 @@ const DorixResponse = Schema.union(
   DorixFailure.pipe(Schema.attachPropertySignature("_tag", "DorixFailure")),
 );
 
-const getNextState = Match.type<Schema.To<typeof DorixSuccess>["order"]["status"]>().pipe(
+const getNextState = Match.type<Schema.Schema.To<typeof DorixSuccess>["order"]["status"]>().pipe(
   Match.whenOr("FAILED", "UNREACHABLE", _ => OrderState.Cancelled),
   Match.when("AWAITING_TO_BE_RECEIVED", _ => OrderState.Unconfirmed),
   Match.orElse(_ => OrderState.Confirmed),
@@ -61,7 +60,7 @@ const handler = (req: NextApiRequest, res: NextApiResponse) =>
       _.body
     ),
     Effect.flatMap(Schema.parse(DorixResponse)),
-    Effect.filterOrFail(Schema.is(DorixSuccess), _ => _ as Schema.To<typeof DorixFailure>),
+    Effect.filterOrFail(Schema.is(DorixSuccess), _ => _ as Schema.Schema.To<typeof DorixFailure>),
     Effect.flatMap(_ => Order.setOrderState(_.order.externalId, getNextState(_.order.status))),
     Effect.match({
       onFailure: (e) => res.status(500).json(e),

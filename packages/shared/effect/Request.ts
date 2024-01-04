@@ -1,12 +1,14 @@
-import * as Data from "@effect/data/Data";
-import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as RA from "@effect/data/ReadonlyRecord";
-import * as Effect from "@effect/io/Effect";
-import * as Request from "@effect/io/Request";
-import * as RequestResolver from "@effect/io/RequestResolver";
 import * as Schema from "@effect/schema/Schema";
+import {
+  Data,
+  Effect,
+  Option as O,
+  pipe,
+  ReadonlyArray as A,
+  ReadonlyRecord as RA,
+  Request,
+  RequestResolver,
+} from "effect";
 import { Database } from "../Database";
 
 interface RequestError<Tag extends string> extends Data.Case {
@@ -69,7 +71,7 @@ export const createRequest =
       ));
   };
 
-export const resolveBatch = <E, A, Req extends Request.Request<E, A[]>>(
+export const resolveBatch = <E, A, Req extends Request.Request<E, ReadonlyArray<A>>>(
   requests: Req[],
   getResult: (reqs: Req[], db: Database) => Promise<A[]>,
   getRequestKey: (r: Req) => string,

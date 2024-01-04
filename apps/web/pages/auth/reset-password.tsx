@@ -46,7 +46,14 @@ const ResetPasswordPage: BlitzPage = () => {
 
   return (
     <Container size="xs">
-      <Paper sx={{ width: 460 }} withBorder shadow="md" p={30} mt={30} radius="md">
+      <Paper
+        className="w-[460px]"
+        withBorder
+        shadow="md"
+        p={30}
+        mt={30}
+        radius="md"
+      >
         {isSuccess
           ? (
             <div>

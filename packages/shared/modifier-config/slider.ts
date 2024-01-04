@@ -5,7 +5,7 @@ import * as Base from "./base";
 export const Option = pipe(
   Base.Option,
 );
-export interface Option extends S.To<typeof Option> {}
+export interface Option extends S.Schema.To<typeof Option> {}
 
 export const Modifier = pipe(
   Base.Modifier,
@@ -17,4 +17,4 @@ export const Modifier = pipe(
     }),
   ),
 );
-export interface Slider extends S.To<typeof Modifier> {}
+export interface Slider extends S.Schema.To<typeof Modifier> {}

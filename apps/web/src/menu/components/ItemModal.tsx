@@ -1,16 +1,10 @@
-import * as Data from "@effect/data/Data";
-import { pipe } from "@effect/data/Function";
-import * as HashMap from "@effect/data/HashMap";
-import * as N from "@effect/data/Number";
-import * as O from "@effect/data/Option";
-import * as RA from "@effect/data/ReadonlyArray";
-import * as RR from "@effect/data/ReadonlyRecord";
 import { a, animated, useSpring } from "@react-spring/web";
 import { useScroll } from "@use-gesture/react";
+import { Data, HashMap, Number, Option, pipe, ReadonlyArray, ReadonlyRecord } from "effect";
 import Image from "next/image";
 import { useCallback, useMemo, useState } from "react";
 import { Blurhash } from "react-blurhash";
-import { Number } from "shared/schema";
+import { Amount, Cost } from "shared/schema/number";
 import { descriptionFor, priceShekel, titleFor } from "src/core/helpers/content";
 import { useLocale } from "src/core/hooks/useLocale";
 import * as Order from "../hooks/useOrder";
@@ -26,8 +20,8 @@ const ImageBasis = {
 
 const THREE_QUATERS_PROGRESS = ImageBasis.Min * 1.5;
 
-const clampImgHeight = N.clamp(ImageBasis.Min, ImageBasis.Max);
-const clampBinary = N.clamp(0, 1);
+const clampImgHeight = Number.clamp({ minimum: ImageBasis.Min, maximum: ImageBasis.Max });
+const clampBinary = Number.clamp({ minimum: 0, maximum: 1 });
 
 export function ItemModal() {
   const [{ activeItem }, dispatch] = useOrderContext();
@@ -36,15 +30,15 @@ export function ItemModal() {
 
   return (
     <Modal
-      open={O.isSome(activeItem) && open}
+      open={Option.isSome(activeItem) && open}
       onClose={handleClose}
       onDestroyed={() => {
         dispatch(Order.removeActiveItem());
         setOpen(true);
       }}
     >
-      {O.getOrNull(
-        O.map(activeItem, (item) => <ItemModal_ activeItem={item} onClose={handleClose} dispatch={dispatch} />),
+      {Option.getOrNull(
+        Option.map(activeItem, (item) => <ItemModal_ activeItem={item} onClose={handleClose} dispatch={dispatch} />),
       )}
     </Modal>
   );
@@ -104,55 +98,55 @@ function ItemModal_(props: Props2) {
       onClose();
       const { extras, oneOfs } = getModifiers(item.modifiers);
 
-      const oneOfMap = HashMap.make(...RA.map(oneOfs, (oo) => [String(oo.id), oo] as const));
-      const extrasMap = HashMap.make(...RA.map(extras, (oo) => [String(oo.id), oo] as const));
+      const oneOfMap = HashMap.make(...ReadonlyArray.map(oneOfs, (oo) => [String(oo.id), oo] as const));
+      const extrasMap = HashMap.make(...ReadonlyArray.map(extras, (oo) => [String(oo.id), oo] as const));
 
       const oneOfCost = pipe(
-        RR.map(modifiers.oneOf, (oo, id) => O.all([O.some(oo), HashMap.get(oneOfMap, id)])),
-        RR.compact,
-        RR.map(([oo, of]) =>
-          O.all([
-            O.some(oo.amount),
-            RA.findFirst(of.config.options, (o) => o.identifier === oo.choice),
+        ReadonlyRecord.map(modifiers.oneOf, (oo, id) => Option.all([Option.some(oo), HashMap.get(oneOfMap, id)])),
+        ReadonlyRecord.getSomes,
+        ReadonlyRecord.map(([oo, of]) =>
+          Option.all([
+            Option.some(oo.amount),
+            ReadonlyArray.findFirst(of.config.options, (o) => o.identifier === oo.choice),
           ])
         ),
-        RR.compact,
-        RR.collect((_, [am, opt]) => am * opt.price),
-        N.sumAll,
+        ReadonlyRecord.getSomes,
+        ReadonlyRecord.collect((_, [am, opt]) => am * opt.price),
+        Number.sumAll,
       );
 
       const extrasCost = pipe(
-        RR.map(modifiers.extras, (oo, id) => O.all([O.some(oo), HashMap.get(extrasMap, id)])),
-        RR.compact,
-        RR.collect((_, [oo, of]) =>
-          RR.collect(oo.choices, (choice, amount) =>
-            O.all([
-              O.some(amount),
-              RA.findFirst(of.config.options, (o) => o.identifier === choice),
+        ReadonlyRecord.map(modifiers.extras, (oo, id) => Option.all([Option.some(oo), HashMap.get(extrasMap, id)])),
+        ReadonlyRecord.getSomes,
+        ReadonlyRecord.collect((_, [oo, of]) =>
+          ReadonlyRecord.collect(oo.choices, (choice, amount) =>
+            Option.all([
+              Option.some(amount),
+              ReadonlyArray.findFirst(of.config.options, (o) => o.identifier === choice),
             ]))
         ),
-        RA.flatten,
-        RA.compact,
-        RA.map(([am, opt]) => am * opt.price),
-        N.sumAll,
+        ReadonlyArray.flatten,
+        ReadonlyArray.getSomes,
+        ReadonlyArray.map(([am, opt]) => am * opt.price),
+        Number.sumAll,
       );
 
       const single = Order.SingleOrderItem({
         item,
         comment,
         valid: true,
-        cost: Number.Cost(N.sumAll([item.price, oneOfCost, extrasCost]) * amount),
+        cost: Cost(Number.sumAll([item.price, oneOfCost, extrasCost]) * amount),
         modifiers: HashMap.make(
           ...pipe(
             modifiers.oneOf,
-            RR.filter((_, id) => HashMap.has(oneOfMap, id)),
-            RR.collect((_id, oo) => {
+            ReadonlyRecord.filter((_, id) => HashMap.has(oneOfMap, id)),
+            ReadonlyRecord.collect((_id, oo) => {
               const id = _Menu.ItemModifierId(parseInt(_id, 10));
               return [
                 id,
                 Order.OneOf({
                   id,
-                  amount: Number.Amount(1),
+                  amount: Amount(1),
                   config: Data.struct(HashMap.unsafeGet(oneOfMap, _id).config),
                   choice: oo.choice,
                 }),
@@ -161,8 +155,8 @@ function ItemModal_(props: Props2) {
           ),
           ...pipe(
             modifiers.extras,
-            RR.filter((_, id) => HashMap.has(extrasMap, id)),
-            RR.collect((_id, oo) => {
+            ReadonlyRecord.filter((_, id) => HashMap.has(extrasMap, id)),
+            ReadonlyRecord.collect((_id, oo) => {
               const id = _Menu.ItemModifierId(parseInt(_id, 10));
               return [
                 id,
@@ -170,9 +164,9 @@ function ItemModal_(props: Props2) {
                   id,
                   choices: pipe(
                     oo.choices,
-                    RR.filter((amount) => amount > 0),
-                    RR.map(Number.Amount),
-                    RR.toEntries,
+                    ReadonlyRecord.filter((amount) => amount > 0),
+                    ReadonlyRecord.map(Amount),
+                    ReadonlyRecord.toEntries,
                     HashMap.fromIterable,
                   ),
                   config: Data.struct(HashMap.unsafeGet(extrasMap, _id).config),
@@ -201,8 +195,8 @@ function ItemModal_(props: Props2) {
 
   const orderItem = pipe(
     activeItem,
-    O.liftPredicate(Order.isExistingActiveItem),
-    O.map((s) => s.item),
+    Option.liftPredicate(Order.isExistingActiveItem),
+    Option.map((s) => s.item),
   );
 
   return (
@@ -219,19 +213,19 @@ function ItemModal_(props: Props2) {
             className="relative w-full self-end grow-0 shrink-0"
           >
             {pipe(
-              O.map(
+              Option.map(
                 item.blurHash,
                 (hash) => <AnimatedBlurhash hash={hash} width="100%" style={{ height: imgHeight }} />,
               ),
-              O.getOrNull,
+              Option.getOrNull,
             )}
             {item?.image && (
               <Image
                 className="object-cover"
                 fill
                 src={item.image}
-                placeholder={O.match(item.blurDataUrl, { onNone: () => "empty", onSome: () => "blur" })}
-                blurDataURL={O.getOrUndefined(item.blurDataUrl)}
+                placeholder={Option.match(item.blurDataUrl, { onNone: () => "empty", onSome: () => "blur" })}
+                blurDataURL={Option.getOrUndefined(item.blurDataUrl)}
                 alt={item.identifier}
                 sizes="100vw"
               />

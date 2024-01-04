@@ -1,6 +1,5 @@
-import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
 import * as S from "@effect/schema/Schema";
+import { Option as O, pipe } from "effect";
 import { Order } from "shared";
 import { Cost } from "../../shared/schema/number";
 
@@ -9,26 +8,26 @@ export const PhoneNumber = pipe(
   S.pattern(/^05\d{8}$/),
   S.brand("PhoneNumber"),
 );
-export type PhoneNumber = S.To<typeof PhoneNumber>;
+export type PhoneNumber = S.Schema.To<typeof PhoneNumber>;
 
 export const Name = pipe(S.string, S.brand("Name"));
-export type Name = S.To<typeof Name>;
+export type Name = S.Schema.To<typeof Name>;
 
 export const Installments = pipe(S.literal(1), S.brand("Installments"));
-export type Installments = S.To<typeof Installments>;
+export type Installments = S.Schema.To<typeof Installments>;
 export const maxInstallments = Installments(1);
 
 export const Session = pipe(S.string, S.brand("GamaSession"));
-export type Session = S.To<typeof Session>;
+export type Session = S.Schema.To<typeof Session>;
 
 export const AuthorizationNumber = pipe(
   S.number,
   S.brand("GamaIssuerAuthorizationNumber"),
 );
-export type AuthorizationNumber = S.To<typeof AuthorizationNumber>;
+export type AuthorizationNumber = S.Schema.To<typeof AuthorizationNumber>;
 
 export const CardNumber = pipe(S.number, S.brand("GamaCardNumber"));
-export type CardNumber = S.To<typeof CardNumber>;
+export type CardNumber = S.Schema.To<typeof CardNumber>;
 
 export const PaymentNetworks = {
   bit: "bit",
@@ -39,7 +38,7 @@ export const PaymentNetwork = pipe(
   S.enums(PaymentNetworks),
   S.brand("PaymentNetwork"),
 );
-export type PaymentNetwork = S.To<typeof PaymentNetwork>;
+export type PaymentNetwork = S.Schema.To<typeof PaymentNetwork>;
 export const paymentNetwork = PaymentNetwork(PaymentNetworks.shva);
 
 export const PaymentProcesses = {
@@ -51,21 +50,21 @@ export const PaymentProcess = pipe(
   S.enums(PaymentProcesses),
   S.brand("@integrations/gama/PaymentProcess"),
 );
-export type PaymentProcess = S.To<typeof PaymentProcess>;
+export type PaymentProcess = S.Schema.To<typeof PaymentProcess>;
 export const paymentProcess = PaymentProcess(PaymentProcesses.creditCard);
 
 export const PaymentCurrency = pipe(
   S.literal("ILS"),
   S.brand("@integrations/gata/PaymentCurrency"),
 );
-export type PaymentCurrency = S.To<typeof PaymentCurrency>;
+export type PaymentCurrency = S.Schema.To<typeof PaymentCurrency>;
 export const paymentCurrency = PaymentCurrency("ILS");
 
 export const IFrameUrl = pipe(
   S.string,
   S.brand("IFrameUrl"),
 );
-export type IFrameUrl = S.To<typeof IFrameUrl>;
+export type IFrameUrl = S.Schema.To<typeof IFrameUrl>;
 
 export const CreateSessionInput = S.struct({
   paymentAmount: Cost,
@@ -74,7 +73,7 @@ export const CreateSessionInput = S.struct({
   orderId: Order.Id,
   venueName: S.string,
 });
-export interface CreateSessionInput extends S.To<typeof CreateSessionInput> {}
+export interface CreateSessionInput extends S.Schema.To<typeof CreateSessionInput> {}
 export const CreateSessionPayload = S.struct({
   clientId: S.number,
   clientSecret: S.string,
@@ -97,14 +96,14 @@ export const CreateSessionPayload = S.struct({
     callbackUrl: S.optional(S.string),
   }),
 });
-export interface CreateSessionPayload extends S.To<typeof CreateSessionPayload> {}
+export interface CreateSessionPayload extends S.Schema.To<typeof CreateSessionPayload> {}
 
 export const PaymentResponse = S.struct({
   transactionStatus: S.literal("approved"),
   issuerAuthorizationNumber: AuthorizationNumber,
   cardNumber: CardNumber,
 });
-interface PaymentResponse extends S.To<typeof PaymentResponse> {}
+interface PaymentResponse extends S.Schema.To<typeof PaymentResponse> {}
 
 export const PaymentResponseOption = pipe(
   S.union(
@@ -122,7 +121,7 @@ export const PaymentResponseOption = pipe(
 export const CreateSessionData = pipe(
   S.struct({
     session: Session,
-    iframeUrl: S.optional(IFrameUrl).toOption(),
+    iframeUrl: S.optional(IFrameUrl, { as: "Option" }),
     paymentResponse: PaymentResponseOption,
   }),
 );
@@ -155,4 +154,4 @@ export const CreateSessionSuccess = pipe(
     }),
   ),
 );
-export interface CreateSessionSuccess extends S.To<typeof CreateSessionSuccess> {}
+export interface CreateSessionSuccess extends S.Schema.To<typeof CreateSessionSuccess> {}

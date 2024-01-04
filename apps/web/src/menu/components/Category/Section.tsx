@@ -1,4 +1,4 @@
-import { clsx } from "@mantine/core";
+import { clsx } from "clsx";
 import { forwardRef, memo, ReactNode } from "react";
 import { Venue } from "shared";
 import { useTitle } from "src/menu/hooks/useTitle";

@@ -12,7 +12,7 @@ export function SmallAmountButtons(props: Props) {
   const handlers = useRef<NumberInputHandlers>();
 
   return (
-    <Group spacing={5}>
+    <Group gap={5}>
       <ActionIcon size="xl" variant="default" onClick={() => handlers.current?.decrement()}>
         –
       </ActionIcon>
@@ -21,7 +21,7 @@ export function SmallAmountButtons(props: Props) {
         hideControls
         readOnly
         value={value}
-        onChange={onChange}
+        onChange={_ => onChange(Number(_))}
         handlersRef={handlers}
         min={0}
         step={1}

@@ -1,11 +1,8 @@
-import * as E from "@effect/data/Either";
-import { pipe } from "@effect/data/Function";
-import * as Str from "@effect/data/String";
-import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
 import { fullOrderInclude } from "@integrations/core/management";
 import * as Management from "@integrations/management";
 import db, { OrderState } from "db";
+import { Effect, Either, pipe, String } from "effect";
 import { notify } from "integrations/telegram/sendMessage";
 import { NextApiRequest, NextApiResponse } from "next";
 import { Renu } from "src/core/effect";
@@ -17,7 +14,7 @@ const handler = async (request: NextApiRequest, res: NextApiResponse) =>
   pipe(
     Effect.succeed(request),
     Effect.filterOrDieMessage(
-      (req) => Str.toLowerCase(req.method || "") === "post",
+      (req) => String.toLowerCase(req.method || "") === "post",
       "this endpoint only received POST messages",
     ),
     Effect.map((req) => req.body),
@@ -43,7 +40,7 @@ const handler = async (request: NextApiRequest, res: NextApiResponse) =>
 
           const either = yield* $(Effect.either(Management.reportOrder(order)));
 
-          if (E.isLeft(either)) {
+          if (Either.isLeft(either)) {
             const e = either.left;
             const orderId = ppc.transaction.more_info;
             const venueId = ppc.transaction.more_info_1;

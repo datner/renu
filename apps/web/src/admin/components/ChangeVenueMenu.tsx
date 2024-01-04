@@ -1,21 +1,20 @@
 import { useAuthenticatedSession } from "@blitzjs/auth";
 import { getQueryClient, useMutation, useQuery } from "@blitzjs/rpc";
 import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as RA from "@effect/data/ReadonlyArray";
-import * as Schema from "@effect/schema/Schema";
+import { Schema } from "@effect/schema";
 import { Menu, Transition } from "@headlessui/react";
 import { ChevronDownIcon } from "@heroicons/react/24/solid";
-import { clsx, Loader } from "@mantine/core";
+import { Loader } from "@mantine/core";
+import { clsx } from "clsx";
+import { Option as O, ReadonlyArray as RA } from "effect";
 import { Fragment } from "react";
 import { Content } from "shared/schema/common";
-import { titleFor } from "src/core/helpers/content";
 import { useLocale } from "src/core/hooks/useLocale";
 import changeCurrentVenue from "src/venues/mutations/changeCurrentVenue";
 import getOrgVenues from "src/venues/queries/getOrgVenues";
 
 const VenueContent = pipe(Content, Schema.omit("description"), Schema.array);
-interface VenueContent extends Schema.To<typeof VenueContent> {}
+interface VenueContent extends Schema.Schema.To<typeof VenueContent> {}
 
 const decodeContent = Schema.decodeSync(VenueContent);
 

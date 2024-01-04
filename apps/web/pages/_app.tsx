@@ -42,14 +42,14 @@ export default withBlitz(function App({
   }, [locale, dir]);
 
   return (
-    <NextIntlClientProvider messages={messages}>
+    <NextIntlClientProvider locale={locale} timeZone="Asia/Jerusalem" messages={messages}>
       {/* This MantineProvider is a local component */}
       <MantineProvider>
         <ErrorBoundary
           FallbackComponent={RootErrorFallback}
           onReset={useQueryErrorResetBoundary().reset}
         >
-          <div className={clsx(secularOne.variable, notoSans.variable, "flex grow min-h-0")}>
+          <div className={clsx(secularOne.variable, notoSans.variable)}>
             {getLayout(<Component {...rest} />)}
           </div>
         </ErrorBoundary>

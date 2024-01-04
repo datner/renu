@@ -1,10 +1,9 @@
-import * as Context from "@effect/data/Context";
-import * as Effect from "@effect/io/Effect";
 import { Prisma } from "database";
+import { Context, Effect } from "effect";
 import { Order } from "shared";
 
 export interface OrderRepository {
-  readonly getOrder: <Get extends Prisma.OrderArgs>(
+  readonly getOrder: <Get extends Prisma.OrderDefaultArgs>(
     id: Order.Id,
     args: Get,
   ) => Effect.Effect<never, never, Prisma.OrderGetPayload<Get>>;

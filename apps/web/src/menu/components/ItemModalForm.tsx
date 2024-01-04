@@ -1,9 +1,4 @@
-import { pipe } from "@effect/data/Function";
-import * as HashMap from "@effect/data/HashMap";
-import * as N from "@effect/data/Number";
-import * as O from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as RR from "@effect/data/ReadonlyRecord";
+import { HashMap, Number, Option, pipe, ReadonlyArray, ReadonlyRecord } from "effect";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
@@ -25,7 +20,7 @@ import { AmountButtons } from "./AmountButtons";
 import { ModifiersBlock } from "./ModifiersBlock";
 
 interface ItemModalFormProps {
-  order: O.Option<Order.OrderItem>;
+  order: Option.Option<Order.OrderItem>;
   item: Venue.Menu.MenuItem;
   // Note on containerEl: this is a filthy dirty hack because I can't find a fuck to do it right
   containerEl: HTMLElement | null;
@@ -73,25 +68,25 @@ const makeDefaults = (item: Venue.Menu.MenuItem): DefaultValues<ItemFieldValues[
   const { extras, oneOfs } = getModifiers(item.modifiers);
   return {
     oneOf: Object.fromEntries(
-      A.map(oneOfs, (oneOf) => [
+      ReadonlyArray.map(oneOfs, (oneOf) => [
         oneOf.id,
         {
           identifier: oneOf.config.identifier,
           amount: 1,
           choice: pipe(
-            A.findFirst(oneOf.config.options, (o) => o.default),
-            O.map((o) => o.identifier),
-            O.getOrElse(() => A.headNonEmpty(oneOf.config.options).identifier),
+            ReadonlyArray.findFirst(oneOf.config.options, (o) => o.default),
+            Option.map((o) => o.identifier),
+            Option.getOrElse(() => ReadonlyArray.headNonEmpty(oneOf.config.options).identifier),
           ),
         },
       ]),
     ),
     extras: Object.fromEntries(
-      A.map(extras, (ex) => [
+      ReadonlyArray.map(extras, (ex) => [
         ex.id,
         {
           identifier: ex.config.identifier,
-          choices: Object.fromEntries(A.map(ex.config.options, (o) => [o.identifier, 0])),
+          choices: Object.fromEntries(ReadonlyArray.map(ex.config.options, (o) => [o.identifier, 0])),
         },
       ]),
     ),
@@ -102,40 +97,40 @@ const makeOrderDefaults = (order: Order.OrderItem): DefaultValues<ItemFieldValue
   const { extras: allExtras, oneOfs } = getModifiers(order.item.modifiers);
   return {
     oneOf: Object.fromEntries(
-      A.map(oneOfs, (oneOf) => [
+      ReadonlyArray.map(oneOfs, (oneOf) => [
         oneOf.id,
         {
           identifier: oneOf.config.identifier,
           amount: 1,
           choice: pipe(
             HashMap.get(order.modifiers, oneOf.id),
-            O.filter(Order.isOneOf),
-            O.map((o) => o.choice),
-            O.orElse(() =>
-              O.map(
-                A.findFirst(oneOf.config.options, (o) => o.default),
+            Option.filter(Order.isOneOf),
+            Option.map((o) => o.choice),
+            Option.orElse(() =>
+              Option.map(
+                ReadonlyArray.findFirst(oneOf.config.options, (o) => o.default),
                 (o) => o.identifier,
               )
             ),
-            O.getOrElse(() => A.headNonEmpty(oneOf.config.options).identifier),
+            Option.getOrElse(() => ReadonlyArray.headNonEmpty(oneOf.config.options).identifier),
           ),
         },
       ]),
     ),
     extras: Object.fromEntries(
-      A.map(allExtras, (ex) => [
+      ReadonlyArray.map(allExtras, (ex) => [
         ex.id,
         {
           identifier: ex.config.identifier,
           choices: Object.fromEntries(
-            A.zip(
-              A.map(ex.config.options, (o) => o.identifier),
-              A.map(ex.config.options, (o) =>
+            ReadonlyArray.zip(
+              ReadonlyArray.map(ex.config.options, (o) => o.identifier),
+              ReadonlyArray.map(ex.config.options, (o) =>
                 pipe(
                   HashMap.get(order.modifiers, ex.id),
-                  O.filter(Order.isExtras),
-                  O.flatMap((m) => HashMap.get(m.choices, o.identifier)),
-                  O.getOrElse(() => 0),
+                  Option.filter(Order.isExtras),
+                  Option.flatMap((m) => HashMap.get(m.choices, o.identifier)),
+                  Option.getOrElse(() => 0),
                 )),
             ),
           ),
@@ -170,11 +165,11 @@ export interface ItemFieldValues {
 export function ItemModalForm(props: ItemModalFormProps) {
   const { order, item, onSubmit, containerEl } = props;
   const t = useTranslations("menu.Components.ItemModal");
-  const isEdit = O.isSome(order);
+  const isEdit = Option.isSome(order);
 
   const defaultValues = useMemo<DefaultValues<ItemFieldValues>>(
     () =>
-      O.match(order, {
+      Option.match(order, {
         onNone: () => ({
           comment: "",
           amount: 1,
@@ -214,7 +209,7 @@ export function ItemModalForm(props: ItemModalFormProps) {
   const submitOrRemove = handleSubmit(
     (data) => {
       onSubmit(
-        O.isSome(order) && (amount === 0 || !isDirty)
+        Option.isSome(order) && (amount === 0 || !isDirty)
           ? { amount: 0, comment: "", modifiers: { oneOf: {}, extras: {} } }
           : data,
       );
@@ -226,7 +221,7 @@ export function ItemModalForm(props: ItemModalFormProps) {
     () =>
       pipe(
         item.modifiers,
-        A.map((m) => [m.id, m] as const),
+        ReadonlyArray.map((m) => [m.id, m] as const),
         HashMap.fromIterable,
       ),
     [item],
@@ -252,7 +247,7 @@ export function ItemModalForm(props: ItemModalFormProps) {
                 <div className="basis-32">
                   <AmountButtons
                     // Number(true) === 1, Number(false) === 0
-                    minimum={Number(O.isNone(order))}
+                    minimum={+Option.isNone(order)}
                     amount={amount}
                     onIncrement={() => field.onChange(amount + 1)}
                     onDecrement={() => field.onChange(amount - 1)}
@@ -260,7 +255,7 @@ export function ItemModalForm(props: ItemModalFormProps) {
                 </div>
               )}
               <SubmitButton
-                isCreate={O.isNone(order)}
+                isCreate={Option.isNone(order)}
                 onRemove={handleRemove}
                 price={item.price}
                 modifierMap={modifiers}
@@ -295,44 +290,45 @@ function SubmitButton(props: SubmitButtonProps) {
 
   const orderState = isCreate ? OrderState.NEW : isUpdate ? OrderState.UPDATE : OrderState.REMOVE;
 
-  const oneOf = RR.collect(oneOfs, (id, { choice, amount }) =>
+  const oneOf = ReadonlyRecord.collect(oneOfs, (id, { choice, amount }) =>
     pipe(
       modifierMap,
-      HashMap.get(Item.Modifier.Id(Number(id))),
-      O.map((o) => o.config),
-      O.filter(ModifierConfig.isOneOf),
-      O.flatMap((m) => A.findFirst(m.options, (o) => o.identifier === choice)),
-      O.map((o) => o.price * amount),
-      O.getOrElse(() => 0),
+      HashMap.get(Item.Modifier.Id(+id)),
+      Option.map((o) => o.config),
+      Option.filter(ModifierConfig.isOneOf),
+      Option.flatMap((m) => ReadonlyArray.findFirst(m.options, (o) => o.identifier === choice)),
+      Option.map((o) => o.price * amount),
+      Option.getOrElse(() => 0),
     ));
 
-  const extras = RR.collect(extrases, (id, { choices }) =>
+  const extras = ReadonlyRecord.collect(extrases, (id, { choices }) =>
     pipe(
       modifierMap,
-      HashMap.get(Item.Modifier.Id(Number(id))),
-      O.map((m) => m.config),
-      O.filter(ModifierConfig.isExtras),
-      O.map((ex) =>
-        RR.collect(choices, (choice, amount) =>
+      HashMap.get(Item.Modifier.Id(+id)),
+      Option.map((m) => m.config),
+      Option.filter(ModifierConfig.isExtras),
+      Option.map((ex) =>
+        ReadonlyRecord.collect(choices, (choice, amount) =>
           pipe(
-            A.findFirst(ex.options, (o) => o.identifier === choice),
-            O.map((o) => o.price * amount),
+            ReadonlyArray.findFirst(ex.options, (o) => o.identifier === choice),
+            Option.map((o) => o.price * amount),
           ))
       ),
-      O.map(O.sumCompact),
-      O.getOrElse(() => 0),
+      Option.map(ReadonlyArray.getSomes),
+      Option.map(Number.sumAll),
+      Option.getOrElse(() => 0),
     ));
 
   // upgrade to something like
   // sequenceT(O.Apply)([markupOneOf, markupExtras, markupNewOne])
-  const total = N.sumAll([price, ...oneOf, ...extras]) * amount;
+  const total = Number.sumAll([price, ...oneOf, ...extras]) * amount;
   const isEmptySelection = price === 0 && total === 0;
 
   switch (orderState) {
     case OrderState.NEW:
       return (
         <button
-          disabled={RR.isEmptyRecord(errors) ? isEmptySelection : !isValid}
+          disabled={ReadonlyRecord.isEmptyRecord(errors) ? isEmptySelection : !isValid}
           form="item-form"
           type="submit"
           className="btn grow px-2 btn-primary"

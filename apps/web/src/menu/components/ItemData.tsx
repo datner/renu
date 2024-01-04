@@ -1,5 +1,5 @@
-import * as O from "@effect/data/Option";
 import clsx from "clsx";
+import { Option as O } from "effect";
 import { useTranslations } from "next-intl";
 import { PropsWithChildren, ReactNode } from "react";
 import { Common } from "shared/schema";

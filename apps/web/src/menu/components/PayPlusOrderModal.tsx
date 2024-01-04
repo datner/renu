@@ -42,10 +42,6 @@ type Payment = Data.TaggedEnum<{
 }>;
 const Payment = Data.taggedEnum<Payment>();
 
-const PaymentInit = Payment("Init");
-const PaymentOpen = Payment("Open");
-const PaymentClosed = Payment("Closed");
-
 const matchPayment = Match.typeTags<Payment>();
 const matchUrl = <A, B>(f: (url: string) => A, orElse: () => B) =>
   matchPayment({
@@ -66,24 +62,24 @@ export function PayPlusOrderModal(props: Props) {
   const { h } = useSpring({ h: height, immediate: isNoHeight });
   const [phoneNumber] = useLocalStorage({ key: "phone-number" });
   const [getUrl, url] = useMutation(getPayplusUrl);
-  const [payment, setPayment] = useState<Payment>(PaymentInit());
+  const [payment, setPayment] = useState<Payment>(Payment.Init());
   const [sendOrderMutation, { isLoading, data: existingOrder }] = useMutation(sendOrder);
 
   useEffect(() => {
-    setPayment(PaymentInit());
+    setPayment(Payment.Init());
   }, [order]);
 
   const handleOrder = async () => {
     if (payment._tag !== "Init") {
-      return setPayment(PaymentOpen(payment));
+      return setPayment(Payment.Open(payment));
     }
     if (OrderState.isEmptyOrder(order)) return;
 
     const newOrder = await sendOrderMutation({
       locale,
       // TODO: change this
-      clearingExtra: Order.Clearing.Extra("Gama")({ phoneNumber }),
-      managementExtra: Order.Management.Extra("Presto")({ phoneNumber }),
+      clearingExtra: Order.Clearing.Extra.Gama({ phoneNumber }),
+      managementExtra: Order.Management.Extra.Presto({ phoneNumber }),
       venueId,
       orderItems: pipe(
         order.items,
@@ -122,7 +118,7 @@ export function PayPlusOrderModal(props: Props) {
     });
 
     const url = await getUrl({ venueId: newOrder.venueId, orderId: newOrder.id });
-    setPayment(PaymentOpen({ url }));
+    setPayment(Payment.Open({ url }));
   };
 
   const amount = OrderState.getOrderAmount(order);
@@ -176,7 +172,7 @@ export function PayPlusOrderModal(props: Props) {
           if (payment._tag === "Init") {
             return;
           }
-          setPayment(PaymentClosed(payment));
+          setPayment(Payment.Closed(payment));
         }}
       >
         <div

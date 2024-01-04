@@ -1,14 +1,9 @@
-import * as Context from "@effect/data/Context";
-import { pipe } from "@effect/data/Function";
-import * as Config from "@effect/io/Config";
-import * as ConfigSecret from "@effect/io/ConfigSecret";
-import * as Effect from "@effect/io/Effect";
-import * as Layer from "@effect/io/Layer";
-import * as Parser from "@effect/schema/Parser";
+import { Schema } from "@effect/schema";
 import { CircuitBreaker, Http, Management } from "@integrations/core";
 import { HttpService } from "@integrations/core/http";
 import { ManagementError } from "@integrations/core/management";
 import { ManagementProvider, OrderState } from "database";
+import { Config, Context, Effect, Layer, pipe, Secret } from "effect";
 import { Integration, IntegrationService, SendOrderResponse, StatusResponse, toOrder } from "./helpers";
 import { DorixMenu, toMenu } from "./menu";
 
@@ -23,7 +18,7 @@ const DorixConfig = Config.all({
 
 const provideDorixIntegration = Effect.provideServiceEffect(
   IntegrationService,
-  Effect.flatMap(Management.IntegrationSettingsService, Parser.parse(Integration)),
+  Effect.flatMap(Management.IntegrationSettingsService, Schema.parse(Integration)),
 );
 
 const provideHttpConfig = Effect.provideServiceEffect(
@@ -31,12 +26,12 @@ const provideHttpConfig = Effect.provideServiceEffect(
   Effect.gen(function*($) {
     const { vendorData } = yield* $(IntegrationService);
     const { isQA = false } = vendorData;
-    const config = yield* $(Effect.config(DorixConfig));
+    const config = yield* $(DorixConfig);
     const { url, apiKey } = isQA ? config.qa : config;
 
     return {
       baseUrl: url,
-      headers: { Authorization: `Bearer ${ConfigSecret.value(apiKey)}` },
+      headers: { Authorization: `Bearer ${Secret.value(apiKey)}` },
     };
   }),
 );
@@ -70,7 +65,7 @@ export const layer = Layer.effect(
           ),
           breaker((e) => e instanceof Http.HttpRequestError),
           Effect.flatMap(Http.toJson),
-          Effect.flatMap(Parser.parse(SendOrderResponse)),
+          Effect.flatMap(Schema.parse(SendOrderResponse)),
           Effect.flatMap((res) => res.ack ? Effect.succeed(res) : Effect.fail(new Error(res.message))),
           provideHttpConfig,
           provideDorixIntegration,
@@ -89,7 +84,7 @@ export const layer = Layer.effect(
           Effect.flatMap((qs) => client.request(`/v1/order/${order.id}/status?${qs.toString()}`)),
           breaker((e) => e instanceof Http.HttpRequestError),
           Effect.flatMap(Http.toJson),
-          Effect.flatMap(Parser.parse(StatusResponse)),
+          Effect.flatMap(Schema.parse(StatusResponse)),
           Effect.map((p) => {
             switch (p.order.status) {
               case "FAILED":
@@ -113,7 +108,7 @@ export const layer = Layer.effect(
         Effect.flatMap((branchId) => client.request(`/v1/menu/branch/${branchId}`)),
         breaker(),
         Effect.flatMap(Http.toJson),
-        Effect.flatMap(Parser.parse(DorixMenu)),
+        Effect.flatMap(Schema.parse(DorixMenu)),
         Effect.map(toMenu),
         provideHttpConfig,
         provideDorixIntegration,

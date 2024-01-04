@@ -1,22 +1,10 @@
 import { BlitzPage, Routes } from "@blitzjs/next";
-import { LoadingOverlay } from "@mantine/core";
-import { Suspense } from "react";
-import { Content } from "src/admin/components/Content";
 import { VenueSettings } from "src/admin/components/VenueSettings";
 import { gSSP } from "src/blitz-server";
 import { AdminLayout } from "src/core/layouts/AdminLayout";
 
 const AdminVenue: BlitzPage = () => {
-  return (
-    <Content
-      main={
-        <Suspense fallback={<LoadingOverlay visible />}>
-          <VenueSettings />
-        </Suspense>
-      }
-      aside={null}
-    />
-  );
+  return <VenueSettings />;
 };
 
 AdminVenue.getLayout = (page) => <AdminLayout>{page}</AdminLayout>;

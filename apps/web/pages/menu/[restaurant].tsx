@@ -1,10 +1,7 @@
 import { BlitzPage } from "@blitzjs/auth";
-import * as O from "@effect/data/Option";
-import * as Order from "@effect/data/Order";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Str from "@effect/data/String";
-import * as Parser from "@effect/schema/Parser";
+import * as Schema from "@effect/schema/Parser";
 import { NotFoundError } from "blitz";
+import { Option, Order, ReadonlyArray, String as Str } from "effect";
 import { InferGetServerSidePropsType } from "next";
 import dynamic from "next/dynamic";
 import Head from "next/head";
@@ -16,6 +13,7 @@ import MenuLayout from "src/core/layouts/MenuLayout";
 import * as Category from "src/menu/components/Category";
 import { Closed } from "src/menu/components/Closed";
 import * as Navigation from "src/menu/components/Navigation";
+import { VenueContext } from "src/menu/components/VenueContext";
 import getMenu from "src/menu/queries/getMenu";
 import * as _Menu from "src/menu/schema";
 import { Query } from "src/menu/validations/page";
@@ -35,16 +33,16 @@ const CategoryOrder = Order.mapInput(Str.Order, (b: Venue.Menu.Category) => b.id
 
 export const Menu: BlitzPage<InferGetServerSidePropsType<typeof getServerSideProps>> = (props) => {
   const { menu } = props;
-  const restaurant = useMemo(() => Parser.decodeSync(Venue.Menu.Menu)(menu), [menu]);
+  const restaurant = useMemo(() => Schema.decodeSync(Venue.Menu.Menu)(menu), [menu]);
   const { categories } = restaurant;
-  const orderedCategories = useMemo(() => A.sort(categories as Array<Venue.Menu.Category>, CategoryOrder), [
+  const orderedCategories = useMemo(() => ReadonlyArray.sort(categories as Array<Venue.Menu.Category>, CategoryOrder), [
     categories,
   ]);
   const locale = useLocale();
   const [reviewOrder, setReviewOrder] = useState(false);
 
-  const venueTitle = O.map(A.findFirst(restaurant.content, _ => _.locale === locale), _ => _.name);
-  const orUnknown = O.getOrElse(() => "unknown");
+  const venueTitle = Option.map(ReadonlyArray.findFirst(restaurant.content, _ => _.locale === locale), _ => _.name);
+  const orUnknown = Option.getOrElse(() => "unknown");
 
   if (!restaurant.open) {
     return (
@@ -74,35 +72,37 @@ export const Menu: BlitzPage<InferGetServerSidePropsType<typeof getServerSidePro
         <link rel="shortcut icon" href="/favicon.ico" />
         <link rel="apple-touch-icon-precomposed" href="/24round4.png" />
       </Head>
-      <Navigation.Root>
-        <Navigation.NavList categories={orderedCategories} />
-        <div>
-          {orderedCategories.map((category) => (
-            <Category.Section key={category.id} category={category}>
-              <Category.Items>
-                {category.categoryItems.map((ci, i) => <Category.Item priority={i < 6} key={ci.item.id} item={ci} />)}
-              </Category.Items>
-            </Category.Section>
-          ))}
-        </div>
-        {O.getOrNull(
-          O.map(restaurant.simpleContactInfo, content => <div className="mt-4 text-center">{content}</div>),
-        )}
-        <div className="mt-4 mb-36 text-center">
-          ביטול עסקה בהתאם לתקנות הגנת הצרכן (ביטול עסקה), התשע״א-2010 וחוק הגנת הצרכן, התשמ״א-1981
-          <br />
-          פרטי הלקוחות לא מועברים לצד ג למעט עבור ביצוע העסקה
-        </div>
-      </Navigation.Root>
-      <LazyViewOrderButton
-        onClick={() => setReviewOrder(true)}
-      />
-      <LazyOrderModal
-        venueId={restaurant.id}
-        open={reviewOrder}
-        onClose={() => setReviewOrder(false)}
-      />
-      <LazyItemModal />
+      <VenueContext menu={restaurant}>
+        <Navigation.Root>
+          <Navigation.NavList categories={orderedCategories} />
+          <div>
+            {orderedCategories.map((category) => (
+              <Category.Section key={category.id} category={category}>
+                <Category.Items>
+                  {category.categoryItems.map((ci, i) => <Category.Item priority={i < 6} key={ci.item.id} item={ci} />)}
+                </Category.Items>
+              </Category.Section>
+            ))}
+          </div>
+          {Option.getOrNull(
+            Option.map(restaurant.simpleContactInfo, content => <div className="mt-4 text-center">{content}</div>),
+          )}
+          <div className="mt-4 mb-36 text-center">
+            ביטול עסקה בהתאם לתקנות הגנת הצרכן (ביטול עסקה), התשע״א-2010 וחוק הגנת הצרכן, התשמ״א-1981
+            <br />
+            פרטי הלקוחות לא מועברים לצד ג למעט עבור ביצוע העסקה
+          </div>
+        </Navigation.Root>
+        <LazyViewOrderButton
+          onClick={() => setReviewOrder(true)}
+        />
+        <LazyOrderModal
+          venueId={restaurant.id}
+          open={reviewOrder}
+          onClose={() => setReviewOrder(false)}
+        />
+        <LazyItemModal />
+      </VenueContext>
     </>
   );
 };
@@ -130,7 +130,6 @@ export const getServerSideProps = gSSP(async (context) => {
       },
     };
   } catch (e) {
-    console.error(e);
     throw new NotFoundError();
   }
 });

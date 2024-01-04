@@ -1,15 +1,7 @@
-import { pipe } from "@effect/data/Function";
-import * as Option from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
-import * as Exit from "@effect/io/Exit";
-import * as Request from "@effect/io/Request";
-import * as RequestResolver from "@effect/io/RequestResolver";
-import { inspect } from "util";
-import { Database } from "../../Database";
-import { filterRequestsByTag, resolveBatch, resolveSingle } from "../../effect/Request";
+import { Effect, pipe, ReadonlyArray, Request, RequestResolver } from "effect";
+import { Database, DB } from "../../Database";
 import { CreateFullOrder } from "./createFullOrder";
-import { GetOrderById, GetOrderByIdError } from "./getById";
+import { GetOrderById } from "./getById";
 import { GetOrderItemModifiers } from "./getItemModifiers";
 import { GetOrderItems } from "./getItems";
 import { SetOrderTransactionId } from "./setTransactionId";
@@ -22,63 +14,85 @@ type OrderRequest =
   | SetOrderTransactionId;
 
 export const OrderResolver = pipe(
-  RequestResolver.makeBatched((
-    requests: OrderRequest[],
-  ) =>
-    Effect.all([
-      Effect.sync(() => console.log(inspect(requests.map(r => r._tag), false, null, true))),
-      resolveBatch(
-        filterRequestsByTag(requests, "GetOrderItems"),
-        (reqs, db) =>
-          db.orderItem.findMany({
-            where: { orderId: { in: reqs.map(req => req.id) } },
-            orderBy: { orderId: "asc" },
-            include: { modifiers: true },
-          }),
-        r => String(r.id),
-        d => String(d.orderId),
-      ),
-      resolveSingle(
-        filterRequestsByTag(requests, "GetOrderById"),
-        (reqs, db) =>
+  RequestResolver.makeBatched<DB, OrderRequest>((
+    requests,
+  ) => {
+    const reqMap = ReadonlyArray.groupBy(requests, _ => _._tag);
+    const byId = reqMap.GetOrderById as GetOrderById[] ?? [];
+    const items = reqMap.GetOrderItems as GetOrderItems[] ?? [];
+    const modifiers = reqMap.GetOrderItemModifiers as GetOrderItemModifiers[] ?? [];
+    const create = reqMap.CreateFullOrder as CreateFullOrder[] ?? [];
+    const setTxId = reqMap.SetOrderTransactionId as SetOrderTransactionId[] ?? [];
+
+    return Effect.andThen(Database, db =>
+      Effect.all({
+        GetOrderById: Effect.promise(() =>
           db.order.findMany({
-            where: { id: { in: reqs.map(_ => _.id) } },
-          }),
-        (req, items) =>
-          Option.match(
-            A.findFirst(items, _ => _.id === req.id),
-            {
-              onNone: () => Exit.fail(new GetOrderByIdError()),
-              onSome: Exit.succeed,
-            },
+            where: { id: { in: byId.map(req => req.id) } },
+          })
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(byId)),
+          Effect.flatMap(
+            Effect.forEach(([order, req]) => Request.succeed(req, order)),
           ),
-      ),
-      pipe(
-        filterRequestsByTag(requests, "CreateFullOrder"),
-        Effect.forEach(req =>
-          pipe(
-            Effect.flatMap(
-              Database,
-              db => Effect.promise(() => db.order.create({ data: req.order })),
+        ),
+        GetorderItems: Effect.promise(() =>
+          Promise.all(
+            items.map(_ =>
+              db.order.findUnique({ where: { id: _.id } }).items({
+                include: { modifiers: true },
+              })
             ),
-            Effect.flatMap(order => Request.succeed(req, order)),
-          ), { concurrency: 5 }),
-      ),
-      pipe(
-        filterRequestsByTag(requests, "SetOrderTransactionId"),
-        Effect.forEach(req =>
-          pipe(
-            Effect.flatMap(
-              Database,
-              db =>
-                Effect.promise(() =>
-                  db.order.update({ where: { id: req.id }, data: { txId: req.transactionId, state: "PaidFor" } })
-                ),
+          )
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(items)),
+          Effect.flatMap(
+            Effect.forEach(([item, req]) => Request.succeed(req, item ?? [])),
+          ),
+        ),
+        GetOrderItemModifiers: Effect.promise(() =>
+          Promise.all(
+            modifiers.map(_ => db.orderItem.findUnique({ where: { id: _.id } }).modifiers()),
+          )
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(modifiers)),
+          Effect.flatMap(
+            Effect.forEach(([mods, req]) => Request.succeed(req, mods ?? [])),
+          ),
+        ),
+        SetModifierConfig: Effect.promise(() =>
+          db.$transaction(
+            create.map(_ => db.order.create({ data: _.order })),
+          )
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(create)),
+          Effect.flatMap(
+            Effect.forEach(([ord, req]) => Request.succeed(req, ord)),
+          ),
+        ),
+        SetOrderTransactionId: Effect.promise(() =>
+          db.$transaction(
+            setTxId.map(_ =>
+              db.order.update({
+                where: {
+                  id: _.id,
+                },
+                data: { txId: _.transactionId },
+              })
             ),
-            Effect.flatMap(order => Request.succeed(req, order)),
-          ), { concurrency: 5 }),
-      ),
-    ], { concurrency: "unbounded" })
-  ),
+          )
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(setTxId)),
+          Effect.flatMap(
+            Effect.forEach(([ord, req]) => Request.succeed(req, ord)),
+          ),
+        ),
+      }));
+  }),
   RequestResolver.contextFromServices(Database),
 );

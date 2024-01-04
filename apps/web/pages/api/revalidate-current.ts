@@ -1,6 +1,4 @@
-import { pipe } from "@effect/data/Function";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
+import { Effect, pipe, ReadonlyArray as A } from "effect";
 import * as Telegram from "integrations/telegram/sendMessage";
 import { Session } from "src/auth";
 import { api } from "src/blitz-server";

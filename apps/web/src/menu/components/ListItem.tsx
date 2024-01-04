@@ -1,11 +1,8 @@
-import * as Equal from "@effect/data/Equal";
-import { pipe } from "@effect/data/Function";
-import * as N from "@effect/data/Number";
-import * as O from "@effect/data/Option";
 import { MinusCircleIcon, PlusCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 import { a, SpringValue, useSpring } from "@react-spring/web";
 import { useDrag } from "@use-gesture/react";
 import { clsx } from "clsx";
+import { Equal, Number, Option } from "effect";
 import Image from "next/image";
 import { memo, ReactNode, useCallback } from "react";
 import { Blurhash } from "react-blurhash";
@@ -25,7 +22,7 @@ const PlusCircle = a(PlusCircleIcon);
 const MinusCircle = a(MinusCircleIcon);
 const XCircle = a(XCircleIcon);
 
-const isPositive = N.greaterThan(0);
+const isPositive = Number.greaterThan(0);
 
 export const ListItem = memo(
   function ListItem(props: Props) {
@@ -101,18 +98,21 @@ export const ListItem = memo(
           <ItemData content={content} price={cost} amount={item.price === 0 && cost > 0 ? "active" : amount} />
         </div>
         <div className="w-32 relative xs:w-48 m-2 rounded-md overflow-hidden h-32">
-          {pipe(O.map(item.blurHash, hash => <Blurhash hash={hash} width={192} height={128} />), O.getOrNull)}
+          {item.blurHash.pipe(
+            Option.map(hash => <Blurhash hash={hash} width={192} height={128} />),
+            Option.getOrNull,
+          )}
           {item.image && (
             <Image
               priority={priority}
               className="object-cover"
               fill
               src={`${item.image}?cs=strip`}
-              placeholder={O.match(O.filter(item.blurDataUrl, _ => _ !== ""), {
+              placeholder={Option.match(Option.filter(item.blurDataUrl, _ => _ !== ""), {
                 onNone: () => "empty",
                 onSome: () => "blur",
               })}
-              blurDataURL={O.getOrUndefined(item.blurDataUrl)}
+              blurDataURL={Option.getOrUndefined(item.blurDataUrl)}
               quality={45}
               alt={item.identifier}
               sizes="(min-width: 370px) 12rem,

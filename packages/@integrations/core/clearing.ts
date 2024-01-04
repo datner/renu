@@ -1,8 +1,6 @@
-import * as Brand from "@effect/data/Brand";
-import * as Context from "@effect/data/Context";
-import * as Effect from "@effect/io/Effect";
 import * as S from "@effect/schema/Schema";
 import { ClearingIntegration, ClearingProvider, Order, Prisma } from "database";
+import { Brand, Context, Effect } from "effect";
 
 export const fullOrderInclude = {
   items: {

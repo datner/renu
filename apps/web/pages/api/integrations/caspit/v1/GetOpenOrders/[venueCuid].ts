@@ -350,7 +350,7 @@ ${TreeFormatter.formatErrors(_.errors)}
         })
       )
     ),
-    Effect.provideSomeContext(
+    Effect.provide(
       Context.empty().pipe(
         Context.add(NextRequest, request),
         Context.add(NextResponse, res),

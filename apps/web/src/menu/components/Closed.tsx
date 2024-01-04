@@ -1,18 +1,16 @@
-import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as Predicate from "@effect/data/Predicate";
 import { Container } from "@mantine/core";
+import { Option, pipe, Predicate } from "effect";
 
 type Props = {
-  venue: O.Option<string>;
+  venue: Option.Option<string>;
 };
 
 export function Closed(props: Props) {
   const venue = pipe(
     props.venue,
-    O.fromNullable,
-    O.filter(Predicate.isString),
-    O.getOrElse(() => "the venue"),
+    Option.fromNullable,
+    Option.filter(Predicate.isString),
+    Option.getOrElse(() => "the venue"),
   );
 
   return (

@@ -1,7 +1,6 @@
 import { pipe } from "@effect/data/Function";
-import * as N from "@effect/data/Number";
-import * as O from "@effect/data/Option";
 import * as S from "@effect/schema/Schema";
+import { Number, Option as O } from "effect";
 import * as Base from "./base";
 
 export const Quantity = pipe(
@@ -10,7 +9,7 @@ export const Quantity = pipe(
   S.nonNegative(),
   S.transform(
     S.optionFromSelf(S.number),
-    O.liftPredicate(N.greaterThan(0)),
+    O.liftPredicate(Number.greaterThan(0)),
     O.getOrElse(() => 0),
   ),
 );
@@ -19,7 +18,7 @@ export const Option = pipe(
   Base.Option,
   S.extend(S.struct({ multi: S.boolean })),
 );
-export interface Option extends S.To<typeof Option> {}
+export interface Option extends S.Schema.To<typeof Option> {}
 
 export const Modifier = pipe(
   Base.Modifier,
@@ -33,4 +32,4 @@ export const Modifier = pipe(
     }),
   ),
 );
-export interface Extras extends S.To<typeof Modifier> {}
+export interface Extras extends S.Schema.To<typeof Modifier> {}

@@ -15,7 +15,7 @@ export const SendOrderOneOf = S.struct({
   // TODO: right now, one-of can't be multiple. Probably shouldn't ever be
   amount: pipe(Number.Amount, S.lessThan(2)),
 });
-export interface SendOrderOneOf extends S.To<typeof SendOrderOneOf> {}
+export interface SendOrderOneOf extends S.Schema.To<typeof SendOrderOneOf> {}
 
 const getMin = O.getOrElse(() => 0);
 const getMax = O.getOrElse(() => Infinity);
@@ -55,10 +55,10 @@ export const SendOrderExtras = pipe(
     pipe(
       A.map(choices, ([_, amount]) => amount),
       N.sumAll,
-      N.between(
-        getMin(modifier.config.min),
-        getMax(modifier.config.max),
-      ),
+      N.between({
+        minimum: getMin(modifier.config.min),
+        maximum: getMax(modifier.config.max),
+      }),
     ), {
     message: (m) =>
       `Item Modifier ${m.modifier.config.identifier} sent with a modifier amount outside of range.
@@ -67,7 +67,7 @@ export const SendOrderExtras = pipe(
 `,
   }),
 );
-export interface SendOrderExtras extends S.To<typeof SendOrderExtras> {}
+export interface SendOrderExtras extends S.Schema.To<typeof SendOrderExtras> {}
 
 export const SendOrderModifiers = S.union(SendOrderOneOf, SendOrderExtras);
 export type SendOrderModifiers = SendOrderOneOf | SendOrderExtras;
@@ -90,7 +90,7 @@ export const getModCost = (mod: SendOrderModifiers) => {
             O.map(o => o.price),
             O.map(N.multiply(amount)),
           )),
-        O.sumCompact,
+        O.reduceCompact(0, N.sum),
       );
   }
 };
@@ -107,7 +107,7 @@ const _SendOrderItem = S.struct({
   item: Item.fromId,
   amount: Number.Amount,
   cost: Number.Cost,
-  comment: pipe(S.string, S.maxLength(250), S.optional),
+  comment: S.optional(pipe(S.string, S.maxLength(250))),
   modifiers: S.array(SendOrderModifiers),
 });
 
@@ -117,7 +117,7 @@ export const SendOrderItem = pipe(
     message: (i) => `Item ${i.item} reported cost (${i.cost}) did not match expected`,
   }),
 );
-export interface SendOrderItem extends S.To<typeof _SendOrderItem> {}
+export interface SendOrderItem extends S.Schema.To<typeof _SendOrderItem> {}
 
 export const Transaction = S.struct({
   id: S.string,
@@ -151,5 +151,5 @@ export const SendOrder = pipe(
   ),
 );
 
-export interface SendOrder extends S.To<typeof SendOrder> {}
-export interface EncodedSendOrder extends S.From<typeof SendOrder> {}
+export interface SendOrder extends S.Schema.To<typeof SendOrder> {}
+export interface EncodedSendOrder extends S.Schema.From<typeof SendOrder> {}

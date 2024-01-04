@@ -1,13 +1,10 @@
 import { invoke } from "@blitzjs/rpc";
-import { constNull, pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as RR from "@effect/data/ReadonlyRecord";
-import * as Match from "@effect/match";
 import * as Schema from "@effect/schema/Schema";
 import { AdjustmentsVerticalIcon, DocumentTextIcon } from "@heroicons/react/20/solid";
 import { PuzzlePieceIcon } from "@heroicons/react/24/solid";
 import { Button, NumberInput, Paper, Tabs, Textarea, TextInput } from "@mantine/core";
+import { Match, Option, pipe, ReadonlyArray, ReadonlyRecord } from "effect";
+import { constNull } from "effect/Function";
 import { useTranslations } from "next-intl";
 import { useReducer } from "react";
 import { FormProvider, useController, useForm, UseFormHandleSubmit } from "react-hook-form";
@@ -15,8 +12,7 @@ import { toast } from "react-toastify";
 import { Item, ModifierConfig } from "shared";
 import { Schema as SchemaUtils } from "shared/effect";
 import getCurrentVenueCategories from "src/categories/queries/getCurrentVenueCategories";
-import { shekelFormatter, shekelParser } from "src/core/helpers/form";
-import { FullItem } from "src/items/hooks/form";
+import { FullItem } from "src/items/helpers/form";
 import { ExtrasSchema, ItemFormSchema, ModifierSchema, OneOfSchema } from "../validations/item-form";
 import { DeleteButton } from "./DeleteButton";
 import { FormCategoryCombobox } from "./FormCategoryCombobox";
@@ -25,26 +21,25 @@ import { ModifierPanel } from "./ModifierPanel";
 import { PrestoIntegrationPanel } from "./PrestoIntegrationPanel";
 
 type Props = {
-  item: O.Option<FullItem>;
-  onSubmit(data: Schema.To<typeof ItemFormSchema>): Promise<void>;
+  item: Option.Option<FullItem>;
+  onSubmit(data: Schema.Schema.To<typeof ItemFormSchema>): Promise<void>;
 };
 
-type F = Schema.From<typeof ItemFormSchema>;
-const toDefaultModifier = pipe(
-  Match.type<Item.Modifier.Modifier>(),
+type F = Schema.Schema.From<typeof ItemFormSchema>;
+const toDefaultModifier = Match.type<Item.Modifier.Modifier>().pipe(
   Match.tag("OneOf", (_): OneOfSchema => ({
     _tag: "oneOf",
     identifier: _.config.identifier,
     defaultOption: _.config.defaultOption,
-    content: RR.fromIterable(
+    content: ReadonlyRecord.fromIterableWith(
       _.config.content,
-      _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
+      _ => [_.locale, { name: _.name, description: Option.getOrElse(_.description, () => "") }],
     ) as any,
-    options: A.mapNonEmpty(_.config.options, _ => ({
+    options: ReadonlyArray.map(_.config.options, _ => ({
       identifier: _.identifier,
-      content: RR.fromIterable(
+      content: ReadonlyRecord.fromIterableWith(
         _.content,
-        _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
+        _ => [_.locale, { name: _.name, description: Option.getOrElse(_.description, () => "") }],
       ) as any,
       managementRepresentation: Schema.encodeSync(ModifierConfig.Base.ManagementRepresentationSchema)(
         _.managementRepresentation,
@@ -55,17 +50,17 @@ const toDefaultModifier = pipe(
   Match.tag("Extras", (_): ExtrasSchema => ({
     _tag: "extras",
     identifier: _.config.identifier,
-    max: O.getOrElse(_.config.max, () => 0),
-    min: O.getOrElse(_.config.min, () => 0),
-    content: RR.fromIterable(
+    max: Option.getOrElse(_.config.max, () => 0),
+    min: Option.getOrElse(_.config.min, () => 0),
+    content: ReadonlyRecord.fromIterableWith(
       _.config.content,
-      _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
+      _ => [_.locale, { name: _.name, description: Option.getOrElse(_.description, () => "") }],
     ) as any,
-    options: A.mapNonEmpty(_.config.options, _ => ({
+    options: ReadonlyArray.map(_.config.options, _ => ({
       identifier: _.identifier,
-      content: RR.fromIterable(
+      content: ReadonlyRecord.fromIterableWith(
         _.content,
-        _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
+        _ => [_.locale, { name: _.name, description: Option.getOrElse(_.description, () => "") }],
       ) as any,
       managementRepresentation: Schema.encodeSync(ModifierConfig.Base.ManagementRepresentationSchema)(
         _.managementRepresentation,
@@ -80,16 +75,16 @@ const toDefaultModifier = pipe(
   Match.exhaustive,
 );
 
-const toDefault = async (item: O.Option<FullItem>): Promise<F> => {
+const toDefault = async (item: Option.Option<FullItem>): Promise<F> => {
   const { categories } = await invoke(getCurrentVenueCategories, {});
   const categoryId = pipe(
-    A.head(categories),
-    O.map(_ => _.id),
-    O.orElse(() => O.map(item, _ => _.categoryId)),
-    O.getOrElse(() => -1),
+    ReadonlyArray.head(categories),
+    Option.map(_ => _.id),
+    Option.orElse(() => Option.map(item, _ => _.categoryId)),
+    Option.getOrElse(() => -1),
   );
 
-  return O.match(
+  return Option.match(
     item,
     {
       onNone: (): F => ({
@@ -111,15 +106,15 @@ const toDefault = async (item: O.Option<FullItem>): Promise<F> => {
         categoryId: _.categoryId,
         image: {
           src: _.image,
-          blur: O.getOrUndefined(_.blurHash),
+          blur: Option.getOrUndefined(_.blurHash),
         },
-        modifiers: A.map(_.modifiers, (_): ModifierSchema => ({
+        modifiers: ReadonlyArray.map(_.modifiers, (_): ModifierSchema => ({
           modifierId: _.id,
           config: toDefaultModifier(_),
         })),
-        content: RR.fromIterable(
+        content: ReadonlyRecord.fromIterableWith(
           _.content,
-          _ => [_.locale, { name: _.name, description: O.getOrElse(_.description, () => "") }],
+          _ => [_.locale, { name: _.name, description: Option.getOrElse(_.description, () => "") }],
         ) as any,
       }),
     },
@@ -129,7 +124,7 @@ const toDefault = async (item: O.Option<FullItem>): Promise<F> => {
 export function ItemForm(props: Props) {
   const { onSubmit: onSubmit_, item } = props;
   const t = useTranslations("admin.Components.ItemForm");
-  const isEdit = O.isSome(item);
+  const isEdit = Option.isSome(item);
   const form = useForm({
     resolver: SchemaUtils.schemaResolver(Schema.from(ItemFormSchema)),
     defaultValues: async (_) => {
@@ -142,11 +137,11 @@ export function ItemForm(props: Props) {
   const { isSubmitting, isDirty, errors } = formState;
 
   // patches a react-hook-form type limitation
-  const handleSubmit = form.handleSubmit as any as UseFormHandleSubmit<Schema.To<typeof ItemFormSchema>>;
+  const handleSubmit = form.handleSubmit as any as UseFormHandleSubmit<Schema.Schema.To<typeof ItemFormSchema>>;
   const onSubmit = handleSubmit(
     async (data) => {
       console.log(data);
-      const isCreate = O.isNone(item);
+      const isCreate = Option.isNone(item);
       await toast.promise(onSubmit_(data), {
         pending: `${isCreate ? "Creating" : "Updating"} in progress...`,
         success: `${data.identifier} ${isCreate ? "created" : "updated"} successfully!`,
@@ -171,13 +166,13 @@ export function ItemForm(props: Props) {
 
   const title = pipe(
     item,
-    O.match({
+    Option.match({
       onNone: () => t("title.new"),
       onSome: () => t("title.edit"),
     }),
   );
 
-  const deleteButton = O.match(
+  const deleteButton = Option.match(
     item,
     {
       onNone: constNull,
@@ -190,13 +185,7 @@ export function ItemForm(props: Props) {
   return (
     <FormProvider {...form}>
       <Paper
-        sx={{
-          minHeight: 0,
-          flexGrow: 1,
-          display: "flex",
-          flexDirection: "column",
-        }}
-        withBorder
+        className="min-h-0 grow flex flex-col"
         radius="md"
         shadow="sm"
       >
@@ -209,21 +198,21 @@ export function ItemForm(props: Props) {
         <form className="grow min-h-0 flex flex-col" onSubmit={onSubmit}>
           <Tabs
             keepMounted={false}
-            sx={{ flexGrow: 1, display: "flex", minHeight: 0, flexDirection: "column" }}
+            className="min-h-0 grow flex flex-col"
             classNames={{ panel: "border-b-2 flex flex-col grow min-h-0" }}
             defaultValue="general"
           >
             <Tabs.List px={24}>
-              <Tabs.Tab value="general" icon={<DocumentTextIcon className="h-5 w-5" />}>
+              <Tabs.Tab value="general" leftSection={<DocumentTextIcon className="h-5 w-5" />}>
                 General
               </Tabs.Tab>
-              <Tabs.Tab value="modifiers" icon={<AdjustmentsVerticalIcon className="h-5 w-5" />}>
+              <Tabs.Tab value="modifiers" leftSection={<AdjustmentsVerticalIcon className="h-5 w-5" />}>
                 Modifiers
               </Tabs.Tab>
               <Tabs.Tab
-                disabled={O.isNone(item)}
+                disabled={Option.isNone(item)}
                 value="integrations"
-                icon={<PuzzlePieceIcon className="h-5 w-5" />}
+                leftSection={<PuzzlePieceIcon className="h-5 w-5" />}
               >
                 Integrations
               </Tabs.Tab>
@@ -242,12 +231,14 @@ export function ItemForm(props: Props) {
                   </div>
                   <NumberInput
                     {...priceProps}
-                    onChange={_ => priceProps.onChange(_ || 0)}
+                    onChange={_ => priceProps.onChange(+_ * 100 || 0)}
                     label={t("price")}
-                    step={50}
-                    min={0}
-                    parser={shekelParser}
-                    formatter={shekelFormatter}
+                    step={0.5}
+                    allowNegative={false}
+                    prefix="₪"
+                    decimalScale={2}
+                    fixedDecimalScale
+                    thousandSeparator
                     error={errors.price?.message}
                   />
                   <div>

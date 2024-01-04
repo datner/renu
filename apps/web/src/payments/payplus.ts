@@ -12,7 +12,7 @@ export const PayPlusCallback = S.struct({
     payment_request_uid: S.optional(S.string),
     number: S.string,
     type: S.string,
-    date: S.dateFromString(S.string),
+    date: S.Date,
     status_code: S.string,
     amount: S.number,
     currency: S.literal("ILS"),
@@ -83,4 +83,4 @@ export const PayPlusCallback = S.struct({
   ),
 });
 
-export interface PayPlusCallback extends S.To<typeof PayPlusCallback> {}
+export interface PayPlusCallback extends S.Schema.To<typeof PayPlusCallback> {}

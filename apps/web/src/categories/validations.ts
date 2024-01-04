@@ -23,7 +23,7 @@ export const CreateCategoryResult = S.struct({
 });
 
 export const UpdateCategory = CreateCategory;
-export interface CategoryForm extends S.From<typeof CreateCategory> {}
-export interface UpdateCategory extends S.To<typeof UpdateCategory> {}
-export interface CreateCategory extends S.To<typeof CreateCategory> {}
-export interface CategorySchema extends S.To<typeof CreateCategory> {}
+export interface CategoryForm extends S.Schema.From<typeof CreateCategory> {}
+export interface UpdateCategory extends S.Schema.To<typeof UpdateCategory> {}
+export interface CreateCategory extends S.Schema.To<typeof CreateCategory> {}
+export interface CategorySchema extends S.Schema.To<typeof CreateCategory> {}

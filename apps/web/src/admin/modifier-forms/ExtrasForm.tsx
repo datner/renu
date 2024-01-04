@@ -7,7 +7,6 @@ import { ActionIcon, Button, NumberInput, Switch, TextInput } from "@mantine/cor
 import { useEffect } from "react";
 import { Control, Controller, useFieldArray, UseFieldArrayUpdate, useForm } from "react-hook-form";
 import { schemaResolver } from "shared/effect/Schema";
-import { shekelFormatter, shekelParser } from "src/core/helpers/form";
 import { ExtrasSchema, ItemFormSchema } from "../validations/item-form";
 
 type Props = {
@@ -87,7 +86,7 @@ export const ExtrasForm = (props: Props) => {
               className="relative border border-gray-300 bg-white p-4 shadow-md rounded-md"
             >
               <ActionIcon
-                sx={{ position: "absolute", right: 4, top: 4 }}
+                className="absolute right-1 top-1,"
                 type="button"
                 color="red"
                 variant="outline"
@@ -102,11 +101,14 @@ export const ExtrasForm = (props: Props) => {
                   name={`options.${i}.price`}
                   render={({ field }) => (
                     <NumberInput
-                      {...field}
-                      onChange={_ => field.onChange(_ || 0)}
+                      onChange={_ => field.onChange(+_ * 100 || 0)}
                       label="Price"
-                      parser={shekelParser}
-                      formatter={shekelFormatter}
+                      step={0.5}
+                      allowNegative={false}
+                      prefix="₪"
+                      decimalScale={2}
+                      fixedDecimalScale
+                      thousandSeparator
                     />
                   )}
                 />
@@ -143,7 +145,7 @@ export const ExtrasForm = (props: Props) => {
           })}
         type="button"
         variant="outline"
-        leftIcon={<PlusIcon className="h-5 w-5" />}
+        leftSection={<PlusIcon className="h-5 w-5" />}
       >
         Add Option
       </Button>

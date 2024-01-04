@@ -1,10 +1,9 @@
 import { resolver } from "@blitzjs/rpc";
-import { pipe } from "@effect/data/Function";
-import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
 import { Presto } from "@integrations/presto";
 import { OrderRepository } from "database-helpers/order";
 import db, { OrderState } from "db";
+import { Effect, pipe } from "effect";
 import * as Message from "integrations/telegram/sendMessage";
 import { Order } from "shared";
 import { Resolver } from "src/auth";

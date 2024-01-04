@@ -4,16 +4,16 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
-    "@effect/data": "0.18.3",
-    "@effect/schema": "0.34.0",
-    "eslint": "8.48.0",
-    "eslint-config-next": "13.4.19",
-    "eslint-config-prettier": "^9.0.0",
-    "eslint-config-turbo": "1.10.13",
+    "@effect/data": "0.18.7",
+    "@effect/schema": "0.56.1",
+    "eslint": "8.56.0",
+    "eslint-config-next": "14.0.4",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-turbo": "1.11.2",
     "eslint-plugin-react": "7.33.2"
   },
   "devDependencies": {
-    "typescript": "^5.2.2"
+    "typescript": "^5.3.3"
   },
   "publishConfig": {
     "access": "public"

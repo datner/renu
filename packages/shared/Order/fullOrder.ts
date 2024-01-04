@@ -1,8 +1,5 @@
-import { pipe } from "@effect/data/Function";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
-import * as ParseResult from "@effect/schema/ParseResult";
-import * as Schema from "@effect/schema/Schema";
+import { ParseResult, Schema } from "@effect/schema";
+import { Effect, pipe, ReadonlyArray } from "effect";
 import { Database } from "../Database";
 import { accessing } from "../effect/Context";
 import * as Item from "../Item/item";
@@ -18,7 +15,7 @@ export const OrderItemModifier = pipe(
   Schema.extend(Schema.struct({ modifier: ItemModifier.fromPrisma })),
 );
 
-export const OrderItem = Schema.transformResult(
+export const OrderItem = Schema.transformOrFail(
   Schema.from(pipe(
     OI.Schema,
     Schema.extend(Schema.struct({ modifiers: Schema.array(OrderModifier.Schema) })),
@@ -37,19 +34,19 @@ export const OrderItem = Schema.transformResult(
             m => Effect.zip(Effect.succeed(m), ItemRequest.getModifierById(m.itemModifierId)),
             { batching: true },
           ),
-          Effect.map(A.map(([m, modifier]) => ({ ...m, modifier }))),
+          Effect.map(ReadonlyArray.map(([m, modifier]) => ({ ...m, modifier }))),
         ),
       }, { concurrency: 2 }),
       Effect.map((ex) => ({ ...i, ...ex })),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
       accessing(Database),
     ),
-  ParseResult.success,
+  ParseResult.succeed,
 );
 
-export const FullOrder = Schema.transformResult(
+export const FullOrder = Schema.transformOrFail(
   Order.Id,
-  pipe(Schema.to(Order.Schema), Schema.extend(Schema.struct({ items: Schema.array(OrderItem) }))),
+  Schema.to(pipe(Order.Schema, Schema.extend(Schema.struct({ items: Schema.array(OrderItem) })))),
   (id) =>
     pipe(
       Effect.all([
@@ -60,6 +57,6 @@ export const FullOrder = Schema.transformResult(
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
       accessing(Database),
     ),
-  _ => ParseResult.success(_.id),
+  _ => ParseResult.succeed(_.id),
 );
-export interface FullOrder extends Schema.To<typeof FullOrder> {}
+export interface FullOrder extends Schema.Schema.To<typeof FullOrder> {}

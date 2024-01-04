@@ -1,9 +1,8 @@
-import * as O from "@effect/data/Option";
-import * as P from "@effect/data/Predicate";
+import { Option, Predicate } from "effect";
 
 export const isTagged = <T extends B["_tag"] & string, A extends { _tag: string }, B extends A>(
   tag: T,
-): P.Refinement<A, B> =>
+): Predicate.Refinement<A, B> =>
 (a: A): a is B => a["_tag"] === tag;
 
 export const refineTag = <T extends A["_tag"] & string, A extends { _tag: string }>(
@@ -11,9 +10,9 @@ export const refineTag = <T extends A["_tag"] & string, A extends { _tag: string
 ) =>
 (_: A) =>
   _["_tag"] === tag
-    ? O.some(
+    ? Option.some(
       _ as Extract<A, {
         _tag: T;
       }>,
     )
-    : O.none();
+    : Option.none();

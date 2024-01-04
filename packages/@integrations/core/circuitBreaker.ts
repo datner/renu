@@ -1,10 +1,4 @@
-import * as Context from "@effect/data/Context";
-import * as Duration from "@effect/data/Duration";
-import { constFalse, pipe } from "@effect/data/Function";
-import * as Predicate from "@effect/data/Predicate";
-import * as Effect from "@effect/io/Effect";
-import * as Ref from "@effect/io/Ref";
-import * as Schedule from "@effect/io/Schedule";
+import { Context, Duration, Effect, Function, pipe, Predicate, Ref, Schedule } from "effect";
 
 export class CircuitBreakerError extends Error {
   readonly _tag = "CircuitBreakerError";
@@ -98,7 +92,7 @@ export const makeBreaker = (config?: BreakerConfig | undefined) =>
       state = yield* $(Ref.make(closed(0))),
     } = config ?? {};
 
-    return <E, EI extends E>(isRetryable: Predicate.Predicate<EI> = constFalse) =>
+    return <E, EI extends E>(isRetryable: Predicate.Predicate<EI> = Function.constFalse) =>
     <R, A>(self: Effect.Effect<R, E, A>) =>
       pipe(
         Ref.updateAndGet(

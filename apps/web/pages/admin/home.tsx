@@ -1,24 +1,18 @@
 import { AuthenticatedSessionContext } from "@blitzjs/auth";
 import { BlitzPage, Routes } from "@blitzjs/next";
-import { LoadingOverlay } from "@mantine/core";
+import { Center, LoadingOverlay } from "@mantine/core";
 import { Suspense } from "react";
-import { Content } from "src/admin/components/Content";
 import { ToggleVenueOpen } from "src/admin/components/ToggleVenueOpen";
 import { gSSP } from "src/blitz-server";
 import { AdminLayout } from "src/core/layouts/AdminLayout";
 
 const AdminHome: BlitzPage = () => {
   return (
-    <Content
-      main={
-        <Suspense fallback={<LoadingOverlay visible />}>
-          <div className="px-8 py-6 h-full flex items-center justify-center">
-            <ToggleVenueOpen />
-          </div>
-        </Suspense>
-      }
-      aside={null}
-    />
+    <Suspense fallback={<LoadingOverlay visible />}>
+      <Center className="h-96">
+        <ToggleVenueOpen />
+      </Center>
+    </Suspense>
   );
 };
 

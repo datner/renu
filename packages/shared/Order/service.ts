@@ -37,9 +37,7 @@ interface GetItemsById extends Request.Request<OrdersError, ReadonlyArray<OrderI
 }
 const GetItemsById = Request.tagged<GetItemsById>("Orders.GetItemsById");
 
-interface GetModifiersByItemId
-  extends Request.Request<OrdersError, ReadonlyArray<OrderModifier.Modifier & { modifier: ItemModifier.Modifier }>>
-{
+interface GetModifiersByItemId extends Request.Request<OrdersError, ReadonlyArray<OrderModifier.ModifierWithRef>> {
   readonly _tag: "Orders.GetModifiersByItemId";
   readonly id: number;
 }
@@ -77,7 +75,7 @@ const OrdersService = Effect.gen(function*(_) {
     Effect.forEach(req =>
       Effect.tryPromise(() => db.order.findUnique({ where: { id: req.id } })).pipe(
         Effect.flatMap(Option.fromNullable),
-        Effect.flatMap(Schema.decode(Order.Order.schema())),
+        Effect.flatMap(Schema.decode(Order.Order)),
         Effect.mapError(() => new OrdersError()),
         Effect.tap(_ =>
           Effect.fromNullable(_.cuid).pipe(
@@ -99,7 +97,7 @@ const OrdersService = Effect.gen(function*(_) {
     Effect.forEach(req =>
       Effect.tryPromise(() => db.order.findUnique({ where: { cuid: req.cuid } })).pipe(
         Effect.flatMap(Option.fromNullable),
-        Effect.flatMap(Schema.decode(Order.Order.schema())),
+        Effect.flatMap(Schema.decode(Order.Order)),
         Effect.mapError(() => new OrdersError()),
         Effect.tap(_ => Effect.cacheRequestResult(GetById({ id: _.id }), Exit.succeed(_))),
         Effect.exit,
@@ -121,8 +119,7 @@ const OrdersService = Effect.gen(function*(_) {
           Effect.flatMap(Option.fromNullable),
           Effect.flatMap(Schema.decode(Schema.array(
             OrderItem.Item
-              .extend({ item: Item.Item })
-              .schema(),
+              .extend<OrderItem.Item & { item: Item.Item }>()({ item: Item.Item }),
           ))),
           Effect.mapError(() => new OrdersError()),
           Effect.exit,
@@ -137,24 +134,22 @@ const OrdersService = Effect.gen(function*(_) {
       getItemsByIdResolver,
     ).pipe(Effect.withRequestCaching(true));
 
-  const getModifiersByItemIdResolver = RequestResolver.makeBatched<never, GetModifiersByItemId>(
+  const parse = Schema.parse(Schema.array(OrderModifier.ModifierWithRef));
+  const getModifiersByItemIdResolver = RequestResolver.makeBatched<never, GetModifiersByItemId>(_ =>
     Effect.forEach(
+      _,
       req =>
         Effect.tryPromise(() =>
           db.orderItem.findUnique({ where: { id: req.id } }).modifiers({ include: { modifier: true } })
         ).pipe(
           Effect.flatMap(Option.fromNullable),
-          Effect.flatMap(Schema.decode(Schema.array(
-            OrderModifier.Modifier.extend({
-              modifier: ItemModifier.Modifier,
-            }).schema(),
-          ))),
+          Effect.flatMap(parse),
           Effect.mapError(() => new OrdersError()),
           Effect.exit,
           Effect.flatMap(_ => Request.complete(req, _)),
         ),
       { concurrency: "inherit", discard: true },
-    ),
+    )
   );
   const getModifiersByItemId = (id: number) =>
     Effect.request(
@@ -190,9 +185,9 @@ const OrdersService = Effect.gen(function*(_) {
       getFullOrderResolver,
     ).pipe(Effect.withRequestCaching(true));
 
-  const setOrderStateResolver = RequestResolver.fromFunctionEffect<never, SetOrderState>(req =>
+  const setOrderStateResolver = RequestResolver.fromEffect<never, SetOrderState>(req =>
     Effect.tryPromise(() => db.order.update({ where: { id: req.id }, data: { state: req.state } })).pipe(
-      Effect.flatMap(Schema.decode(Order.Order.schema())),
+      Effect.flatMap(Schema.decode(Order.Order)),
       Effect.mapError(() => new OrdersError()),
       Effect.tap(_ =>
         Effect.fromNullable(_.cuid).pipe(

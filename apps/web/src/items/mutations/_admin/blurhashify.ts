@@ -1,8 +1,6 @@
 import { Ctx } from "@blitzjs/next";
-import { pipe } from "@effect/data/Function";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
 import db from "db";
+import { Effect, pipe } from "effect";
 import { Session } from "src/auth";
 import { Renu } from "src/core/effect";
 import { getBlurHash } from "src/core/helpers/plaiceholder";
@@ -23,23 +21,22 @@ const blurhashify = (_: null, ctx: Ctx) =>
                   deleted: null,
                   blurHash: null,
                 },
+                select: {
+                  id: true,
+                  image: true,
+                },
               }),
             catch: prismaError("Item"),
           }),
-          Effect.map(A.map((it) => Effect.zip(Effect.succeed(it.id), getBlurHash(it.image)))),
-          Effect.flatMap((effects) => Effect.all(effects, { concurrency: 5 })),
-          Effect.flatMap((items) =>
-            pipe(
-              Effect.all(
-                A.map(items, ([id, blurHash]) =>
-                  Effect.tryPromise({
-                    try: () => db.item.update({ where: { id }, data: { blurHash } }),
-                    catch: prismaError("Item"),
-                  })),
-                { concurrency: 10, discard: true },
-              ),
-            )
+          Effect.tap(Effect.logInfo),
+          Effect.flatMap(
+            Effect.forEach(_ => Effect.zip(Effect.succeed(_.id), getBlurHash(_.image)), { concurrency: 5 }),
           ),
+          Effect.flatMap(Effect.forEach(([id, blurHash]) =>
+            Effect.tryPromise({
+              try: () => db.item.update({ where: { id }, data: { blurHash } }),
+              catch: prismaError("Item"),
+            }), { concurrency: 10, discard: true })),
         )
       )
     ),

@@ -1,8 +1,6 @@
 import { Routes } from "@blitzjs/next";
 import { useMutation, useQuery } from "@blitzjs/rpc";
 import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
 import { CheckCircleIcon } from "@heroicons/react/24/solid";
 import {
   Alert,
@@ -16,6 +14,7 @@ import {
   TextInput,
 } from "@mantine/core";
 import { Prisma } from "database";
+import { Option, ReadonlyArray } from "effect";
 import { forwardRef, Suspense, useDeferredValue } from "react";
 import { useController } from "react-hook-form";
 import { useZodForm } from "src/core/hooks/useZodForm";
@@ -38,11 +37,11 @@ const VenueAutocomplete = forwardRef<HTMLInputElement, AutocompleteComponent<{ o
     );
 
     return pipe(
-      O.fromNullable(venueQuery),
-      O.map((o) => o.venues),
-      O.map(A.map((v) => v.identifier)),
-      O.map((data) => <Autocomplete key="venues" label="Pick Venue" ref={ref} {...rest} data={data} />),
-      O.getOrElse(() => (
+      Option.fromNullable(venueQuery),
+      Option.map((o) => o.venues),
+      Option.map(ReadonlyArray.map((v) => v.identifier)),
+      Option.map((data) => <Autocomplete key="venues" label="Pick Venue" ref={ref} {...rest} data={data} />),
+      Option.getOrElse(() => (
         <Autocomplete
           key="venues"
           ref={ref}
@@ -70,14 +69,12 @@ const OrganizationAutocomplete = forwardRef<HTMLInputElement, AutocompleteCompon
         label="Pick an organizations"
         ref={ref}
         {...props}
-        data={id(organizations)}
+        data={organizations.map(_ => _.identifier)}
       />
     );
   },
 );
 OrganizationAutocomplete.displayName = "OrganizationAutocomplete";
-
-const id = A.map<{ identifier: string }, string>((o) => o.identifier);
 
 function InviteMemberForm() {
   const [invite, { data, isSuccess }] = useMutation(_inviteMember);
@@ -109,7 +106,7 @@ function InviteMemberForm() {
   return (
     <Container size="xs">
       <Paper
-        sx={{ width: 460 }}
+        className="w-[460px]"
         component="form"
         withBorder
         shadow="md"

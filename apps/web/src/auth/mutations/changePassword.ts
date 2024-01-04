@@ -1,9 +1,8 @@
 import { SecurePassword } from "@blitzjs/auth/secure-password";
 import { resolver } from "@blitzjs/rpc";
-import { pipe } from "@effect/data/Function";
-import * as Effect from "@effect/io/Effect";
-import * as Schema from "@effect/schema/Schema";
+import { Schema } from "@effect/schema";
 import { AuthenticationError } from "blitz";
+import { Effect, pipe } from "effect";
 import { Database } from "shared/Database";
 import { Renu } from "src/core/effect";
 import { Resolver } from "..";
@@ -35,7 +34,7 @@ export const verifyPassword = (hashedPassword: string | null, password: string) 
 
 export const Password = pipe(
   Schema.string,
-  Schema.trim,
+  Schema.compose(Schema.Trim),
   Schema.minLength(10, { message: () => "Password has to be at least 10 characters" }),
   Schema.maxLength(100, { message: () => "Ok thats too long." }),
 );

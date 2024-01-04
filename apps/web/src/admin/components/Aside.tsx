@@ -1,9 +1,8 @@
 import { Routes } from "@blitzjs/next";
 import { useQuery } from "@blitzjs/rpc";
-import { pipe } from "@effect/data/Function";
-import * as Option from "@effect/data/Option";
-import * as Schema from "@effect/schema/Schema";
+import { Schema } from "@effect/schema";
 import { Loader, LoadingOverlay } from "@mantine/core";
+import { Option } from "effect";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
@@ -19,7 +18,12 @@ const includeContent = Schema.decodeSync(Schema.array(Item.ItemWithContent));
 function AsideDirectory() {
   const locale = useLocale();
   const t = useTranslations("admin.Components.Aside");
-  const [items, { isLoading, isRefetching }] = useQuery(getCurrentVenueItems, undefined, { select: includeContent });
+  const [items, { isLoading, isRefetching }] = useQuery(getCurrentVenueItems, undefined, {
+    select: (_) => {
+      console.log(_);
+      return includeContent(_);
+    },
+  });
 
   const title = titleFor(locale);
 
@@ -36,8 +40,8 @@ function AsideDirectory() {
             <li key={item.id} className="bg-white">
               <div className="relative px-5 py-5 flex items-center gap-4 hover:bg-gray-50 focus-within:ring-2 focus-within:ring-inset focus-within:ring-emerald-500">
                 <div className="flex-shrink-0 relative w-10 h-10 rounded-full overflow-hidden">
-                  {pipe(
-                    Option.map(item.blurHash, hash => <Blurhash hash={hash} width={40} height={40} />),
+                  {item.blurHash.pipe(
+                    Option.map(hash => <Blurhash hash={hash} width={40} height={40} />),
                     Option.getOrNull,
                   )}
                   {item.image && (

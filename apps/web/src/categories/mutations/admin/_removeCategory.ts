@@ -1,8 +1,7 @@
 import { Ctx } from "@blitzjs/next";
 import { pipe } from "@effect/data/Function";
-import * as Cause from "@effect/io/Cause";
-import * as Effect from "@effect/io/Effect";
 import db from "db";
+import { Cause, Console, Effect } from "effect";
 import { Session } from "src/auth";
 import { Renu } from "src/core/effect";
 import { prismaError } from "src/core/helpers/prisma";
@@ -22,8 +21,7 @@ const _removeCategory = (id: _Menu.CategoryId, ctx: Ctx) =>
       })
     ),
     Session.authorize(ctx),
-    Effect.tapError((c) => Effect.sync(() => console.log((c as Error).cause))),
-    Effect.tapErrorCause((c) => Effect.sync(() => console.log(Cause.pretty(c)))),
+    Effect.tapErrorCause((c) => Console.log(Cause.pretty(c))),
     Renu.runPromise$,
   );
 

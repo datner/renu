@@ -6,4 +6,4 @@ export const Content = S.struct({
   name: S.string,
   description: S.string,
 });
-export interface Content extends S.To<typeof Content> {}
+export interface Content extends S.Schema.To<typeof Content> {}

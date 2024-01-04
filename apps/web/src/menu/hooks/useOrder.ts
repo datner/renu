@@ -1,15 +1,16 @@
-import * as B from "@effect/data/Boolean";
-import * as Brand from "@effect/data/Brand";
-import * as Data from "@effect/data/Data";
-import * as Equal from "@effect/data/Equal";
-import { pipe } from "@effect/data/Function";
-import * as HashMap from "@effect/data/HashMap";
-import * as N from "@effect/data/Number";
-import * as O from "@effect/data/Option";
-import * as P from "@effect/data/Predicate";
-import * as A from "@effect/data/ReadonlyArray";
-import * as RA from "@effect/data/ReadonlyArray";
-import * as Match from "@effect/match";
+import {
+  Boolean,
+  Brand,
+  Data,
+  Equal,
+  HashMap,
+  Match,
+  Number as N,
+  Option,
+  pipe,
+  Predicate,
+  ReadonlyArray,
+} from "effect";
 import { nanoid } from "nanoid";
 import { Dispatch, useReducer } from "react";
 import { Item, ModifierConfig, Venue } from "shared";
@@ -99,7 +100,7 @@ export type Order = ActiveOrder | EmptyOrder;
 export interface State extends Data.Case {
   readonly _tag: "State";
   readonly order: Order;
-  readonly activeItem: O.Option<ActiveItem>;
+  readonly activeItem: Option.Option<ActiveItem>;
 }
 export const State = Data.tagged<State>("State");
 
@@ -107,17 +108,19 @@ type Action = (state: State) => State;
 
 const getOneOfCost = (oneOf: OneOf) =>
   pipe(
-    RA.findFirst(oneOf.config.options, (o) => o.identifier === oneOf.choice),
-    O.map((o) => o.price * oneOf.amount),
-    O.getOrElse(() => 0),
+    ReadonlyArray.findFirst(oneOf.config.options, (o) => o.identifier === oneOf.choice),
+    Option.map((o) => o.price * oneOf.amount),
+    Option.getOrElse(() => 0),
   );
 
 const getExtrasCost = (extras: Extras) => {
-  return O.sumCompact(
-    RA.map(
+  return Option.reduceCompact(
+    ReadonlyArray.map(
       extras.config.options,
-      (o) => O.map(HashMap.get(extras.choices, o.identifier), (amount) => o.price * (o.multi ? amount : 1)),
+      (o) => Option.map(HashMap.get(extras.choices, o.identifier), (amount) => o.price * (o.multi ? amount : 1)),
     ),
+    0,
+    N.sum,
   );
 };
 
@@ -139,28 +142,28 @@ export const getAmount = pipe(
 );
 
 const isOnlyItem = (key: OrderItemKey) =>
-  P.every([
+  Predicate.every([
     (o: ActiveOrder) => HashMap.has(o.items, key),
     (o: ActiveOrder) => HashMap.size(o.items) === 1,
   ]);
 
-const isLastItem = (key: OrderItemKey) => P.and(isOnlyItem(key), (o: ActiveOrder) => o.totalAmount === 1);
+const isLastItem = (key: OrderItemKey) => Predicate.and(isOnlyItem(key), (o: ActiveOrder) => o.totalAmount === 1);
 
-export const isOneOf: P.Refinement<OrderItemModifier, OneOf> = Refinement.isTagged("OneOf");
+export const isOneOf: Predicate.Refinement<OrderItemModifier, OneOf> = Refinement.isTagged("OneOf");
 
-export const isExtras: P.Refinement<OrderItemModifier, Extras> = Refinement.isTagged("Extras");
+export const isExtras: Predicate.Refinement<OrderItemModifier, Extras> = Refinement.isTagged("Extras");
 
-export const isActiveOrder: P.Refinement<Order, ActiveOrder> = Refinement.isTagged("ActiveOrder");
+export const isActiveOrder: Predicate.Refinement<Order, ActiveOrder> = Refinement.isTagged("ActiveOrder");
 
-export const isEmptyOrder: P.Refinement<Order, EmptyOrder> = Refinement.isTagged("EmptyOrder");
+export const isEmptyOrder: Predicate.Refinement<Order, EmptyOrder> = Refinement.isTagged("EmptyOrder");
 
-export const isNewActiveItem: P.Refinement<ActiveItem, NewActiveItem> = Refinement.isTagged("NewActiveItem");
+export const isNewActiveItem: Predicate.Refinement<ActiveItem, NewActiveItem> = Refinement.isTagged("NewActiveItem");
 
-export const isExistingActiveItem: P.Refinement<ActiveItem, ExistingActiveItem> = Refinement.isTagged(
+export const isExistingActiveItem: Predicate.Refinement<ActiveItem, ExistingActiveItem> = Refinement.isTagged(
   "ExistingActiveItem",
 );
 
-export const isMultiOrderItem: P.Refinement<OrderItem, MultiOrderItem> = Refinement.isTagged("MultiOrderItem");
+export const isMultiOrderItem: Predicate.Refinement<OrderItem, MultiOrderItem> = Refinement.isTagged("MultiOrderItem");
 
 export const getOrderItemAmount = (orderItem: OrderItem) =>
   isMultiOrderItem(orderItem) ? orderItem.amount : Number.Amount(1);
@@ -196,8 +199,8 @@ export const getSumCost = HashMap.reduce(0, (accumulated, item: OrderItem) => N.
 export const addEmptyItem = (item: Venue.Menu.MenuItem): Action => (state) => {
   const key = OrderItemKey(nanoid());
   const mods = pipe(
-    A.filterMap(item.modifiers, refineTag("OneOf")),
-    A.map(
+    ReadonlyArray.filterMap(item.modifiers, refineTag("OneOf")),
+    ReadonlyArray.map(
       _ =>
         OneOf({
           id: _.id,
@@ -207,13 +210,13 @@ export const addEmptyItem = (item: Venue.Menu.MenuItem): Action => (state) => {
           choice: _.config.options[parseInt(_.config.defaultOption, 10)]!.identifier,
         }),
     ),
-    A.map(_ => [_.id, _] as const),
+    ReadonlyArray.map(_ => [_.id, _] as const),
   );
 
   const valid = pipe(
-    A.filterMap(item.modifiers, refineTag("Extras")),
-    A.every(_ => O.isNone(_.config.min)),
-    B.and(item.price !== 0),
+    ReadonlyArray.filterMap(item.modifiers, refineTag("Extras")),
+    ReadonlyArray.every(_ => Option.isNone(_.config.min)),
+    Boolean.and(item.price !== 0),
   );
 
   const orderItem = SingleOrderItem({
@@ -227,12 +230,12 @@ export const addEmptyItem = (item: Venue.Menu.MenuItem): Action => (state) => {
     ...state,
     activeItem: valid
       ? pipe(
-        O.filter(state.activeItem, isNewActiveItem),
-        O.filter((active) => active.item.id === item.id),
-        O.map(() => ExistingActiveItem({ item: orderItem, key })),
-        O.orElse(() => state.activeItem),
+        Option.filter(state.activeItem, isNewActiveItem),
+        Option.filter((active) => active.item.id === item.id),
+        Option.map(() => ExistingActiveItem({ item: orderItem, key })),
+        Option.orElse(() => state.activeItem),
       )
-      : O.some(ExistingActiveItem({ item: orderItem, key })),
+      : Option.some(ExistingActiveItem({ item: orderItem, key })),
     order: pipe(
       Match.value(state.order),
       Match.tag("EmptyOrder", (_) =>
@@ -278,10 +281,10 @@ export const addItem = (item: OrderItem): Action => (state) => {
       Match.exhaustive,
     ),
     activeItem: pipe(
-      O.filter(state.activeItem, isNewActiveItem),
-      O.filter((active) => active.item.id === item.item.id),
-      O.map(() => ExistingActiveItem({ item, key })),
-      O.orElse(() => state.activeItem),
+      Option.filter(state.activeItem, isNewActiveItem),
+      Option.filter((active) => active.item.id === item.item.id),
+      Option.map(() => ExistingActiveItem({ item, key })),
+      Option.orElse(() => state.activeItem),
     ),
   });
 };
@@ -313,13 +316,13 @@ export const incrementItem = (key: OrderItemKey): Action => (state) =>
       ActiveOrder: _ =>
         pipe(
           HashMap.get(_.items, key),
-          O.map((orderItem) => {
+          Option.map((orderItem) => {
             const multiItem = incrementOrderItem(orderItem);
             const becameInvalid = !multiItem.valid && orderItem.valid;
             if (becameInvalid) {
               return State({
                 ...state,
-                activeItem: O.some(ExistingActiveItem({ key, item: orderItem })),
+                activeItem: Option.some(ExistingActiveItem({ key, item: orderItem })),
               });
             }
             const items = HashMap.set(_.items, key, multiItem);
@@ -331,7 +334,7 @@ export const incrementItem = (key: OrderItemKey): Action => (state) =>
                 totalAmount: Number.Amount(_.totalAmount + 1),
                 totalCost: Number.Cost(getSumCost(items)),
               }),
-              activeItem: O.zipWith(state.activeItem, O.some(multiItem), (active, item) => {
+              activeItem: Option.zipWith(state.activeItem, Option.some(multiItem), (active, item) => {
                 if (isExistingActiveItem(active) && Equal.equals(active.key, key)) {
                   return ExistingActiveItem({ key, item });
                 }
@@ -340,15 +343,15 @@ export const incrementItem = (key: OrderItemKey): Action => (state) =>
               }),
             });
           }),
-          O.getOrElse(() => state),
+          Option.getOrElse(() => state),
         ),
     }),
   );
 
-const decrementAmount = (opt: O.Option<OrderItem>) =>
+const decrementAmount = (opt: Option.Option<OrderItem>) =>
   pipe(
-    O.filter(opt, isMultiOrderItem),
-    O.map(({ _tag, amount, ...oi }) =>
+    Option.filter(opt, isMultiOrderItem),
+    Option.map(({ _tag, amount, ...oi }) =>
       amount === 2
         ? SingleOrderItem({ ...oi, cost: Number.Cost(getItemCost({ _tag: "SingleOrderItem", ...oi })) })
         : MultiOrderItem({
@@ -370,23 +373,23 @@ export const removeItem = (key: OrderItemKey): Action => (state) =>
         ...state,
         order: EmptyOrder(),
         activeItem: pipe(
-          O.filter(state.activeItem, isExistingActiveItem),
-          O.zipWith(HashMap.get(ord.items, key), (active, orderItem) =>
+          Option.filter(state.activeItem, isExistingActiveItem),
+          Option.zipWith(HashMap.get(ord.items, key), (active, orderItem) =>
             Equal.equals(active.item, orderItem)
               ? NewActiveItem({ item: Data.struct(orderItem.item) })
               : active),
-          O.orElse(() => state.activeItem),
+          Option.orElse(() => state.activeItem),
         ),
       })),
     Match.tag("ActiveOrder", (o) => {
       const item = HashMap.get(o.items, key);
 
       const cost = pipe(
-        O.map(item, (it) => it.cost),
-        O.getOrElse(() => 0),
+        Option.map(item, (it) => it.cost),
+        Option.getOrElse(() => 0),
       );
 
-      const amount = O.match(item, { onNone: () => 0, onSome: getAmount });
+      const amount = Option.match(item, { onNone: () => 0, onSome: getAmount });
 
       return State({
         ...state,
@@ -410,21 +413,21 @@ export const decrementItem = (key: OrderItemKey): Action => (state) => {
         ...state,
         order: EmptyOrder(),
         activeItem: pipe(
-          O.filter(state.activeItem, isExistingActiveItem),
-          O.zipWith(HashMap.get(ord.items, key), (active, orderItem) =>
+          Option.filter(state.activeItem, isExistingActiveItem),
+          Option.zipWith(HashMap.get(ord.items, key), (active, orderItem) =>
             Equal.equals(active.item, orderItem)
               ? NewActiveItem({ item: Data.struct(orderItem.item) })
               : active),
-          O.orElse(() => state.activeItem),
+          Option.orElse(() => state.activeItem),
         ),
       })),
     Match.tag("ActiveOrder", ({ _tag, ...o }) =>
-      O.match(
+      Option.match(
         HashMap.get(o.items, key),
         {
           onNone: () => state,
           onSome: (it) =>
-            B.match(
+            Boolean.match(
               it._tag === "SingleOrderItem",
               {
                 onFalse: () =>
@@ -449,9 +452,9 @@ export const decrementItem = (key: OrderItemKey): Action => (state) => {
 export const updateItem = (hash: OrderItemKey, update: (v: OrderItem) => OrderItem): Action => (state) =>
   pipe(
     state.order,
-    O.liftPredicate(isActiveOrder),
-    O.map((ord) => HashMap.modify(ord.items, hash, update)),
-    O.match({
+    Option.liftPredicate(isActiveOrder),
+    Option.map((ord) => HashMap.modify(ord.items, hash, update)),
+    Option.match({
       onNone: () => state,
       onSome: (items) =>
         State({
@@ -470,7 +473,7 @@ export const updateItem = (hash: OrderItemKey, update: (v: OrderItem) => OrderIt
 export const setNewActiveItem = (item: Venue.Menu.MenuItem): Action => (state) =>
   State({
     ...state,
-    activeItem: O.some(NewActiveItem({ item: Data.struct(item) })),
+    activeItem: Option.some(NewActiveItem({ item: Data.struct(item) })),
   });
 
 export const setExistingActiveItem = (key: OrderItemKey): Action => (state) =>
@@ -478,17 +481,17 @@ export const setExistingActiveItem = (key: OrderItemKey): Action => (state) =>
     ...state,
     activeItem: pipe(
       state.order,
-      O.liftPredicate(isActiveOrder),
-      O.flatMap((ord) => HashMap.get(ord.items, key)),
-      O.map((item) => ExistingActiveItem({ item, key })),
-      O.orElse(() => state.activeItem),
+      Option.liftPredicate(isActiveOrder),
+      Option.flatMap((ord) => HashMap.get(ord.items, key)),
+      Option.map((item) => ExistingActiveItem({ item, key })),
+      Option.orElse(() => state.activeItem),
     ),
   });
 
 export const removeActiveItem = (): Action => (state) =>
   State({
     ...state,
-    activeItem: O.none(),
+    activeItem: Option.none(),
   });
 
 const reducer = (state: State, action: Action): State => action(state);
@@ -498,5 +501,5 @@ export type OrderDispatch = Dispatch<Action>;
 export const useOrder = () =>
   useReducer(
     reducer,
-    State({ order: EmptyOrder(), activeItem: O.none() }),
+    State({ order: EmptyOrder(), activeItem: Option.none() }),
   );

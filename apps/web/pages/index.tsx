@@ -1,6 +1,6 @@
 import { BlitzPage, Routes } from "@blitzjs/next";
 import { useMutation } from "@blitzjs/rpc";
-import { Anchor, Button, Container, Group, Paper, PasswordInput, Text, TextInput, Title } from "@mantine/core";
+import { Anchor, Button, Container, Paper, PasswordInput, Text, TextInput, Title } from "@mantine/core";
 import { AuthenticationError } from "blitz";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -61,11 +61,9 @@ function LoginForm() {
           placeholder="your password"
           mt="md"
         />
-        <Group position="apart" mt="md">
-          <Link passHref href={Routes.ForgotPasswordPage()} legacyBehavior>
-            <Anchor<"a"> size="sm">Forgot Password?</Anchor>
-          </Link>
-        </Group>
+        <Link passHref href={Routes.ForgotPasswordPage()} legacyBehavior>
+          <Anchor<"a"> size="sm">Forgot Password?</Anchor>
+        </Link>
       </fieldset>
       <Button type="submit" fullWidth mt="xl" loading={form.formState.isSubmitting}>
         Sign In
@@ -77,10 +75,10 @@ function LoginForm() {
 const Authentication: BlitzPage = () => {
   return (
     <Container size={420} my={40}>
-      <Title align="center" weight="bolder">
+      <Title ta="center" fw="bolder">
         Welcome back!
       </Title>
-      <Text color="dimmed" size="sm" align="center" mt={5}>
+      <Text c="dimmed" size="sm" ta="center" mt={5}>
         Do you not have an account yet?{" "}
         <Link passHref href={Routes.UserSignupPage()} legacyBehavior>
           <Anchor<"a"> size="sm">Create Account</Anchor>

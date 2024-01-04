@@ -1,7 +1,7 @@
 import { pipe } from "@effect/data/Function";
-import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
 import db from "db";
+import * as Effect from "effect/Effect";
 import { Venue } from "shared";
 import { Renu } from "src/core/effect";
 import { prismaError } from "src/core/helpers/prisma";
@@ -17,7 +17,7 @@ const GetVenueClearingProvider = Schema.union(
   FromId,
   FromIdentifier,
 );
-export type GetVenueClearingProviderFrom = Schema.From<typeof GetVenueClearingProvider>;
+export type GetVenueClearingProviderFrom = Schema.Schema.From<typeof GetVenueClearingProvider>;
 
 const getVenueClearingProvider = (input: GetVenueClearingProviderFrom) =>
   pipe(

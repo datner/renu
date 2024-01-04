@@ -7,18 +7,18 @@ import { Common } from "../schema";
 import * as internal from "./internal/service";
 
 export const Id = Common.Id("VenueId");
-export type Id = Schema.To<typeof Id>;
+export type Id = Schema.Schema.To<typeof Id>;
 
 export const Logo = pipe(Schema.string, Schema.brand("Logo"));
-export type Logo = Schema.To<typeof Logo>;
+export type Logo = Schema.Schema.To<typeof Logo>;
 
 export const Open = pipe(Schema.boolean, Schema.brand("VenueOpen"));
-export type Open = Schema.To<typeof Open>;
+export type Open = Schema.Schema.To<typeof Open>;
 
 export const Identifier = pipe(Schema.string, Schema.fromBrand(Common.Slug), Schema.brand("VenueIdentifier"));
-export type Identifier = Schema.To<typeof Identifier>;
+export type Identifier = Schema.Schema.To<typeof Identifier>;
 
-export class Venue extends Schema.Class({
+export class Venue extends Schema.Class<Venue>()({
   id: Id,
   cuid: Schema.nullable(Schema.string),
   identifier: Identifier,

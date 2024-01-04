@@ -1,10 +1,10 @@
-import * as Effect from "@effect/io/Effect";
+import { Effect } from "effect";
 import { Format, Telegram } from "telegraf";
 import { TelegramService } from ".";
 import { ConstantCaseConfigProvider, TelegramConfig } from "./client";
 
 export const alertDatner = (msg: string | Format.FmtString) =>
-  Effect.config(TelegramConfig).pipe(
+  TelegramConfig.pipe(
     Effect.flatMap((config) =>
       Effect.tryPromise(() => new Telegram(config.botToken).sendMessage(config.datnerId, msg))
     ),
@@ -22,7 +22,7 @@ export const sendJson = (json: unknown) =>
   );
 
 export const notify = (msg: string | Format.FmtString) =>
-  Effect.config(TelegramConfig).pipe(
+  TelegramConfig.pipe(
     Effect.flatMap((config) => Effect.tryPromise(() => new Telegram(config.botToken).sendMessage(config.chatId, msg))),
     Effect.catchAllCause((cause) => Effect.logError("Failed to send message to Telegram", cause)),
     Effect.withConfigProvider(ConstantCaseConfigProvider),

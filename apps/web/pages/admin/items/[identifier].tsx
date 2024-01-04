@@ -1,10 +1,7 @@
 import { BlitzPage, ErrorBoundary, Routes, useParam } from "@blitzjs/next";
-import { LoadingOverlay } from "@mantine/core";
 import { GetServerSidePropsContext } from "next";
 import { useRouter } from "next/router";
-import { Suspense } from "react";
 import { Aside } from "src/admin/components/Aside";
-import { Content } from "src/admin/components/Content";
 import { UpdateItemForm } from "src/admin/components/UpdateItemForm";
 import { gSSP } from "src/blitz-server";
 import { AdminLayout } from "src/core/layouts/AdminLayout";
@@ -13,25 +10,14 @@ const AdminItemsItem: BlitzPage = () => {
   const identifier = useParam("identifier", "string");
   const router = useRouter();
   return (
-    <Content
-      main={
-        <ErrorBoundary
-          onError={() => router.push(Routes.AdminItems())}
-          fallback={<div>oops! couldn&apos;t find a {identifier}</div>}
-        >
-          <Suspense fallback={<LoadingOverlay visible />}>
-            <div className="flex flex-col min-h-0 items-stretch grow justify-center p-6">
-              {identifier && <UpdateItemForm identifier={identifier} />}
-            </div>
-          </Suspense>
-        </ErrorBoundary>
-      }
-      aside={
-        <Suspense fallback={<LoadingOverlay visible />}>
-          <Aside.Directory />
-        </Suspense>
-      }
-    />
+    <ErrorBoundary
+      onError={() => router.push(Routes.AdminItems())}
+      fallback={<div>oops! couldn&apos;t find a {identifier}</div>}
+    >
+      <div className="flex flex-col min-h-0 items-stretch grow justify-center p-6">
+        {identifier && <UpdateItemForm identifier={identifier} />}
+      </div>
+    </ErrorBoundary>
   );
 };
 
@@ -57,6 +43,6 @@ AdminItemsItem.authenticate = {
   redirectTo: Routes.Authentication(),
 };
 
-AdminItemsItem.getLayout = (page) => <AdminLayout>{page}</AdminLayout>;
+AdminItemsItem.getLayout = (page) => <AdminLayout aside={<Aside.Directory />}>{page}</AdminLayout>;
 
 export default AdminItemsItem;

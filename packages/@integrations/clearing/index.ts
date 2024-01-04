@@ -1,7 +1,7 @@
-import * as Effect from "@effect/io/Effect";
 import * as C from "@integrations/core/clearing";
 import * as M from "@integrations/core/management";
 import { Order } from "database";
+import * as Effect from "effect/Effect";
 export { ClearingService, IntegrationSettingsService, Settings } from "@integrations/core/clearing";
 
 export const getClearingPageLink = (order: M.FullOrderWithItems) =>

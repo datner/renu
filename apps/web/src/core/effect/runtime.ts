@@ -1,12 +1,5 @@
+import { Cause, ConfigProvider, Effect, Exit, Layer, Logger, pipe, ReadonlyArray, Runtime, Scope } from "effect";
 /* eslint-disable react-hooks/rules-of-hooks */
-import { pipe } from "@effect/data/Function";
-import * as ConfigProvider from "@effect/io/ConfigProvider";
-import * as Effect from "@effect/io/Effect";
-import * as Exit from "@effect/io/Exit";
-import * as Layer from "@effect/io/Layer";
-import * as Logger from "@effect/io/Logger";
-import * as Runtime from "@effect/io/Runtime";
-import * as Scope from "@effect/io/Scope";
 import { Http } from "@integrations/core";
 import * as Gama from "@integrations/gama";
 import * as Management from "@integrations/management";
@@ -14,32 +7,51 @@ import * as Payplus from "@integrations/payplus";
 import * as Presto from "@integrations/presto";
 import * as Db from "db";
 import * as Telegram from "integrations/telegram";
-import { Venue, Order } from "shared";
+import { Order, Venue } from "shared";
+import { logger } from "src/blitz-server";
+import { inspect } from "util";
 
 const provider = ConfigProvider.constantCase(ConfigProvider.fromEnv());
 
+const simpleLogger = Logger.mapInput(
+  Logger.make(m => {
+    logger.log(
+      m.logLevel.syslog,
+      m.logLevel.label,
+      m.date,
+      typeof m.message === "string" ? m.message : inspect(m.message, false, 11, true),
+      Cause.isEmpty(m.cause) ? "" : Cause.pretty(m.cause),
+      inspect(ReadonlyArray.fromIterable(m.annotations), false, 5, true),
+      inspect(ReadonlyArray.fromIterable(m.spans), false, 5, true),
+    );
+    return m;
+  }),
+  _ => {
+    if (typeof _ === "object" && _ != null && "authorization" in _) {
+      const { authorization, ...rest } = _;
+      return { authorization: "Bearer [redacted]", ...rest };
+    }
+    return _;
+  },
+);
 const serverLayer = pipe(
-  Logger.logFmt,
-  Layer.merge(Telegram.layer),
-  Layer.merge(Telegram.layer),
+  // Logger.replace(Logger.defaultLoggersimpleLogger),
+  Telegram.layer,
   Layer.merge(Management.layer),
   Layer.merge(Gama.layer),
   Layer.merge(Presto.layer),
   Layer.merge(Payplus.layer),
   Layer.merge(Venue.service.layer),
   Layer.merge(Order.service.layer),
-  Layer.merge(Effect.setConfigProvider(provider)),
-  Layer.useMerge(Db.layer),
-  Layer.useMerge(Http.layer),
+  Layer.merge(Layer.setConfigProvider(provider)),
+  Layer.provideMerge(Db.layer),
+  Layer.provideMerge(Http.layer),
 );
 
 export const makeRuntime = <R, E, A>(layer: Layer.Layer<R, E, A>) =>
   Effect.gen(function*($) {
     const scope = yield* $(Scope.make());
-    const env = yield* $(Layer.buildWithScope(layer, scope));
-    const runtime = yield* $(
-      pipe(Effect.runtime<A>(), Effect.scoped, Effect.provideContext(env)),
-    );
+    const runtime = yield* $(Layer.toRuntime(layer), Effect.provideService(Scope.Scope, scope));
 
     return {
       runtime,
@@ -47,7 +59,7 @@ export const makeRuntime = <R, E, A>(layer: Layer.Layer<R, E, A>) =>
     };
   });
 
-export const basicRuntime = Runtime.runSync(Runtime.defaultRuntime)(
+export const basicRuntime = Effect.runSync(
   makeRuntime(serverLayer),
 );
 

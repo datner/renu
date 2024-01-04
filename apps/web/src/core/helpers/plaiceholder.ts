@@ -1,6 +1,5 @@
-import * as Data from "@effect/data/Data";
-import * as Effect from "@effect/io/Effect";
 import { Http } from "@integrations/core";
+import { Data, Effect } from "effect";
 
 interface GetBlurHashError extends Data.Case {
   readonly _tag: "GetBlurHashError";
@@ -34,4 +33,3 @@ export const getBlurHash = (image: string) =>
       baseUrl: "https://renu.imgix.net",
     }),
   );
-

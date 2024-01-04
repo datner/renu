@@ -1,7 +1,5 @@
-import { pipe } from "@effect/data/Function";
-import * as Effect from "@effect/io/Effect";
-import * as ParseResult from "@effect/schema/ParseResult";
-import * as Schema from "@effect/schema/Schema";
+import { ParseResult, Schema } from "@effect/schema";
+import { Effect, pipe, ReadonlyArray } from "effect";
 import * as C from "../Category/category";
 import * as CI from "../Category/item";
 import * as CR from "../Category/requests";
@@ -14,152 +12,99 @@ import { Common } from "../schema";
 import * as VR from "./requests";
 import * as V from "./venue";
 
-const ItemExtension = Schema.struct({
-  modifiers: Schema.array(IM.fromPrisma),
-  content: Schema.array(Common.Content),
-});
-
-const Item = Schema.transformResult(
-  Schema.from(I.Item),
-  Schema.extend(ItemExtension)(I.Item),
+class Item extends I.Item.transformFrom<Item>()(
+  {
+    modifiers: Schema.array(IM.fromPrisma),
+    content: Schema.array(Common.Content),
+  },
   (i) =>
-    pipe(
-      Effect.zip(
-        IR.getContent(i.id),
-        IR.getModifiers(i.id),
-        { batching: true },
-      ),
-      Effect.map(([content, modifiers]) => ({ ...i, content, modifiers })),
-      Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
+    Effect.all({
+      content: IR.getContent(i.id),
+      modifiers: IR.getModifiers(i.id),
+    }, { batching: true }).pipe(
+      Effect.mapBoth({
+        onSuccess: (_) => ({ ...i, ..._ }),
+        onFailure: _ => ParseResult.parseError([ParseResult.missing]),
+      }),
       accessing(Database),
     ),
-  ParseResult.success,
-);
+  ParseResult.succeed,
+) {}
 
-export interface Item extends Schema.To<typeof Item> {}
-
-const CategoryItemExtension = Schema.struct({
+export class CategoryItem extends CI.Item.transform<CategoryItem>()({
   item: Item,
-});
+}, ci =>
+  IR.getById(ci.itemId).pipe(
+    Effect.andThen(_ => Schema.decode(Item)(_)),
+    Effect.mapBoth({
+      onSuccess: (item) => ({ ...ci, item }),
+      onFailure: _ => ParseResult.parseError([ParseResult.missing]),
+    }),
+    accessing(Database),
+  ), ParseResult.succeed)
+{}
 
-export const CategoryItem = Schema.extend(CategoryItemExtension)(CI.Item);
-export interface CategoryItem extends Schema.To<typeof CategoryItem> {}
-
-export const CategoryItems = Schema.transformResult(
-  Schema.from(Schema.array(CI.Item)),
-  Schema.array(CategoryItem),
-  Effect.forEach(ci =>
-    IR.getById(ci.itemId).pipe(
-      Effect.map((item) => ({ ...ci, item })),
-      Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
-      accessing(Database),
-    ), { batching: true }),
-  ParseResult.success,
-);
-export interface CategoryItems extends Schema.To<typeof CategoryItems> {}
-
-const CategoryExtension = Schema.struct({
+export class Category extends C.Category.transformFrom<Category>()({
   content: Schema.array(Common.Content),
-  categoryItems: CategoryItems,
-});
-
-export interface Category extends Schema.To<typeof Category> {}
-
-const Category = Schema.transformResult(
-  Schema.from(C.Category),
-  Schema.extend(CategoryExtension)(C.Category),
-  (c) =>
-    pipe(
-      Effect.zip(
-        CR.getContent(c.id),
-        CR.getItems(c.id),
-        { batching: true },
-      ),
-      Effect.map(([content, categoryItems]) => ({ ...c, content, categoryItems })),
-      Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
-      accessing(Database),
+  categoryItems: Schema.to(Schema.array(CategoryItem)),
+}, (c) =>
+  Effect.zip(
+    CR.getContent(c.id),
+    CR.getItems(c.id).pipe(
+      Effect.andThen(Effect.forEach(_ => Schema.decode(CategoryItem)(_), { batching: true })),
     ),
-  ParseResult.success,
-);
+    { batching: true },
+  ).pipe(
+    Effect.map(([content, categoryItems]) => ({ ...c, content, categoryItems })),
+    Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
+    accessing(Database),
+    _ => _,
+  ), ParseResult.succeed)
+{}
 
-const VenueExtension = Schema.struct({
+export class FromVenue extends V.Venue.transformFrom<FromVenue>()({
   content: Schema.array(pipe(Common.Content, Schema.omit("description"))),
-  categories: Schema.array(Category),
-});
-
-export const fromVenue = Schema.transformResult(
-  Schema.from(V.Venue.schema()),
-  Schema.extend(VenueExtension)(V.Venue.schemaStruct()),
-  v =>
-    pipe(
-      Effect.zip(
-        VR.getContent(v.id),
-        VR.getCategories(v.id),
-        { batching: true },
-      ),
-      Effect.map(([content, categories]) => ({ ...v, content, categories })),
-      Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
-      accessing(Database),
+  categories: Schema.to(Schema.array(Category)),
+}, v =>
+  Effect.zip(
+    VR.getContent(v.id),
+    VR.getCategories(v.id).pipe(
+      Effect.andThen(Effect.forEach(_ => Schema.decode(Category)(_), { batching: true })),
+      Effect.map(ReadonlyArray.filter(_ => ReadonlyArray.isNonEmptyReadonlyArray(_.categoryItems))),
     ),
-  ParseResult.success,
-);
+    { batching: true },
+  ).pipe(
+    Effect.mapBoth({
+      onSuccess: ([content, categories]) => ({ ...v, content, categories }),
+      onFailure: _ => ParseResult.parseError([ParseResult.missing]),
+    }),
+    accessing(Database),
+  ), ParseResult.succeed)
+{}
 
-export type MenuModifierItem = Schema.To<typeof IM.Modifier>;
+export type MenuModifierItem = Schema.Schema.To<typeof IM.Modifier>;
 
-export const MenuItem = pipe(
-  I.Item,
-  Schema.pick(
-    "id",
-    "image",
-    "price",
-    "identifier",
-    "blurDataUrl",
-    "blurHash",
-    "categoryId",
-  ),
-  Schema.extend(Schema.struct({
-    content: Schema.array(Common.Content),
-    modifiers: pipe(
-      IM.Modifier,
-      Schema.array,
-    ),
-  })),
-);
-export interface MenuItem extends Schema.To<typeof MenuItem> {}
+export class MenuItem extends I.Item.extend<MenuItem>()({
+  content: Schema.array(Common.Content),
+  modifiers: Schema.array(IM.Modifier),
+  updatedAt: Schema.Date,
+  createdAt: Schema.Date,
+}) {}
 
-export const MenuCategoryItem = pipe(
-  CI.Item,
-  Schema.pick("position"),
-  Schema.extend(Schema.struct({
-    item: pipe(
-      MenuItem,
-    ),
-  })),
-);
-export interface MenuCategoryItem extends Schema.To<typeof MenuCategoryItem> {}
+export class MenuCategoryItem extends CI.Item.extend<MenuCategoryItem>()({
+  item: MenuItem.struct,
+}) {}
 
-export const MenuCategory = pipe(
-  C.Category,
-  Schema.pick("id", "identifier"),
-  Schema.extend(Schema.struct({
-    content: Schema.array(Common.Content),
-    categoryItems: pipe(
-      MenuCategoryItem,
-      Schema.array,
-    ),
-  })),
-);
-export interface MenuCategory extends Schema.To<typeof MenuCategory> {}
-
-export const Menu = pipe(
-  V.Venue.schemaStruct(),
-  Schema.pick("id", "open", "simpleContactInfo"),
-  Schema.extend(Schema.struct({
-    content: pipe(Common.Content, Schema.omit("description"), Schema.array),
-    categories: pipe(
-      MenuCategory,
-      Schema.array,
-    ),
-  })),
-);
-export interface Menu extends Schema.To<typeof Menu> {}
+export class MenuCategory extends C.Category.extend<MenuCategory>()({
+  content: Schema.array(Common.Content),
+  categoryItems: Schema.array(MenuCategoryItem.struct),
+  updatedAt: Schema.Date,
+  createdAt: Schema.Date,
+  deleted: Schema.optionFromNullable(Schema.Date),
+}) {}
+export class Menu extends V.Venue.extend<Menu>()({
+  content: pipe(Common.Content, Schema.omit("description"), Schema.array),
+  categories: Schema.array(MenuCategory.struct),
+  updatedAt: Schema.Date,
+  createdAt: Schema.Date,
+}) {}

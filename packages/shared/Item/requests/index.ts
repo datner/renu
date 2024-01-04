@@ -1,5 +1,4 @@
-import * as Option from "@effect/data/Option";
-import * as Effect from "@effect/io/Effect";
+import { Effect, Option } from "effect";
 import * as ModifierConfig from "../../modifier-config";
 import { Common } from "../../schema";
 import * as Item from "../item";

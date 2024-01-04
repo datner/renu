@@ -59,7 +59,7 @@ export function LoginForm() {
           placeholder="your password"
           mt="md"
         />
-        <Group position="apart" mt="md">
+        <Group justify="space-between" mt="md">
           <Anchor<"a"> size="sm" href="#" onClick={(e) => e.preventDefault()}>
             Forgot Password?
           </Anchor>

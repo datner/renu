@@ -1,8 +1,6 @@
-import { identity, pipe } from "@effect/data/Function";
-import * as Effect from "@effect/io/Effect";
-import * as ParseResult from "@effect/schema/ParseResult";
-import * as Schema from "@effect/schema/Schema";
+import { ParseResult, Schema } from "@effect/schema";
 import { ManagementProvider } from "database";
+import { Effect, identity, pipe } from "effect";
 import { Database } from "../Database";
 import { accessing } from "../effect/Context";
 import { Common } from "../schema";
@@ -10,7 +8,7 @@ import { getManagement } from "./requests";
 import * as Venue from "./venue";
 
 export const Id = Common.Id("ManagementIntegrationId");
-export type Id = Schema.To<typeof Id>;
+export type Id = Schema.Schema.To<typeof Id>;
 
 const VendorMap = {
   Dorix: Schema.struct({
@@ -33,7 +31,7 @@ export const managementOf = <I1, A1, T extends ManagementProvider>(s: Schema.Sch
     id: Id,
     venueId: Venue.Id,
     provider: pipe(Provider, Schema.filter((_): _ is T => _ === p)),
-    vendorData: Schema.transformResult(Schema.unknown, Schema.to(s), Schema.parseResult(s), Schema.encodeResult(s)),
+    vendorData: Schema.compose(Schema.unknown, s),
   });
 };
 
@@ -43,12 +41,12 @@ export const GeneralManagementIntegration = Schema.struct({
   venueId: Venue.Id,
   vendorData: Schema.unknown,
 });
-export interface ManagementIntegration extends Schema.To<typeof GeneralManagementIntegration> {}
+export interface ManagementIntegration extends Schema.Schema.To<typeof GeneralManagementIntegration> {}
 
 export const DorixIntegration = managementOf(VendorMap.Dorix, "DORIX");
-export interface DorixIntegration extends Schema.To<typeof DorixIntegration> {}
+export interface DorixIntegration extends Schema.Schema.To<typeof DorixIntegration> {}
 export const PrestoIntegration = managementOf(VendorMap.Presto, "PRESTO");
-export interface PrestoIntegration extends Schema.To<typeof PrestoIntegration> {}
+export interface PrestoIntegration extends Schema.Schema.To<typeof PrestoIntegration> {}
 
 export const ManagementIntegration = Schema.transform(
   Schema.from(GeneralManagementIntegration),
@@ -60,8 +58,8 @@ export const ManagementIntegration = Schema.transform(
   identity,
 );
 
-export const fromVenue = Schema.transformResult(
-  Schema.from(Venue.Id),
+export const fromVenue = Schema.transformOrFail(
+  Venue.Id,
   ManagementIntegration,
   id =>
     pipe(
@@ -69,5 +67,5 @@ export const fromVenue = Schema.transformResult(
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
       accessing(Database),
     ),
-  _ => ParseResult.success(_.venueId),
+  _ => ParseResult.succeed(Venue.Id(_.venueId)),
 );

@@ -1,24 +1,15 @@
-import { pipe } from "@effect/data/Function";
-import * as Option from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
-import * as Exit from "@effect/io/Exit";
-import * as Request from "@effect/io/Request";
-import * as RequestResolver from "@effect/io/RequestResolver";
-import * as Match from "@effect/match";
 import * as Schema from "@effect/schema/Schema";
-import { inspect } from "util";
-import { Database } from "../../Database";
-import { filterRequestsByTag, resolveBatch, resolveSingle } from "../../effect/Request";
+import { Effect, pipe, ReadonlyArray, Request, RequestResolver } from "effect";
+import { Database, DB } from "../../Database";
 import * as ModifierConfig from "../../modifier-config";
-import { GetItemById, GetItemByIdError } from "./getById";
-import { GetItemByIdentifier, GetItemByIdentifierError } from "./getByIdentifier";
+import { GetItemById } from "./getById";
+import { GetItemByIdentifier } from "./getByIdentifier";
 import { GetItemsByVenue } from "./getByVenue";
 import { GetItemContent } from "./getContent";
-import { GetItemModifierById, GetItemModifierByIdError } from "./getModifierById";
+import { GetItemModifierById } from "./getModifierById";
 import { GetItemModifiers } from "./getModifiers";
-import { SetModifierConfig, SetModifierConfigError } from "./setModifierConfig";
-import { SetPrestoId, SetPrestoIdError } from "./setPrestoId";
+import { SetModifierConfig } from "./setModifierConfig";
+import { SetPrestoId } from "./setPrestoId";
 
 type ItemRequest =
   | GetItemById
@@ -30,153 +21,139 @@ type ItemRequest =
   | SetModifierConfig
   | SetPrestoId;
 
+const encodeModifier = Schema.encode(ModifierConfig.Schema);
 export const ItemResolver = pipe(
-  RequestResolver.makeBatched((
-    requests: ItemRequest[],
-  ) =>
-    Effect.all([
-      Effect.sync(() => console.log(inspect(requests.map(r => r._tag), false, null, true))),
-      resolveBatch(
-        A.filter(requests, (_): _ is GetItemModifiers => _._tag === "GetItemModifiers"),
-        (reqs, db) =>
-          db.itemModifier.findMany({
-            where: { itemId: { in: reqs.map(req => req.id) }, deleted: null },
-            orderBy: { itemId: "asc" },
-          }),
-        r => String(r.id),
-        d => String(d.itemId),
-      ),
-      resolveBatch(
-        filterRequestsByTag(requests, "GetItemsByVenue"),
-        (reqs, db) =>
-          db.item.findMany({
-            where: { venueId: { in: reqs.map(req => req.venueId) }, deleted: null },
-            orderBy: { venueId: "asc" },
-          }),
-        r => String(`${r.venueId}-${r.orgId}`),
-        d => String(`${d.venueId}-${d.organizationId}`),
-      ),
-      resolveBatch(
-        filterRequestsByTag(requests, "GetItemContent"),
-        (reqs, db) =>
-          db.itemI18L.findMany({
-            where: { itemId: { in: reqs.map(req => req.id) } },
-            orderBy: { itemId: "asc" },
-          }),
-        r => String(r.id),
-        d => String(d.itemId),
-      ),
-      resolveSingle(
-        A.appendAll(
-          filterRequestsByTag(requests, "GetItemByIdentifier"),
-          filterRequestsByTag(requests, "GetItemById"),
+  RequestResolver.makeBatched<DB, ItemRequest>((
+    requests,
+  ) => {
+    const reqMap = ReadonlyArray.groupBy(requests, _ => _._tag);
+    const modifiers = reqMap.GetItemModifiers as GetItemModifiers[] ?? [];
+    const content = reqMap.GetItemContent as GetItemContent[] ?? [];
+    const modById = reqMap.GetItemModifierById as GetItemModifierById[] ?? [];
+    const byVenue = reqMap.GetItemsByVenue as GetItemsByVenue[] ?? [];
+    const byId = reqMap.GetItemById as GetItemById[] ?? [];
+    const byIdentifier = reqMap.GetItemByIdentifier as GetItemByIdentifier[] ?? [];
+    const setModConf = reqMap.SetModifierConfig as SetModifierConfig[] ?? [];
+    const setPrestoId = reqMap.SetPrestoId as SetPrestoId[] ?? [];
+    return Effect.andThen(Database, db =>
+      Effect.all({
+        GetItemContent: Effect.promise(() =>
+          Promise.all(
+            content.map(_ => db.item.findUnique({ where: { id: _.id } }).content()),
+          )
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(content)),
+          Effect.flatMap(
+            Effect.forEach(([content, req]) => Request.succeed(req, content ?? [])),
+          ),
         ),
-        (reqs, db) =>
+        GetItemModifiers: Effect.promise(() =>
+          Promise.all(
+            modifiers.map(_ => db.item.findUnique({ where: { id: _.id } }).modifiers()),
+          )
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(modifiers)),
+          Effect.flatMap(
+            Effect.forEach(([mods, req]) => Request.succeed(req, mods ?? [])),
+          ),
+        ),
+        GetItemsByVenue: Effect.promise(() =>
+          Promise.all(
+            byVenue.map(_ =>
+              db.venue.findUnique({ where: { id: _.venueId, organizationId: _.orgId } }).inventory({
+                include: { content: true },
+              })
+            ),
+          )
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(byVenue)),
+          Effect.flatMap(
+            Effect.forEach(([inventory, req]) => Request.succeed(req, inventory ?? [])),
+          ),
+        ),
+        GetItemModifierById: Effect.promise(() =>
+          db.itemModifier.findMany({
+            where: { id: { in: modById.map(_ => _.id) } },
+          })
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(modById)),
+          Effect.flatMap(
+            Effect.forEach(([mod, req]) => Request.succeed(req, mod)),
+          ),
+        ),
+        GetItemById: Effect.promise(() =>
           db.item.findMany({
             where: {
-              OR: [
-                { id: { in: filterRequestsByTag(reqs, "GetItemById").map(_ => _.id) } },
-                { identifier: { in: filterRequestsByTag(reqs, "GetItemByIdentifier").map(_ => _.identifier) } },
-              ],
+              id: { in: byId.map(_ => _.id) },
             },
-          }),
-        (req, items) =>
-          pipe(
-            Match.value(req),
-            Match.tag("GetItemById", _ =>
-              Option.match(
-                A.findFirst(items, it => {
-                  if (Option.isSome(_.venueId)) {
-                    return _.id === it.id && it.venueId === _.venueId.value;
-                  }
-                  return _.id === it.id;
-                }),
-                {
-                  onNone: () =>
-                    Exit.fail(req._tag === "GetItemById" ? new GetItemByIdError() : new GetItemByIdentifierError()),
-                  onSome: Exit.succeed,
-                },
-              )),
-            Match.tag("GetItemByIdentifier", _ =>
-              Option.match(
-                A.findFirst(items, it => {
-                  if (Option.isSome(_.venueId)) {
-                    return _.identifier === it.identifier && it.venueId === _.venueId.value;
-                  }
-
-                  return _.identifier === it.identifier;
-                }),
-                {
-                  onNone: () =>
-                    Exit.fail(req._tag === "GetItemById" ? new GetItemByIdError() : new GetItemByIdentifierError()),
-                  onSome: Exit.succeed,
-                },
-              )),
-            Match.exhaustive,
-          ) as any,
-      ),
-      resolveSingle(
-        filterRequestsByTag(requests, "GetItemModifierById"),
-        (reqs, db) =>
-          db.itemModifier.findMany({
-            where: { id: { in: reqs.map(_ => _.id) } },
-          }),
-        (req, modifiers) =>
-          Option.match(
-            A.findFirst(modifiers, _ => _.id === req.id),
-            {
-              onNone: () => Exit.fail(new GetItemModifierByIdError()),
-              onSome: Exit.succeed,
-            },
+            include: { content: true },
+          })
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(byId)),
+          Effect.flatMap(
+            Effect.forEach(([item, req]) => Request.succeed(req, item)),
           ),
-      ),
-      pipe(
-        filterRequestsByTag(requests, "SetPrestoId"),
-        Effect.forEach(req =>
-          Request.completeEffect(
-            req,
-            pipe(
-              Database,
-              Effect.flatMap(db =>
-                Effect.tryPromise({
-                  try: () =>
-                    db.item.update({
-                      where: { id: req.id },
-                      data: {
-                        managementRepresentation: {
-                          _tag: "Presto",
-                          id: req.prestoId,
-                        },
-                      },
-                    }),
-                  catch: () => new SetPrestoIdError(),
-                })
-              ),
-            ),
-          ), { concurrency: "unbounded" }),
-      ),
-      pipe(
-        // FIX: if 2 requests to the same modifier arrive, unexpected results will happen
-        filterRequestsByTag(requests, "SetModifierConfig"),
-        Effect.forEach(req =>
-          Request.completeEffect(
-            req,
-            pipe(
-              Schema.encode(ModifierConfig.Schema)(req.config),
-              Effect.zip(Database),
-              Effect.flatMap(([config, db]) =>
-                Effect.tryPromise(() =>
+        ),
+        GetItemByIdentifier: Effect.promise(() =>
+          db.item.findMany({
+            where: {
+              identifier: { in: byIdentifier.map(_ => _.identifier) },
+            },
+            include: { content: true },
+          })
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(byIdentifier)),
+          Effect.flatMap(
+            Effect.forEach(([item, req]) => Request.succeed(req, item)),
+          ),
+        ),
+        SetModifierConfig: Effect.andThen(
+          Effect.forEach(setModConf, _ => encodeModifier(_.config)),
+          (configs) =>
+            db.$transaction(
+              ReadonlyArray.zip(setModConf, configs).map(
+                ([req, config]) =>
                   db.itemModifier.update({
                     where: { id: req.id },
                     data: { config },
-                  })
-                )
+                  }),
               ),
-              Effect.catchAll(() => Effect.fail(new SetModifierConfigError())),
             ),
-          ), { concurrency: "unbounded" }),
-      ),
-    ], { concurrency: "unbounded" })
-  ),
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(setModConf)),
+          Effect.flatMap(
+            Effect.forEach(([item, req]) => Request.succeed(req, item)),
+          ),
+        ),
+        SetPrestoId: Effect.promise(() =>
+          db.$transaction(
+            setPrestoId.map(_ =>
+              db.item.update({
+                where: { id: _.id },
+                data: {
+                  managementRepresentation: {
+                    _tag: "Presto",
+                    id: _.prestoId,
+                  },
+                },
+              })
+            ),
+          )
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(setPrestoId)),
+          Effect.flatMap(
+            Effect.forEach(([item, req]) => Request.succeed(req, item)),
+          ),
+        ),
+      }, { concurrency: 9 }));
+  }),
   RequestResolver.contextFromServices(Database),
 );

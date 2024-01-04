@@ -1,15 +1,9 @@
 import { Ctx } from "@blitzjs/next";
 import { resolver } from "@blitzjs/rpc";
-import * as Data from "@effect/data/Data";
 import { pipe } from "@effect/data/Function";
-import * as N from "@effect/data/Number";
-import * as O from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Cause from "@effect/io/Cause";
-import * as Effect from "@effect/io/Effect";
-import { ParseError } from "@effect/schema/ParseResult";
-import * as S from "@effect/schema/Schema";
+import { ParseResult, Schema } from "@effect/schema";
 import { Prisma } from "database";
+import { Cause, Effect, Number, Option, ReadonlyArray } from "effect";
 import * as Telegram from "integrations/telegram/sendMessage";
 import { Order } from "shared";
 import * as Renu from "src/core/effect/runtime";
@@ -24,23 +18,23 @@ const createNewOrderModifier_ = (om: SendOrderModifiers) => {
     case "OneOf":
       return pipe(
         om.modifier.config.options,
-        A.findFirst((o) => o.identifier === om.choice),
-        O.map((opt) => ({
+        ReadonlyArray.findFirst((o) => o.identifier === om.choice),
+        Option.map((opt) => ({
           amount: om.amount,
           price: opt.price,
           choice: om.choice,
           ref: om.modifier.config.identifier,
           modifier: { connect: { id: om.modifier.id } },
         } satisfies Prisma.OrderItemModifierCreateWithoutReferencedInInput)),
-        A.fromOption,
+        ReadonlyArray.fromOption,
       );
 
     case "Extras":
       return pipe(
-        A.map(om.choices, ([choice, amount]) =>
+        ReadonlyArray.map(om.choices, ([choice, amount]) =>
           pipe(
-            A.findFirst(om.modifier.config.options, (o) => o.identifier === choice),
-            O.map((o) => (
+            ReadonlyArray.findFirst(om.modifier.config.options, (o) => o.identifier === choice),
+            Option.map((o) => (
               {
                 amount,
                 price: o.price,
@@ -50,7 +44,7 @@ const createNewOrderModifier_ = (om: SendOrderModifiers) => {
               } satisfies Prisma.OrderItemModifierCreateWithoutReferencedInInput
             )),
           )),
-        A.compact,
+        ReadonlyArray.getSomes,
       );
   }
 };
@@ -62,7 +56,7 @@ const toOrderItemInput = (orderItem: SendOrderItem) => ({
   name: orderItem.item.identifier,
   quantity: orderItem.amount,
   modifiers: {
-    create: A.flatMap(orderItem.modifiers, createNewOrderModifier_),
+    create: ReadonlyArray.flatMap(orderItem.modifiers, createNewOrderModifier_),
   },
 } satisfies Prisma.OrderItemCreateWithoutOrderInput);
 
@@ -70,42 +64,37 @@ const toOrderInput = (order: SendOrder) => ({
   venue: { connect: { id: order.venueId } },
   state: "Init",
   items: {
-    create: A.map(order.orderItems, toOrderItemInput),
+    create: ReadonlyArray.map(order.orderItems, toOrderItemInput),
   },
-  managementExtra: S.encodeSync(Order.Management.ExtraSchema)(order.managementExtra),
-  clearingExtra: S.encodeSync(Order.Clearing.ExtraSchema)(order.clearingExtra),
-  totalCost: N.sumAll(A.map(order.orderItems, getItemCost)),
+  managementExtra: Schema.encodeSync(Order.Management.ExtraSchema)(order.managementExtra),
+  clearingExtra: Schema.encodeSync(Order.Clearing.ExtraSchema)(order.clearingExtra),
+  totalCost: Number.sumAll(ReadonlyArray.map(order.orderItems, getItemCost)),
 } satisfies Prisma.OrderCreateInput);
 
 const anonymous: <I, A>(
-  s: S.Schema<I, A>,
-) => (input: I, ctx: Ctx) => Effect.Effect<never, ParseError, A> = s => (i, _) => S.decode(s)(i);
+  s: Schema.Schema<I, A>,
+) => (input: I, ctx: Ctx) => Effect.Effect<never, ParseResult.ParseError, A> = s => (i, _) => Schema.decode(s)(i);
 
 const createNewOrder = (input: SendOrder) =>
   pipe(
     Effect.sync(() => toOrderInput(input)),
     Effect.flatMap(Order.createDeepOrder),
-    Effect.flatMap(S.decode(Order.Schema)),
+    Effect.flatMap(Schema.decode(Order.Schema)),
   );
 
 // const matchProvider = Match.discriminator("provider");
 
+const formatter = Intl.NumberFormat("us-IL", { style: "currency", currency: "ILS" });
 const notifyAboutNewOrder = (order: SendOrder) =>
   Telegram.notify(`
 New Order received for ${order.venueId}!
 
 Customer ordered:
 ${
-    A.join(
-      A.map(
+    ReadonlyArray.join(
+      ReadonlyArray.map(
         order.orderItems,
-        (oi) =>
-          `${oi.amount} x ${oi.item.identifier} for ${
-            N.divide(oi.cost, 100).toLocaleString("us-IL", {
-              style: "currency",
-              currency: "ILS",
-            })
-          }`,
+        (oi) => `${oi.amount} x ${oi.item.identifier} for ${formatter.format(Number.unsafeDivide(oi.cost, 100))}`,
       ),
       `\n`,
     )

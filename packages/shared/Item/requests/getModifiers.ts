@@ -1,10 +1,9 @@
-import * as Data from "@effect/data/Data";
-import * as Request from "@effect/io/Request";
 import * as Models from "database";
+import { Data, Request } from "effect";
 
 export class GetItemModifiersError extends Data.TaggedClass("GetItemsModifiersIdError")<{}> {}
 
-export interface GetItemModifiers extends Request.Request<GetItemModifiersError, Models.ItemModifier[]> {
+export interface GetItemModifiers extends Request.Request<GetItemModifiersError, ReadonlyArray<Models.ItemModifier>> {
   readonly _tag: "GetItemModifiers";
   readonly id: number;
 }

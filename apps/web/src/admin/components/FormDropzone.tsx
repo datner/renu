@@ -1,6 +1,9 @@
+import { PhotoIcon, XMarkIcon } from "@heroicons/react/24/outline";
+import { ArrowUpTrayIcon } from "@heroicons/react/24/solid";
+import { Group, Text } from "@mantine/core";
+import { Dropzone, IMAGE_MIME_TYPE } from "@mantine/dropzone";
 import { useTranslations } from "next-intl";
 import Image from "next/image";
-import { useDropzone } from "react-dropzone";
 import { useController, useFormContext } from "react-hook-form";
 import { useEvent } from "src/core/hooks/useEvent";
 import { ItemFormSchema } from "../validations/item-form";
@@ -25,23 +28,44 @@ export function FormDropzone() {
     image.field.onChange({ src: URL.createObjectURL(file) });
   });
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
-    accept: { "image/*": [] },
-  });
-
   return (
     <>
-      <span className="block text-sm font-medium text-gray-700">{t("image")}</span>
-      <div
-        {...getRootProps()}
-        className="p-2 mt-1 rounded-md cursor-pointer border border-gray-300 bg-gray-100 border-dashed"
+      <Dropzone
+        onDrop={onDrop}
+        maxFiles={1}
+        accept={IMAGE_MIME_TYPE}
+        maxSize={5 * 1024 ** 2}
       >
-        <input {...getInputProps()} />
-        <span className="text-gray-400 text-sm">
-          {isDragActive ? <p>{t("drop files here")}</p> : <p>{t("drag and drop here")}</p>}
-        </span>
-      </div>
+        <Group justify="center" gap="xl" mih={220} style={{ pointerEvents: "none" }}>
+          <Dropzone.Accept>
+            <ArrowUpTrayIcon
+              className="size-12"
+              style={{ color: "var(--mantine-color-blue-6)" }}
+            />
+          </Dropzone.Accept>
+          <Dropzone.Reject>
+            <XMarkIcon
+              className="size-12"
+              style={{ color: "var(--mantine-color-red-6)" }}
+            />
+          </Dropzone.Reject>
+          <Dropzone.Idle>
+            <PhotoIcon
+              className="size-12"
+              style={{ color: "var(--mantine-color-dimmed)" }}
+            />
+          </Dropzone.Idle>
+
+          <div>
+            <Text size="sm" inline>
+              {t("drag and drop here")}
+            </Text>
+            <Text size="xs" c="dimmed" inline mt={7}>
+              File should not exceed 5mb
+            </Text>
+          </div>
+        </Group>
+      </Dropzone>
 
       <div className="mt-2 relative grow">
         {image.field.value?.src && (

@@ -1,11 +1,9 @@
-import { pipe } from "@effect/data/Function";
-import * as RR from "@effect/data/ReadonlyRecord";
-import * as Schema from "@effect/schema/Schema";
+import { Schema } from "@effect/schema";
+import { pipe, ReadonlyRecord as RR } from "effect";
 import { Category, ModifierConfig } from "shared";
 import { Common, Number } from "shared/schema";
 import { Slug } from "shared/schema/common";
 
-Common.Content;
 const Content_ = Schema.struct({
   name: Common.Name,
   description: Common.Description,
@@ -18,11 +16,11 @@ const ContentTuple = Schema.tuple(
   Schema.attachPropertySignature("locale", "en")(Content_),
   Schema.attachPropertySignature("locale", "he")(Content_),
 );
-const Content = Schema.transformResult(
+const Content = Schema.transformOrFail(
   ContentStruct,
   Schema.to(ContentTuple),
-  _ => Schema.parseResult(ContentTuple)(RR.collect(_, (locale, value) => ({ ...value, locale }))),
-  _ => Schema.parseResult(ContentStruct)(RR.fromIterable(_, _ => [_.locale, _])),
+  _ => Schema.parse(ContentTuple)(RR.collect(_, (locale, value) => ({ ...value, locale }))),
+  _ => Schema.parse(ContentStruct)(RR.fromIterableBy(_, _ => _.locale)),
 );
 
 export const ExtrasOption = Schema.struct({
@@ -41,7 +39,7 @@ export const ExtrasSchema = Schema.struct({
   min: Schema.number,
   max: Schema.number,
 });
-export interface ExtrasSchema extends Schema.From<typeof ExtrasSchema> {}
+export interface ExtrasSchema extends Schema.Schema.From<typeof ExtrasSchema> {}
 
 export const OneOfOption = Schema.struct({
   identifier: Common.Slug,
@@ -57,7 +55,7 @@ export const OneOfSchema = Schema.struct({
   content: Content,
   options: Schema.nonEmptyArray(OneOfOption),
 });
-export interface OneOfSchema extends Schema.From<typeof OneOfSchema> {}
+export interface OneOfSchema extends Schema.Schema.From<typeof OneOfSchema> {}
 
 export const ModifierConfigSchema = Schema.union(
   OneOfSchema,
@@ -68,7 +66,7 @@ export const ModifierSchema = Schema.struct({
   modifierId: Schema.optional(Schema.number),
   config: ModifierConfigSchema,
 });
-export interface ModifierSchema extends Schema.From<typeof ModifierSchema> {}
+export interface ModifierSchema extends Schema.Schema.From<typeof ModifierSchema> {}
 
 export const ItemFormSchema = Schema.struct({
   identifier: Common.Slug,
@@ -86,7 +84,7 @@ export const ItemFormSchema = Schema.struct({
   ),
   modifiers: Schema.array(ModifierSchema),
 });
-export interface ItemFormSchema extends Schema.From<typeof ItemFormSchema> {}
+export interface ItemFormSchema extends Schema.Schema.From<typeof ItemFormSchema> {}
 
 export const UpsertItemPayload = pipe(
   ItemFormSchema,
@@ -96,4 +94,4 @@ export const UpsertItemPayload = pipe(
     image: Schema.string,
   })),
 );
-export interface UpsertItemPayload extends Schema.From<typeof UpsertItemPayload> {}
+export interface UpsertItemPayload extends Schema.Schema.From<typeof UpsertItemPayload> {}

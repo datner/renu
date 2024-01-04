@@ -1,10 +1,4 @@
-import * as Context from "@effect/data/Context";
-import * as Data from "@effect/data/Data";
-import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as P from "@effect/data/Predicate";
-import * as Effect from "@effect/io/Effect";
-import * as Layer from "@effect/io/Layer";
+import { Context, Data, Effect, Layer, Option, pipe, Predicate } from "effect";
 
 export interface HttpConfig {
   readonly baseUrl?: string;
@@ -91,7 +85,7 @@ export type HttpRequest = (
   init?: RequestInit | undefined,
 ) => Effect.Effect<never, HttpError, Response>;
 
-export const request = Effect.serviceFunctionEffect(HttpService, _ => _.request)
+export const request = Effect.serviceFunctionEffect(HttpService, _ => _.request);
 export const toJson = (res: Response) =>
   Effect.tryPromise({
     try: () => res.json() as Promise<unknown>,
@@ -117,7 +111,7 @@ export const toText = (res: Response) =>
 const isRequestError = (e: unknown): e is HttpRequestError => e instanceof HttpRequestError;
 const isResponseError = (e: unknown): e is HttpResponseError => e instanceof HttpResponseError;
 
-export const isRetriable = P.or(isRequestError, isResponseError);
+export const isRetriable = Predicate.or(isRequestError, isResponseError);
 
 const getResponseError = (response: Response) => {
   if (response.status < 400) {
@@ -163,15 +157,15 @@ export const layer = Layer.succeed(HttpService, {
           try: (signal) => {
             const baseUrl = pipe(
               config,
-              O.flatMapNullable((c) => c.baseUrl),
-              O.getOrUndefined,
+              Option.flatMapNullable((c) => c.baseUrl),
+              Option.getOrUndefined,
             );
 
             const headers = pipe(
               config,
-              O.flatMapNullable((c) => c.headers),
-              O.map((h) => new Headers(h)),
-              O.getOrElse(() => new Headers()),
+              Option.flatMapNullable((c) => c.headers),
+              Option.map((h) => new Headers(h)),
+              Option.getOrElse(() => new Headers()),
             );
 
             const req = new Request(

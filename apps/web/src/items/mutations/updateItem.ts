@@ -1,15 +1,15 @@
 import { resolver } from "@blitzjs/rpc";
-import * as Effect from "@effect/io/Effect";
-import * as Schema from "@effect/schema/Schema";
-import * as TreeFormatter from "@effect/schema/TreeFormatter";
+import { Schema, TreeFormatter } from "@effect/schema";
 import db from "db";
+import { Console, Effect } from "effect";
 import { UpsertItemPayload } from "src/admin/validations/item-form";
 import { Resolver } from "src/auth";
 import * as Renu from "src/core/effect/runtime";
 import { getBlurHash } from "src/core/helpers/plaiceholder";
 import { prismaError } from "src/core/helpers/prisma";
 import { inspect } from "util";
-import { FullItem, toFullItem } from "../queries/getItemNew";
+import { FullItem } from "../helpers/form";
+import { toFullItem } from "../queries/getItemNew";
 
 export default resolver.pipe(
   Resolver.schema(UpsertItemPayload),
@@ -131,8 +131,7 @@ export default resolver.pipe(
       catch: prismaError("Item"),
     })
   ),
-  Effect.tapErrorTag("PrismaError", e => Effect.sync(() => console.log(inspect(e.cause)))),
-  Effect.tapErrorTag("PrismaError", e => Effect.sync(() => console.log(e.cause))),
+  Effect.tapErrorTag("PrismaError", e => Console.error(inspect(e.cause))),
   Effect.flatMap(Schema.decode(toFullItem)),
   Effect.flatMap(Schema.encode(FullItem)),
   Effect.catchTag("ParseError", _ => Effect.fail(TreeFormatter.formatErrors(_.errors))),

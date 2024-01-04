@@ -1,8 +1,8 @@
-import { pipe } from "@effect/data/Function";
 import * as S from "@effect/schema/Schema";
 import { Locale, Prisma } from "database";
+import { Brand, pipe } from "effect";
 
-export const Slug = pipe(
+export const Slug: S.BrandSchema<string, Slug> = pipe(
   S.string,
   S.minLength(1),
   S.pattern(/^[a-z0-9-]+$/, {
@@ -13,7 +13,7 @@ export const Slug = pipe(
   }),
   S.brand("Slug"),
 );
-export type Slug = S.To<typeof Slug>;
+export type Slug = Brand.Branded<string, "Slug">;
 
 export const Id = <B extends string>(brand: B) => pipe(S.number, S.int(), S.positive(), S.brand(brand));
 
@@ -37,8 +37,8 @@ export const Content = S.struct({
   description: S.optionFromNullable(Description),
 });
 
-export interface Content extends S.To<typeof Content> {}
-export interface ContentFrom extends S.From<typeof Content> {}
+export interface Content extends S.Schema.To<typeof Content> {}
+export interface ContentFrom extends S.Schema.From<typeof Content> {}
 
 export const PrismaJson = S.unknown as S.Schema<Prisma.JsonValue, Prisma.JsonValue>;
 

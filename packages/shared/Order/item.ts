@@ -5,9 +5,9 @@ import * as Number from "../schema/number";
 import * as Order from "./order";
 
 export const Id = Common.Id("OrderItemId");
-export type Id = S.To<typeof Id>;
+export type Id = S.Schema.To<typeof Id>;
 
-export class Item extends S.Class({
+export class Item extends S.Class<Item>()({
   id: Id,
   itemId: _Item.Id,
   price: Number.Price,
@@ -26,6 +26,6 @@ export const Schema = S.struct({
   name: S.string,
   orderId: Order.Id,
 });
-export interface Decoded extends S.To<typeof Schema> {}
+export interface Decoded extends S.Schema.To<typeof Schema> {}
 
 export const getCost = (i: Decoded) => i.price * i.quantity;

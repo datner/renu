@@ -1,11 +1,10 @@
 import { PublicData } from "@blitzjs/auth";
 import { SecurePassword } from "@blitzjs/auth/secure-password";
 import { resolver } from "@blitzjs/rpc";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
-import * as Schema from "@effect/schema/Schema";
+import { Schema } from "@effect/schema";
 import { AuthenticationError, NotFoundError } from "blitz";
 import { Prisma } from "database";
+import { Effect, ReadonlyArray as A } from "effect";
 import { Database } from "shared/Database";
 import { Renu } from "src/core/effect";
 import { Resolver } from "..";
@@ -27,7 +26,7 @@ const isValidNeedsRehash = (symb: symbol): symb is typeof SecurePassword.VALID_N
 
 const rehashPassword = Effect.serviceFunctionEffect(
   Database,
-  db => ({ password, email }: Schema.To<typeof Login>) =>
+  db => ({ password, email }: Schema.Schema.To<typeof Login>) =>
     Effect.flatMap(
       Effect.promise(() => SecurePassword.hash(password)),
       hashedPassword => Effect.promise(() => db.user.update({ where: { email }, data: { hashedPassword } })),

@@ -6,11 +6,11 @@ import { Modifiers } from "database-helpers";
 import { Common } from "shared/schema";
 
 export const ItemModifierId = Common.Id("ItemModifierId");
-export type ItemModifierId = S.To<typeof ItemModifierId>;
+export type ItemModifierId = S.Schema.To<typeof ItemModifierId>;
 export const ItemId = Common.Id("ItemId");
-export type ItemId = S.To<typeof ItemId>;
+export type ItemId = S.Schema.To<typeof ItemId>;
 export const CategoryId = Common.Id("CategoryId");
-export type CategoryId = S.To<typeof CategoryId>;
+export type CategoryId = S.Schema.To<typeof CategoryId>;
 
 export const ItemModifier = S.struct({
   id: ItemModifierId,
@@ -36,7 +36,7 @@ export const Content = S.struct({
   name: S.string,
   description: S.nullable(S.string),
 });
-export interface Content extends S.To<typeof Content> {}
+export interface Content extends S.Schema.To<typeof Content> {}
 
 export const Item = S.struct({
   id: ItemId,
@@ -49,13 +49,13 @@ export const Item = S.struct({
   content: S.array(Content),
   modifiers: S.array(ItemModifier),
 });
-export interface Item extends S.To<typeof Item> {}
+export interface Item extends S.Schema.To<typeof Item> {}
 
 export const CategoryItem = S.struct({
   position: S.number,
   Item,
 });
-export interface CategoryItem extends S.To<typeof CategoryItem> {}
+export interface CategoryItem extends S.Schema.To<typeof CategoryItem> {}
 
 export const Category = S.struct({
   id: CategoryId,
@@ -63,7 +63,7 @@ export const Category = S.struct({
   content: S.array(Content),
   categoryItems: S.array(CategoryItem),
 });
-export interface Category extends S.To<typeof Category> {}
+export interface Category extends S.Schema.To<typeof Category> {}
 
 export const FullMenu = S.struct({
   open: S.boolean,
@@ -71,4 +71,4 @@ export const FullMenu = S.struct({
   content: pipe(Content, S.omit("description"), S.array),
   categories: S.array(Category),
 });
-export interface FullMenu extends S.To<typeof FullMenu> {}
+export interface FullMenu extends S.Schema.To<typeof FullMenu> {}

@@ -1,10 +1,10 @@
-import { Button, createStyles, TextInput } from "@mantine/core";
+import { Button, TextInput } from "@mantine/core";
 import { PromiseReturnType } from "blitz";
+import { Match, pipe } from "effect";
 import { useTranslations } from "next-intl";
 import { DefaultValues, FormProvider, useForm } from "react-hook-form";
 import getCategory from "src/categories/queries/getCategory";
 import { CategoryForm } from "src/categories/validations";
-import { match, P } from "ts-pattern";
 
 type Props = {
   item?: PromiseReturnType<typeof getCategory>;
@@ -18,24 +18,21 @@ const DEFAULT_VALUES: DefaultValues<CategoryForm> = {
   he: { name: "" },
 };
 
-const useStyles = createStyles({
-  mono: {
-    fontFamily: [
-      "ui-monospace",
-      "SFMono-Regular",
-      "Menlo",
-      "Monaco",
-      "Consolas",
-      "Liberation Mono",
-      "Courier New",
-      "monospace",
-    ],
-  },
-});
+// no not that one
+type Result = {
+  defaultValues: string | undefined;
+  isSubmitting: boolean;
+};
+
+const key = Match.type<Result>().pipe(
+  Match.when({ defaultValues: Match.undefined, isSubmitting: true }, () => "create.category" as const),
+  Match.when({ isSubmitting: true }, () => "update.category" as const),
+  Match.when({ defaultValues: Match.undefined }, () => "create.initial" as const),
+  Match.orElse(() => "update.initial" as const),
+);
 
 export function CategoryForm(props: Props) {
   const { defaultValues = DEFAULT_VALUES, onSubmit } = props;
-  const { classes } = useStyles();
   const t = useTranslations("admin.Components.CategoryForm");
   const form = useForm<CategoryForm>({
     defaultValues,
@@ -49,12 +46,7 @@ export function CategoryForm(props: Props) {
     isSubmitting,
   };
 
-  const message = match(result)
-    .with({ defaultValues: P.nullish, isSubmitting: true }, () => t("create.category"))
-    .with({ defaultValues: P._, isSubmitting: true }, () => t("update.category"))
-    .with({ defaultValues: P.nullish }, () => t("create.initial"))
-    .with({ defaultValues: P._ }, () => t("update.initial"))
-    .exhaustive();
+  const message = pipe(result, key, t);
 
   return (
     <FormProvider {...form}>
@@ -68,7 +60,7 @@ export function CategoryForm(props: Props) {
           <div className="flex gap-4">
             <fieldset className="space-y-6 flex-1 font-mono" disabled={isSubmitting}>
               <TextInput
-                classNames={{ input: classes.mono }}
+                classNames={{ input: "font-mono" }}
                 {...register("identifier", {
                   pattern: {
                     value: /^[a-z0-9-]+[^-]$/,

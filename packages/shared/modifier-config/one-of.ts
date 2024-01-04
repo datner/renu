@@ -6,7 +6,7 @@ export const Option = pipe(
   Base.Option,
   S.extend(S.struct({ default: S.boolean })),
 );
-export interface Option extends S.To<typeof Option> {}
+export interface Option extends S.Schema.To<typeof Option> {}
 
 export const Modifier = pipe(
   Base.Modifier,
@@ -19,4 +19,4 @@ export const Modifier = pipe(
     }),
   ),
 );
-export interface OneOf extends S.To<typeof Modifier> {}
+export interface OneOf extends S.Schema.To<typeof Modifier> {}

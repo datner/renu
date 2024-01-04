@@ -1,6 +1,6 @@
-import { pipe } from "@effect/data/Function";
 import * as S from "@effect/schema/Schema";
 import { Locale } from "@prisma/client";
+import { pipe } from "effect/Function";
 
 export const ModifierEnum = {
   oneOf: "oneOf",
@@ -12,7 +12,7 @@ export const OptionContent = S.struct({
   name: S.string,
   description: S.string,
 });
-export interface OptionContent extends S.To<typeof OptionContent> {}
+export interface OptionContent extends S.Schema.To<typeof OptionContent> {}
 
 export const BaseOption = S.struct({
   managementRepresentation: S.optional(S.unknown),
@@ -21,23 +21,23 @@ export const BaseOption = S.struct({
   price: S.number,
   content: S.nonEmptyArray(OptionContent),
 });
-export interface BaseOption extends S.To<typeof BaseOption> {}
+export interface BaseOption extends S.Schema.To<typeof BaseOption> {}
 
 const OneOfOption_ = S.struct({ default: S.boolean });
 export const OneOfOption = pipe(BaseOption, S.extend(OneOfOption_));
-export interface OneOfOption extends S.To<typeof OneOfOption> {}
+export interface OneOfOption extends S.Schema.To<typeof OneOfOption> {}
 
 const ExtrasOption_ = S.struct({ multi: S.boolean });
 export const ExtrasOption = pipe(BaseOption, S.extend(ExtrasOption_));
-export interface ExtrasOption extends S.To<typeof ExtrasOption> {}
+export interface ExtrasOption extends S.Schema.To<typeof ExtrasOption> {}
 
 export const BaseModifier = S.struct({
   identifier: S.string,
   content: S.nonEmptyArray(OptionContent),
   options: S.nonEmptyArray(BaseOption),
 });
-export interface BaseModifier extends S.To<typeof BaseModifier> {}
-export interface EncodedBaseModifier extends S.From<typeof BaseModifier> {}
+export interface BaseModifier extends S.Schema.To<typeof BaseModifier> {}
+export interface EncodedBaseModifier extends S.Schema.From<typeof BaseModifier> {}
 
 const OneOf_ = S.struct({
   _tag: S.literal(ModifierEnum.oneOf),
@@ -46,8 +46,8 @@ const OneOf_ = S.struct({
 });
 
 export const OneOf = pipe(BaseModifier, S.omit("options"), S.extend(OneOf_));
-export interface OneOf extends S.To<typeof OneOf> {}
-export interface EncodedOneOf extends S.From<typeof OneOf> {}
+export interface OneOf extends S.Schema.To<typeof OneOf> {}
+export interface EncodedOneOf extends S.Schema.From<typeof OneOf> {}
 
 const Extras_ = S.struct({
   _tag: S.literal(ModifierEnum.extras),
@@ -57,8 +57,8 @@ const Extras_ = S.struct({
 });
 
 export const Extras = pipe(BaseModifier, S.omit("options"), S.extend(Extras_));
-export interface Extras extends S.To<typeof Extras> {}
-export interface EncodedExtras extends S.From<typeof Extras> {}
+export interface Extras extends S.Schema.To<typeof Extras> {}
+export interface EncodedExtras extends S.Schema.From<typeof Extras> {}
 
 export const ModifierConfig = S.union(OneOf, Extras);
 export type ModifierConfig = OneOf | Extras;

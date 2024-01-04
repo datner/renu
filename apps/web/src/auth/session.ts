@@ -1,14 +1,9 @@
 import { AuthenticatedSessionContext } from "@blitzjs/auth";
 import { Ctx } from "@blitzjs/next";
-import * as Brand from "@effect/data/Brand";
-import * as Context from "@effect/data/Context";
-import * as Data from "@effect/data/Data";
-import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as Effect from "@effect/io/Effect";
 import { AuthenticationError, AuthorizationError, CSRFTokenMismatchError } from "blitz";
 import { GlobalRole } from "database";
 import db from "db";
+import { Brand, Context, Data, Effect, Option } from "effect";
 
 export interface AuthenticationErrorCase extends Data.Case {
   readonly _tag: "AuthenticationErrorCase";
@@ -65,12 +60,10 @@ export const Organization = Effect.map(Session, s => s.organization);
 export const Venue = Effect.map(Session, s => s.venue);
 
 export const ensureSuperAdmin = withEffect((session) =>
-  pipe(
-    Effect.try(() => session.$authorize(GlobalRole.SUPER)),
+  Effect.try(() => session.$authorize(GlobalRole.SUPER)).pipe(
     Effect.orElse(() =>
-      pipe(
-        O.fromNullable(session.impersonatingFromUserId),
-        Effect.flatMap((id) => Effect.tryPromise(() => db.user.findUniqueOrThrow({ where: { id } }))),
+      Effect.fromNullable(session.impersonatingFromUserId).pipe(
+        Effect.andThen((id) => db.user.findUniqueOrThrow({ where: { id } })),
         Effect.filterOrDieMessage(
           (u) => u.role === GlobalRole.SUPER,
           "how did you impersonate?",

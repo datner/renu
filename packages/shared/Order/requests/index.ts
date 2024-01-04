@@ -1,5 +1,5 @@
-import * as Effect from "@effect/io/Effect";
 import { Prisma } from "database";
+import { Effect } from "effect";
 import * as Order from "../order";
 import { CreateFullOrder } from "./createFullOrder";
 import { GetOrderById } from "./getById";

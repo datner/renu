@@ -1,10 +1,4 @@
-import * as Context from "@effect/data/Context";
-import * as Duration from "@effect/data/Duration";
-import { pipe } from "@effect/data/Function";
-import * as Config from "@effect/io/Config";
-import * as Layer from "@effect/io/Layer";
-import * as Schedule from "@effect/io/Schedule";
-
+import { Config, Context, Duration, Layer, pipe, Schedule } from "effect";
 export interface IdentityService {
   name: string;
 }

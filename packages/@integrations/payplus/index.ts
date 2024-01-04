@@ -1,17 +1,9 @@
-import * as Context from "@effect/data/Context";
-import { pipe } from "@effect/data/Function";
-import * as Number from "@effect/data/Number";
-import * as Option from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Config from "@effect/io/Config";
-import * as Effect from "@effect/io/Effect";
-import * as Layer from "@effect/io/Layer";
-import * as P from "@effect/schema/Parser";
 import * as Schema from "@effect/schema/Schema";
 import { CircuitBreaker, Clearing, Common, Http } from "@integrations/core";
 import { ClearingError } from "@integrations/core/clearing";
 import crypto from "crypto";
 import { ClearingProvider } from "database";
+import { Config, Context, Effect, Layer, Number, Option, pipe, ReadonlyArray } from "effect";
 import { Order, Venue } from "shared";
 import { FullOrder } from "shared/Order/fullOrder";
 import { GeneratePaymentLinkResponse, GetStatusResponse, StatusSuccess } from "./responses";
@@ -38,7 +30,7 @@ const provideHttpConfig = Effect.provideServiceEffect(
   Effect.gen(function*($) {
     const { vendorData } = yield* $(IntegrationService);
     const { isQA = false, ...creds } = vendorData;
-    const config = yield* $(Effect.config(PayPlusConfig));
+    const config = yield* $(PayPlusConfig);
     const { url } = isQA ? config.qa : config;
 
     return {
@@ -51,7 +43,7 @@ const provideHttpConfig = Effect.provideServiceEffect(
 const ServiceCharge = IntegrationService.pipe(
   Effect.map(_ => _.vendorData.service_charge),
   Effect.map(Option.toArray),
-  Effect.map(A.map((_): PaymentItem => ({
+  Effect.map(ReadonlyArray.map((_): PaymentItem => ({
     price: agorot(_),
     quantity: 1,
     name: "דמי שירות",
@@ -60,26 +52,26 @@ const ServiceCharge = IntegrationService.pipe(
   }))),
 );
 
-const agorot = Number.divide(100);
+const agorot = Number.unsafeDivide(100);
 
 const toPayload = ({ items, id, venueId, totalCost }: FullOrder) =>
   Effect.gen(function*($) {
     const integration = yield* $(IntegrationService);
-    const { host } = yield* $(Effect.config(Common.config));
+    const { host } = yield* $(Common.config);
     const successUrl = new URL(`orders/${id}`, host);
     const errorUrl = new URL(`order/${id}`, host);
     const callbackUrl = new URL(`api/payments/payplus`, host);
 
     // to satisfy typescript I need the double negative
-    if (!A.isNonEmptyReadonlyArray(items)) return yield* $(Effect.die(new Error("order has no items")));
+    if (!ReadonlyArray.isNonEmptyReadonlyArray(items)) return yield* $(Effect.die(new Error("order has no items")));
 
     const serviceCharge = yield* $(ServiceCharge);
 
     const paymentItems = pipe(
       items,
-      A.mapNonEmpty(
+      ReadonlyArray.map(
         (it): PaymentItem => ({
-          price: agorot(Number.sumAll([it.price, ...A.map(it.modifiers, _ => _.price * _.amount)])),
+          price: agorot(Number.sumAll([it.price, ...ReadonlyArray.map(it.modifiers, _ => _.price * _.amount)])),
           quantity: it.quantity,
           name: it.name,
           image_url: `http://renu.imgix.net${it.item.image}?auto=format,compress,enhance&fix=max&w=256&q=20`,
@@ -87,7 +79,7 @@ const toPayload = ({ items, id, venueId, totalCost }: FullOrder) =>
           vat_type: 0,
         }),
       ),
-      A.appendAllNonEmpty(serviceCharge),
+      ReadonlyArray.appendAll(serviceCharge),
     );
 
     return {
@@ -153,7 +145,7 @@ const authorizeResponse = (res: Response) =>
 
 const parseIntegration = Effect.provideServiceEffect(
   IntegrationService,
-  Effect.flatMap(Clearing.Settings, P.parse(Venue.Clearing.PayPlusIntegration)),
+  Effect.flatMap(Clearing.Settings, Schema.parse(Venue.Clearing.PayPlusIntegration)),
 );
 
 const PayplusService = Effect.gen(function*($) {
@@ -181,7 +173,7 @@ const PayplusService = Effect.gen(function*($) {
         }),
         provideHttpConfig,
         parseIntegration,
-        Effect.flatMap(P.parse(GetStatusResponse)),
+        Effect.flatMap(Schema.parse(GetStatusResponse)),
         Effect.filterOrFail(
           (res): res is StatusSuccess => res.results.status === "success",
           (cause) =>
@@ -230,7 +222,7 @@ const PayplusService = Effect.gen(function*($) {
         Effect.flatMap(authorizeResponse),
         Effect.flatMap(Http.toJson),
         Effect.tap(Effect.log),
-        Effect.flatMap(P.parse(GeneratePaymentLinkResponse)),
+        Effect.flatMap(Schema.parse(GeneratePaymentLinkResponse)),
         Effect.map((r) => r.data.payment_page_link),
         Effect.map((link) => new URL(link)),
         breaker((e) => e instanceof Http.HttpRequestError || e instanceof Http.HttpResponseError),

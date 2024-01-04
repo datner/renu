@@ -1,5 +1,5 @@
 import { resolver } from "@blitzjs/rpc";
-import * as Effect from "@effect/io/Effect";
+import { Effect } from "effect";
 import { Order } from "shared";
 import { Resolver } from "src/auth";
 import { Renu } from "src/core/effect";

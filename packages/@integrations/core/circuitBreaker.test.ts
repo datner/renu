@@ -1,10 +1,4 @@
-import * as Duration from "@effect/data/Duration";
-import * as E from "@effect/data/Either";
-import { constTrue, pipe } from "@effect/data/Function";
-import * as Clock from "@effect/io/Clock";
-import * as Effect from "@effect/io/Effect";
-import * as Ref from "@effect/io/Ref";
-import * as Schedule from "@effect/io/Schedule";
+import { Clock, Duration, Effect, Either, Function, pipe, Ref, Schedule } from "effect";
 import { assert, beforeEach, describe, it } from "vitest";
 import { CircuitBreaker as C } from ".";
 
@@ -29,9 +23,9 @@ describe("circuitBreaker", () => {
   it<Context>("should allow request when closed", async (ctx) => {
     const test = Effect.gen(function*($) {
       const breaker = yield* $(ctx.breaker);
-      const result = yield* $(pipe(Effect.succeed("success"), breaker(constTrue), Effect.either));
+      const result = yield* $(pipe(Effect.succeed("success"), breaker(Function.constTrue), Effect.either));
 
-      assert.deepStrictEqual(result, E.right("success") as typeof result);
+      assert.deepStrictEqual(result, Either.right("success") as typeof result);
     });
 
     await Effect.runPromise(test);
@@ -44,12 +38,12 @@ describe("circuitBreaker", () => {
       const result = yield* $(
         pipe(
           Effect.succeed("success"),
-          breaker(constTrue),
+          breaker(Function.constTrue),
           Effect.catchTag("CircuitBreakerError", () => Effect.fail("fail")),
           Effect.either,
         ),
       );
-      assert.deepStrictEqual(result, E.left("fail") as typeof result);
+      assert.deepStrictEqual(result, Either.left("fail") as typeof result);
     });
 
     await Effect.runPromise(test);
@@ -59,9 +53,9 @@ describe("circuitBreaker", () => {
     const test = Effect.gen(function*($) {
       yield* $(Ref.set(ctx.state, C.closed(1)));
       const breaker = yield* $(ctx.breaker);
-      const result = yield* $(pipe(Effect.fail("fail"), breaker(constTrue), Effect.either));
+      const result = yield* $(pipe(Effect.fail("fail"), breaker(Function.constTrue), Effect.either));
 
-      assert.deepStrictEqual(result, E.left("fail") as typeof result);
+      assert.deepStrictEqual(result, Either.left("fail") as typeof result);
     });
 
     await Effect.runPromise(test);
@@ -75,20 +69,20 @@ describe("circuitBreaker", () => {
         const roundA = yield* $(
           pipe(
             Effect.succeed("success"),
-            breaker(constTrue),
+            breaker(Function.constTrue),
             Effect.catchTag("CircuitBreakerError", () => Effect.fail("fail")),
             Effect.either,
           ),
         );
-        assert.deepStrictEqual(roundA, E.left("fail") as typeof roundA);
+        assert.deepStrictEqual(roundA, Either.left("fail") as typeof roundA);
 
         yield* $(Clock.sleep(Duration.millis(5)));
 
-        const roundB = yield* $(pipe(Effect.succeed("success"), breaker(constTrue), Effect.either));
-        assert.deepStrictEqual(roundB, E.right("success") as typeof roundB);
+        const roundB = yield* $(pipe(Effect.succeed("success"), breaker(Function.constTrue), Effect.either));
+        assert.deepStrictEqual(roundB, Either.right("success") as typeof roundB);
 
-        const roundC = yield* $(pipe(Effect.fail("fail"), breaker(constTrue), Effect.either));
-        assert.deepStrictEqual(roundC, E.left("fail") as typeof roundC);
+        const roundC = yield* $(pipe(Effect.fail("fail"), breaker(Function.constTrue), Effect.either));
+        assert.deepStrictEqual(roundC, Either.left("fail") as typeof roundC);
       }),
     );
     await Effect.runPromise(test);
@@ -104,27 +98,27 @@ describe("circuitBreaker", () => {
           const roundA = yield* $(
             pipe(
               Effect.succeed("success"),
-              breaker(constTrue),
+              breaker(Function.constTrue),
               Effect.catchTag("CircuitBreakerError", () => Effect.fail("open")),
               Effect.either,
             ),
           );
-          assert.deepStrictEqual(roundA, E.left("open") as typeof roundA);
+          assert.deepStrictEqual(roundA, Either.left("open") as typeof roundA);
 
           yield* $(Effect.sleep(Duration.millis(5)));
 
-          const roundB = yield* $(pipe(Effect.fail("fail"), breaker(constTrue), Effect.either));
-          assert.deepStrictEqual(roundB, E.left("fail") as typeof roundB);
+          const roundB = yield* $(pipe(Effect.fail("fail"), breaker(Function.constTrue), Effect.either));
+          assert.deepStrictEqual(roundB, Either.left("fail") as typeof roundB);
 
           const roundC = yield* $(
             pipe(
               Effect.succeed("success"),
-              breaker(constTrue),
+              breaker(Function.constTrue),
               Effect.catchTag("CircuitBreakerError", () => Effect.fail("breaker")),
               Effect.either,
             ),
           );
-          assert.deepStrictEqual(roundC, E.left("breaker") as typeof roundC);
+          assert.deepStrictEqual(roundC, Either.left("breaker") as typeof roundC);
         }),
       );
       await Effect.runPromise(test);

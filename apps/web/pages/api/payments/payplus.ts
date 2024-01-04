@@ -1,6 +1,5 @@
-import * as Str from "@effect/data/String";
-import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
+import { Effect, String } from "effect";
 import { notify } from "integrations/telegram/sendMessage";
 import { NextApiRequest, NextApiResponse } from "next";
 import { Order } from "shared";
@@ -11,7 +10,7 @@ import { Format } from "telegraf";
 const handler = async (request: NextApiRequest, res: NextApiResponse) =>
   Effect.succeed(request).pipe(
     Effect.filterOrDieMessage(
-      (req) => Str.toLowerCase(req.method || "") === "post",
+      (req) => String.toLowerCase(req.method || "") === "post",
       "this endpoint only received POST messages",
     ),
     Effect.map((req) => req.body),

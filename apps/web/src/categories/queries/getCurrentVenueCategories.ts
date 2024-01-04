@@ -1,9 +1,8 @@
 import { resolver } from "@blitzjs/rpc";
 import { pipe } from "@effect/data/Function";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
-import * as S from "@effect/schema/Schema";
+import { Schema as S } from "@effect/schema";
 import db, { Prisma } from "db";
+import { Effect, ReadonlyArray as A } from "effect";
 import { Number } from "shared/branded";
 import { Resolver } from "src/auth";
 import { Renu, Server } from "src/core/effect";

@@ -1,15 +1,10 @@
-import { pipe } from "@effect/data/Function";
-import * as Effect from "@effect/io/Effect";
-import * as Exit from "@effect/io/Exit";
-import * as Layer from "@effect/io/Layer";
-import * as Runtime from "@effect/io/Runtime";
-import * as Scope from "@effect/io/Scope";
+import { Effect, Exit, Layer, pipe, Runtime, Scope } from "effect";
 
 export const makeRuntime = <R, E, A>(layer: Layer.Layer<R, E, A>) =>
   Effect.gen(function*($) {
     const scope = yield* $(Scope.make());
     const env = yield* $(Layer.buildWithScope(layer, scope));
-    const runtime = yield* $(pipe(Effect.runtime<A>(), Effect.scoped, Effect.provideContext(env)));
+    const runtime = yield* $(pipe(Effect.runtime<A>(), Effect.scoped, Effect.provide(env)));
 
     return {
       runtime,

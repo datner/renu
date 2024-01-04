@@ -1,10 +1,7 @@
 import { constFalse, constTrue, pipe } from "@effect/data/Function";
-import * as N from "@effect/data/Number";
-import * as O from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as RR from "@effect/data/ReadonlyRecord";
 import { Transition } from "@headlessui/react";
 import { useTimeout } from "@mantine/hooks";
+import { Number, Option, ReadonlyArray as A, ReadonlyRecord as RR } from "effect";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { useController, useFormContext, useWatch } from "react-hook-form";
@@ -100,10 +97,10 @@ const ExtrasCheck = ({
 
 const getAmount = (choices?: Record<string, number>) =>
   pipe(
-    O.fromNullable(choices),
-    O.map(RR.collect((_, a) => a)),
-    O.map(N.sumAll),
-    O.getOrElse(() => 0),
+    Option.fromNullable(choices),
+    Option.map(RR.collect((_, a) => a)),
+    Option.map(Number.sumAll),
+    Option.getOrElse(() => 0),
   );
 
 export const ExtrasComponent = (props: Props) => {
@@ -120,10 +117,11 @@ export const ExtrasComponent = (props: Props) => {
     name: `modifiers.extras.${id}.choices`,
     rules: {
       validate: {
-        overMax: (o) => O.match(config.max, { onNone: constTrue, onSome: N.greaterThanOrEqualTo(getAmount(o)) }),
+        overMax: (o) =>
+          Option.match(config.max, { onNone: constTrue, onSome: Number.greaterThanOrEqualTo(getAmount(o)) }),
         belowMin: (o) =>
-          N.lessThanOrEqualTo(
-            O.getOrElse(config.min, () => 0),
+          Number.lessThanOrEqualTo(
+            Option.getOrElse(config.min, () => 0),
             getAmount(o),
           ),
       },
@@ -132,17 +130,17 @@ export const ExtrasComponent = (props: Props) => {
 
   const value = useWatch({ control, name: `modifiers.extras.${id}.choices` });
 
-  const maxReached = O.match(config.max, {
+  const maxReached = Option.match(config.max, {
     onNone: constFalse,
-    onSome: (max) => N.lessThanOrEqualTo(max, getAmount(value)),
+    onSome: (max) => Number.lessThanOrEqualTo(max, getAmount(value)),
   });
 
-  const minText = O.map(config.min, (min) => t("min", { min }));
+  const minText = Option.map(config.min, (min) => t("min", { min }));
 
-  const maxText = O.map(config.max, (max) => t("max", { max }));
+  const maxText = Option.map(config.max, (max) => t("max", { max }));
 
   const minMaxText = pipe(
-    A.compact([minText, maxText]),
+    A.getSomes([minText, maxText]),
     A.join(" "),
   );
 

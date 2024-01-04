@@ -1,6 +1,6 @@
-import * as Layer from "@effect/io/Layer";
 import { EnhancedPrismaClientAddedMethods, enhancePrisma } from "blitz";
 import { PrismaClient } from "database";
+import { Layer } from "effect";
 import { Database } from "shared";
 
 const EnhancedPrisma = enhancePrisma(PrismaClient);

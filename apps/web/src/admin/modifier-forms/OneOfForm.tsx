@@ -1,13 +1,11 @@
-import { pipe } from "@effect/data/Function";
-import * as A from "@effect/data/ReadonlyArray";
 import * as Schema from "@effect/schema/Schema";
 import { PlusIcon } from "@heroicons/react/20/solid";
 import { XMarkIcon } from "@heroicons/react/24/solid";
 import { ActionIcon, Button, NumberInput, Select, TextInput } from "@mantine/core";
+import { pipe, ReadonlyArray as A } from "effect";
 import { useEffect } from "react";
 import { Control, Controller, useFieldArray, UseFieldArrayUpdate, useForm } from "react-hook-form";
 import { schemaResolver } from "shared/effect/Schema";
-import { shekelFormatter, shekelParser } from "src/core/helpers/form";
 import { ItemFormSchema, OneOfSchema } from "../validations/item-form";
 
 type Props = {
@@ -53,7 +51,7 @@ export const OneOfForm = (props: Props) => {
                 onChange={_ => field.onChange(_ ?? "")}
                 label="Default Selection"
                 placeholder="Pick one"
-                nothingFound="No options"
+                nothingFoundMessage="No options"
                 searchable
                 data={pipe(
                   controlledFields,
@@ -87,7 +85,7 @@ export const OneOfForm = (props: Props) => {
               className="relative border border-gray-300 bg-white p-4 shadow-md rounded-md"
             >
               <ActionIcon
-                sx={{ position: "absolute", right: 4, top: 4 }}
+                className="absolute right-1 top-1"
                 type="button"
                 color="red"
                 variant="outline"
@@ -102,11 +100,14 @@ export const OneOfForm = (props: Props) => {
                   name={`options.${i}.price`}
                   render={({ field }) => (
                     <NumberInput
-                      {...field}
-                      onChange={_ => field.onChange(_ || 0)}
+                      onChange={_ => field.onChange(+_ * 100 || 0)}
                       label="Price"
-                      parser={shekelParser}
-                      formatter={shekelFormatter}
+                      step={0.5}
+                      allowNegative={false}
+                      prefix="₪"
+                      decimalScale={2}
+                      fixedDecimalScale
+                      thousandSeparator
                     />
                   )}
                 />
@@ -120,7 +121,7 @@ export const OneOfForm = (props: Props) => {
         )}
       </div>
       <Button
-        mt={16}
+        className="mt-4"
         onClick={() =>
           append({
             identifier: "",
@@ -133,7 +134,7 @@ export const OneOfForm = (props: Props) => {
           })}
         type="button"
         variant="outline"
-        leftIcon={<PlusIcon className="h-5 w-5" />}
+        leftSection={<PlusIcon className="h-5 w-5" />}
       >
         Add Option
       </Button>

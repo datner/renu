@@ -1,9 +1,7 @@
 import * as Schema from "@effect/schema/Schema";
 import { Context, Data, Effect, Exit, Layer, Option, Request, RequestResolver } from "effect";
 import { Database } from "../Database";
-import * as ItemModifier from "../Item/modifier";
 import * as Order from "../Order/order";
-import * as Orders from "../Order/service";
 import * as internal from "./internal/service";
 import * as Venue from "./venue";
 
@@ -44,7 +42,7 @@ const VenuesService = Effect.gen(function*(_) {
     Effect.forEach(req =>
       Effect.tryPromise(() => db.venue.findUnique({ where: { id: req.id } })).pipe(
         Effect.flatMap(Option.fromNullable),
-        Effect.flatMap(Schema.decode(Venue.Venue.schema())),
+        Effect.flatMap(Schema.decode(Venue.Venue)),
         Effect.mapError(() => new VenuesError()),
         Effect.tap(_ =>
           Effect.fromNullable(_.cuid).pipe(
@@ -66,7 +64,7 @@ const VenuesService = Effect.gen(function*(_) {
     Effect.forEach(req =>
       Effect.tryPromise(() => db.venue.findUnique({ where: { cuid: req.cuid } })).pipe(
         Effect.flatMap(Option.fromNullable),
-        Effect.flatMap(Schema.decode(Venue.Venue.schema())),
+        Effect.flatMap(Schema.decode(Venue.Venue)),
         Effect.mapError(() => new VenuesError()),
         Effect.tap(_ => Effect.cacheRequestResult(GetById({ id: _.id }), Exit.succeed(_))),
         Effect.exit,
@@ -86,7 +84,7 @@ const VenuesService = Effect.gen(function*(_) {
           () => db.venue.findUnique({ where: { id: req.id } }).orders(),
         ).pipe(
           Effect.flatMap(Option.fromNullable),
-          Effect.flatMap(Schema.decode(Schema.array(Order.Order.schema()))),
+          Effect.flatMap(Schema.decode(Schema.array(Order.Order))),
           Effect.mapError(() => new VenuesError()),
           Effect.exit,
           Effect.flatMap(_ => Request.complete(req, _)),

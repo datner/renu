@@ -1,8 +1,5 @@
-import { pipe } from "@effect/data/Function";
-import * as Num from "@effect/data/Number";
-import * as Option from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
 import { Locale } from "database";
+import { Number, Option, pipe, ReadonlyArray } from "effect";
 import * as O from "monocle-ts/Optional";
 import { Common } from "shared/schema";
 import { Nullish } from "src/menu/types/utils";
@@ -38,14 +35,14 @@ export const priceOption = pipe(
   O.prop("price"),
 );
 
-export const toShekel = (cost: number) => pipe(Num.divide(cost, 100), shekel.format);
+export const toShekel = (cost: number) => pipe(Number.unsafeDivide(cost, 100), shekel.format);
 export const priceShekel = (
   k: {
     price: number;
   } | null,
 ) => toShekel(k?.price ?? 0);
 export const getContentFor = (content: ReadonlyArray<Common.Content>, locale: Locale) =>
-  A.findFirst(content, c => c.locale === locale);
+  ReadonlyArray.findFirst(content, c => c.locale === locale);
 
 export const titleFor = (locale: Locale) => (content: ReadonlyArray<Common.Content>) =>
   pipe(
@@ -56,7 +53,7 @@ export const titleFor = (locale: Locale) => (content: ReadonlyArray<Common.Conte
 
 export const descriptionFor = (locale: Locale) => (content: ReadonlyArray<Common.Content>) =>
   pipe(
-    A.findFirst(content, c => c.locale === locale),
+    ReadonlyArray.findFirst(content, c => c.locale === locale),
     Option.flatMap(c => c.description),
     Option.getOrElse(() => ""),
   );

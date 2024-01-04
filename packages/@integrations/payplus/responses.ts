@@ -62,7 +62,7 @@ export const StatusSuccess = S.struct({
     issuer_name: S.string,
   }),
 });
-export interface StatusSuccess extends S.To<typeof StatusSuccess> {}
+export interface StatusSuccess extends S.Schema.To<typeof StatusSuccess> {}
 
 export const StatusError = S.struct({
   results: S.struct({
@@ -72,7 +72,7 @@ export const StatusError = S.struct({
   }),
   data: S.struct({}),
 });
-export interface StatusError extends S.To<typeof StatusError> {}
+export interface StatusError extends S.Schema.To<typeof StatusError> {}
 
 export const StatusUnexpected = S.struct({
   results: S.struct({
@@ -82,7 +82,7 @@ export const StatusUnexpected = S.struct({
   }),
   data: S.record(S.string, S.unknown),
 });
-export interface StatusUnexpected extends S.To<typeof StatusUnexpected> {}
+export interface StatusUnexpected extends S.Schema.To<typeof StatusUnexpected> {}
 
 export const GetStatusResponse = S.union(StatusSuccess, StatusError, StatusUnexpected);
 export type GetStatusResponse = StatusSuccess | StatusError | StatusUnexpected;

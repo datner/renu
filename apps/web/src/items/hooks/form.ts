@@ -2,17 +2,15 @@ import { getAntiCSRFToken } from "@blitzjs/auth";
 import { Routes } from "@blitzjs/next";
 import { invalidateQuery, invoke, setQueryData, useQuery } from "@blitzjs/rpc";
 import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as Effect from "@effect/io/Effect";
-import * as Schema from "@effect/schema/Schema";
+import { Schema } from "@effect/schema";
+import { Effect, Option as O } from "effect";
 import { nanoid } from "nanoid";
 import { useRouter } from "next/router";
 import { useCallback } from "react";
-import { Item } from "shared";
-import { Common } from "shared/schema";
 import getUploadUrl from "src/admin/mutations/getUploadUrl";
 import { ItemFormSchema } from "src/admin/validations/item-form";
 import getCurrentVenueCategories from "src/categories/queries/getCurrentVenueCategories";
+import { FullItem } from "../helpers/form";
 import updateItem from "../mutations/updateItem";
 import getItem from "../queries/getItem";
 import getItemNew from "../queries/getItemNew";
@@ -22,14 +20,6 @@ const invalidateQueries = Effect.all([
   Effect.promise(() => invalidateQuery(getItems)),
   Effect.promise(() => invalidateQuery(getCurrentVenueCategories)),
 ], { discard: true, concurrency: "unbounded" });
-
-export const FullItem = Schema.extend(
-  Schema.struct({
-    content: Schema.array(Common.Content),
-    modifiers: Schema.array(Item.Modifier.fromPrisma),
-  }),
-)(Item.Item);
-export interface FullItem extends Schema.To<typeof FullItem> {}
 
 const revalidate = Effect.sync(() => {
   const antiCSRFToken = getAntiCSRFToken();
@@ -64,7 +54,7 @@ const useCreate = (redirect = false) => {
   const router = useRouter();
 
   const onSubmit = useCallback(
-    (data: Schema.From<typeof ItemFormSchema>) => {
+    (data: Schema.Schema.From<typeof ItemFormSchema>) => {
       return pipe(
         Effect.succeed(data.imageFile),
         Effect.flatMap(O.fromNullable),
@@ -98,7 +88,7 @@ const useUpdate = (identifier: string) => {
 
   const [item, { setQueryData }] = useQuery(getItemNew, identifier, { select: Schema.decodeSync(FullItem) });
 
-  const onSubmit = (data: Schema.From<typeof ItemFormSchema>) =>
+  const onSubmit = (data: Schema.Schema.From<typeof ItemFormSchema>) =>
     pipe(
       Effect.succeed(data.imageFile),
       Effect.flatMap(O.fromNullable),

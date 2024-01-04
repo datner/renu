@@ -1,4 +1,4 @@
-import * as O from "@effect/data/Option";
+import * as O from "effect/Option";
 import { createContext, ReactNode, useContext, useMemo } from "react";
 import * as Order from "src/menu/hooks/useOrder";
 

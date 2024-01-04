@@ -1,6 +1,5 @@
 import { invalidateQuery, setQueryData, useMutation } from "@blitzjs/rpc";
-import { pipe } from "@effect/data/Function";
-import * as Effect from "@effect/io/Effect";
+import { Effect } from "effect";
 import createCategory from "../mutations/createCategory";
 import getCategory from "../queries/getCategory";
 import getCurrentVenueCategories from "../queries/getCurrentVenueCategories";
@@ -11,8 +10,7 @@ export const category = {
     const [create] = useMutation(createCategory);
     return {
       onSubmit: (data: CategoryForm) =>
-        pipe(
-          Effect.promise(() => create(data)),
+        Effect.promise(() => create(data)).pipe(
           Effect.tap((c) =>
             Effect.all([
               Effect.promise(() => setQueryData(getCategory, { identifier: c.identifier }, c)),

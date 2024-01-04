@@ -1,7 +1,6 @@
 import { resolver } from "@blitzjs/rpc";
-import * as O from "@effect/data/Option";
-import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
+import { Effect, Option as O } from "effect";
 import { Order } from "shared";
 import { Renu } from "src/core/effect";
 

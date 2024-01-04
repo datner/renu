@@ -1,14 +1,9 @@
-import * as Context from "@effect/data/Context";
-import * as Duration from "@effect/data/Duration";
-import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
-import * as P from "@effect/schema/Parser";
-import * as S from "@effect/schema/Schema";
+import * as Schema from "@effect/schema/Schema";
 import * as Management from "@integrations/core/management";
 import { ManagementProvider, Order, OrderItem, OrderItemModifier, Prisma } from "database";
 import { Modifiers } from "database-helpers";
+import { Effect } from "effect";
+import { Context, Duration, Option, pipe, ReadonlyArray } from "effect";
 import { Order as OrderUtils } from "shared";
 import type * as Dorix from "./types";
 
@@ -20,54 +15,54 @@ type FullOrderModifier = Prisma.OrderItemModifierGetPayload<{
   include: { modifier: true };
 }>;
 
-export const DorixIntegrations = S.struct({
-  provider: S.literal(ManagementProvider.DORIX),
-  vendorData: S.struct({
-    branchId: S.string,
-    isQA: S.optional(S.boolean),
+export const DorixIntegrations = Schema.struct({
+  provider: Schema.literal(ManagementProvider.DORIX),
+  vendorData: Schema.struct({
+    branchId: Schema.string,
+    isQA: Schema.optional(Schema.boolean),
   }),
 });
 
 export const Integration = pipe(
   Management.Integration,
-  S.omit("vendorData"),
-  S.omit("provider"),
-  S.extend(DorixIntegrations),
+  Schema.omit("vendorData"),
+  Schema.omit("provider"),
+  Schema.extend(DorixIntegrations),
 );
-export interface Integration extends S.To<typeof Integration> {}
+export interface Integration extends Schema.Schema.To<typeof Integration> {}
 
 export const IntegrationService = Context.Tag<Integration>();
 
-const ManagementRepresentation = S.struct({ id: S.optional(pipe(S.string, S.nullable)) });
+const ManagementRepresentation = Schema.struct({ id: Schema.optional(pipe(Schema.string, Schema.nullable)) });
 
-export const toModifier = A.map((m: FullOrderModifier) =>
+export const toModifier = ReadonlyArray.map((m: FullOrderModifier) =>
   pipe(
     m.modifier.config,
-    S.parseOption(Modifiers.BaseModifier),
-    O.bindTo("config"),
-    O.let("modifierName", ({ config }) =>
+    Schema.parseOption(Modifiers.BaseModifier),
+    Option.bindTo("config"),
+    Option.let("modifierName", ({ config }) =>
       pipe(
         config.content,
-        A.findFirst((c) => c.locale === "he"),
-        O.map((c) => c.name),
-        O.getOrElse(() => config.identifier),
+        ReadonlyArray.findFirst((c) => c.locale === "he"),
+        Option.map((c) => c.name),
+        Option.getOrElse(() => config.identifier),
       )),
-    O.bind("choice", ({ config }) => A.findFirst(config.options, (o) => o.identifier === m.choice)),
-    O.let("id", ({ choice }) =>
+    Option.bind("choice", ({ config }) => ReadonlyArray.findFirst(config.options, (o) => o.identifier === m.choice)),
+    Option.let("id", ({ choice }) =>
       pipe(
         choice.managementRepresentation,
-        P.parseOption(ManagementRepresentation),
-        O.flatMapNullable((mr) => mr.id),
-        O.getOrElse(() => m.choice),
+        Schema.parseOption(ManagementRepresentation),
+        Option.flatMapNullable((mr) => mr.id),
+        Option.getOrElse(() => m.choice),
       )),
-    O.let("name", ({ choice }) =>
+    Option.let("name", ({ choice }) =>
       pipe(
         choice.content,
-        A.findFirst((c) => c.locale === "he"),
-        O.map((c) => c.name),
-        O.getOrElse(() => choice.identifier),
+        ReadonlyArray.findFirst((c) => c.locale === "he"),
+        Option.map((c) => c.name),
+        Option.getOrElse(() => choice.identifier),
       )),
-    O.map(
+    Option.map(
       ({ id, name, modifierName }): Dorix.Modifier => ({
         id,
         quantity: m.amount,
@@ -80,13 +75,13 @@ export const toModifier = A.map((m: FullOrderModifier) =>
   )
 );
 
-export const toItem = A.map<OrderItemWithInfo, Dorix.Item>(
+export const toItem = ReadonlyArray.map<OrderItemWithInfo[], Dorix.Item>(
   ({ id, itemId, comment, price, orderId, modifiers, ...rest }) => ({
     id: String(itemId),
     notes: comment,
     price: price / 100,
     ...rest,
-    modifiers: A.compact(toModifier(modifiers)),
+    modifiers: ReadonlyArray.getSomes(toModifier(modifiers)),
   }),
 );
 
@@ -147,40 +142,40 @@ const ORDER_STATUS = {
   unreachable: "UNREACHABLE",
 } as const;
 
-export const OrderStatus = S.enums(ORDER_STATUS);
+export const OrderStatus = Schema.enums(ORDER_STATUS);
 
-const nullishString = S.optional(pipe(S.string, S.nullable));
+const nullishString = Schema.optional(pipe(Schema.string, Schema.nullable));
 
-export const StatusResponse = S.struct({
-  branch: S.struct({
-    id: S.string,
+export const StatusResponse = Schema.struct({
+  branch: Schema.struct({
+    id: Schema.string,
     name: nullishString,
   }),
-  order: S.struct({
+  order: Schema.struct({
     status: OrderStatus,
     id: nullishString,
-    externalId: S.string,
-    source: S.literal("RENU"),
-    metadata: S.optional(S.struct({})),
-    estimatedTime: S.optional(S.number),
+    externalId: Schema.string,
+    source: Schema.literal("RENU"),
+    metadata: Schema.optional(Schema.struct({})),
+    estimatedTime: Schema.optional(Schema.number),
   }),
-  history: S.optional(pipe(
-    S.struct({
+  history: Schema.optional(pipe(
+    Schema.struct({
       status: OrderStatus,
-      timestamp: S.string,
+      timestamp: Schema.string,
     }),
-    S.array,
+    Schema.array,
   )),
-  error: S.optional(pipe(
-    S.struct({
-      message: S.string,
-      stack: S.string,
+  error: Schema.optional(pipe(
+    Schema.struct({
+      message: Schema.string,
+      stack: Schema.string,
     }),
-    S.partial,
+    Schema.partial,
   )),
 });
 
-export const SendOrderResponse = S.union(
-  S.struct({ ack: S.literal(true) }),
-  S.struct({ ack: S.literal(false), message: S.optional(S.string) }),
+export const SendOrderResponse = Schema.union(
+  Schema.struct({ ack: Schema.literal(true) }),
+  Schema.struct({ ack: Schema.literal(false), message: Schema.optional(Schema.string) }),
 );

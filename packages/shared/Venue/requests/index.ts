@@ -1,4 +1,4 @@
-import * as Effect from "@effect/io/Effect";
+import { Effect } from "effect";
 import { Slug } from "../../schema/common";
 import { GetVenueById } from "./getById";
 import { GetVenueByIdentifier } from "./getByIdentifier";
@@ -14,7 +14,6 @@ export const getById = (id: number) =>
     VenueResolver,
   ));
 
-Effect.withRequestBatching;
 export const getByIdentifier = (identifier: Slug) =>
   Effect.withRequestCaching(true)(Effect.request(
     GetVenueByIdentifier({ identifier }),

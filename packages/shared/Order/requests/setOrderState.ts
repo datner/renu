@@ -1,8 +1,5 @@
-import * as Data from "@effect/data/Data";
-import * as Effect from "@effect/io/Effect";
-import * as Request from "@effect/io/Request";
-import * as RequestResolver from "@effect/io/RequestResolver";
 import * as Models from "database";
+import { Data, Effect, Request, RequestResolver } from "effect";
 import { Database } from "../../Database";
 import * as Order from "../order";
 
@@ -17,7 +14,7 @@ export interface SetOrderState extends Request.Request<SetOrderStateError, Model
 export const SetOrderState = Request.tagged<SetOrderState>("Order.SetOrderState");
 
 export const SetOrderStateResolver = RequestResolver.contextFromEffect(
-  RequestResolver.fromFunctionEffect(
+  RequestResolver.fromEffect(
     Effect.serviceFunctionEffect(
       Database,
       db => (req: SetOrderState) =>

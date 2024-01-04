@@ -5,11 +5,11 @@ import * as Common from "../schema/common";
 import * as Venue from "../Venue/venue";
 
 export const Id = Common.Id("CategoryId");
-export type Id = Schema.To<typeof Id>;
+export type Id = Schema.Schema.To<typeof Id>;
 
 export const Identifier = pipe(Schema.string, Schema.fromBrand(Common.Slug), Schema.brand("CategoryIdentifier"));
 
-export const Category = Schema.struct({
+export class Category extends Schema.Class<Category>()({
   id: Id,
   menuId: Schema.optionFromNullable(Schema.number),
   // restaurantId: Schema.optionFromNullable(Schema.number)
@@ -19,5 +19,4 @@ export const Category = Schema.struct({
   updatedAt: Schema.DateFromSelf,
   createdAt: Schema.DateFromSelf,
   deleted: Schema.optionFromNullable(Schema.DateFromSelf),
-});
-export interface Category extends Schema.To<typeof Category> {}
+}) {}

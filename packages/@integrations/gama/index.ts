@@ -1,12 +1,6 @@
-import * as Context from "@effect/data/Context";
-import { pipe } from "@effect/data/Function";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Config from "@effect/io/Config";
-import * as Effect from "@effect/io/Effect";
-import * as Layer from "@effect/io/Layer";
-import * as P from "@effect/schema/Parser";
 import * as Schema from "@effect/schema/Schema";
 import { CircuitBreaker, Http } from "@integrations/core";
+import { Config, Context, Effect, Layer, pipe, ReadonlyArray } from "effect";
 import * as jose from "jose";
 import {
   CreateSessionErrorBody,
@@ -43,7 +37,7 @@ const toPayload = (
   input: CreateSessionInput,
   int: Venue.Clearing.GamaIntegration,
 ) =>
-  P.decode(CreateSessionPayload)({
+  Schema.decode(CreateSessionPayload)({
     clientId: int.vendorData.id,
     clientSecret: int.vendorData.secret_key,
     userIp: "1.2.3.4",
@@ -77,8 +71,7 @@ const provideHttpConfig = (int: Venue.Clearing.GamaIntegration) =>
       GamaConfig,
       Config.nested(int.vendorData.env),
       Config.nested("gama"),
-      Effect.config,
-      Effect.map(({ url }) => ({ baseUrl: url })),
+      Config.map(({ url }) => ({ baseUrl: url })),
       Effect.orDie,
     ),
   );
@@ -104,22 +97,22 @@ const GamaService = Effect.gen(function*($) {
             headers: {
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(P.encode(CreateSessionPayload)(body)),
+            body: JSON.stringify(Schema.encode(CreateSessionPayload)(body)),
           })
         ),
         Effect.flatMap(Http.toJson),
         Effect.tap((b) => Effect.sync(() => console.log(inspect(b, false, null, true)))),
-        Effect.flatMap(P.parse(CreateSessionSuccess)),
+        Effect.flatMap(Schema.parse(CreateSessionSuccess)),
         Effect.map((data) => data.session),
         breaker(),
         Effect.catchTag("HttpUnprocessableEntityError", (e) =>
           pipe(
             Http.toJson(e.response),
-            Effect.flatMap(P.parse(CreateSessionErrorBody)),
+            Effect.flatMap(Schema.parse(CreateSessionErrorBody)),
             Effect.tap(b => Effect.log(inspect(b, false, null, true))),
             Effect.map((body) => body.errors),
-            Effect.map(A.map((err) => err.msg)),
-            Effect.map(A.join("\n")),
+            Effect.map(ReadonlyArray.map((err) => err.msg)),
+            Effect.map(ReadonlyArray.join("\n")),
             Effect.map(s => "\n\n" + s),
             Effect.flatMap(Effect.dieMessage),
           )),

@@ -1,9 +1,9 @@
 import { constFalse, pipe } from "@effect/data/Function";
-import * as N from "@effect/data/Number";
-import * as O from "@effect/data/Option";
-import * as RA from "@effect/data/ReadonlyArray";
-import * as RR from "@effect/data/ReadonlyRecord";
 import { Modifiers } from "database-helpers";
+import * as N from "effect/Number";
+import * as O from "effect/Option";
+import * as RA from "effect/ReadonlyArray";
+import * as RR from "effect/ReadonlyRecord";
 import { z } from "zod";
 
 export const OneOfItem = z.object({
@@ -40,10 +40,10 @@ export const getItemFormSchema = (modifiers: Modifiers.ModifierConfig[]) =>
               RA.findFirst((m) => m.identifier === ex.identifier),
               O.filter(Modifiers.isExtras),
               O.map((m) =>
-                N.between(
-                  O.getOrElse(m.min, () => 0),
-                  O.getOrElse(m.max, () => Infinity),
-                )
+                N.between({
+                  minimum: O.getOrElse(m.min, () => 0),
+                  maximum: O.getOrElse(m.max, () => Infinity),
+                })
               ),
               O.ap(
                 pipe(

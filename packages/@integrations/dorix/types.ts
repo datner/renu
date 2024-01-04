@@ -1,6 +1,5 @@
-import { pipe } from "@effect/data/Function";
-import * as RA from "@effect/data/ReadonlyRecord";
 import * as S from "@effect/schema/Schema";
+import { pipe, ReadonlyRecord } from "effect";
 
 export const ORDER_STATUS = {
   PENDING_ORDER_COMPLETION: "PENDING_ORDER_COMPLETION",
@@ -57,9 +56,9 @@ export const Payment = S.struct({
     }),
   ),
 });
-export interface Payment extends S.To<typeof Payment> {}
+export interface Payment extends S.Schema.To<typeof Payment> {}
 
-export const Modifier: S.Schema<Modifier, Modifier> = S.lazy(() =>
+export const Modifier: S.Schema<Modifier, Modifier> = S.suspend(() =>
   S.struct({
     modifierId: S.optional(pipe(
       S.union(S.number, S.string),
@@ -85,7 +84,7 @@ export const Modifier: S.Schema<Modifier, Modifier> = S.lazy(() =>
   })
 );
 
-export const Item = S.lazy(() =>
+export const Item = S.suspend(() =>
   S.struct({
     id: pipe(S.string, S.description("As appears in Dorix POS, or not...")),
     name: S.optional(pipe(S.string, S.description("If not in Dorix POS, use this name"))),
@@ -95,7 +94,7 @@ export const Item = S.lazy(() =>
     modifiers: S.optional(pipe(Modifier, S.array)),
   })
 );
-export interface Item extends S.To<typeof Item> {}
+export interface Item extends S.Schema.To<typeof Item> {}
 
 export const Order = S.struct({
   branchId: S.string,
@@ -129,7 +128,7 @@ export interface Transaction {
   readonly amount: number;
   /** payment reference number */
   readonly id?: string;
-  readonly transactionInfo?: RA.ReadonlyRecord<unknown>;
+  readonly transactionInfo?: ReadonlyRecord.ReadonlyRecord<unknown>;
 }
 
 export interface Modifier {

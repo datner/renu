@@ -1,5 +1,4 @@
-import * as Data from "@effect/data/Data";
-import * as Request from "@effect/io/Request";
+import { Data, Request } from "effect";
 import * as Models from "database";
 
 export class GetVenueManagementIntegrationError extends Data.TaggedClass("GetVenueManagementIntegrationError")<{}> {}

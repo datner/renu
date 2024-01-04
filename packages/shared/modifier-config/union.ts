@@ -1,6 +1,5 @@
-import * as P from "@effect/data/Predicate";
-import * as ParseResult from "@effect/schema/ParseResult";
 import * as S from "@effect/schema/Schema";
+import { Predicate } from "effect";
 import { Refinement } from "../effect";
 import * as Extras from "./extras";
 import * as OneOf from "./one-of";
@@ -14,17 +13,12 @@ export const ModifierEnum = {
 
 export const Schema = S.union(OneOf.Modifier, Extras.Modifier, Slider.Modifier);
 export type Schema = OneOf.OneOf | Extras.Extras | Slider.Slider;
-export const FromPrisma = S.transformResult(
-  S.unknown,
-  S.to(Schema),
-  S.parse(Schema),
-  S.encode(Schema),
-);
-export const FromUnknown = S.transformResult(S.unknown, S.to(Schema), S.parse(Schema), ParseResult.success);
+export const FromPrisma = S.compose(S.unknown, Schema);
+export const FromUnknown = FromPrisma;
 
-export const isOneOf: P.Refinement<Schema, OneOf.OneOf> = Refinement.isTagged(
+export const isOneOf: Predicate.Refinement<Schema, OneOf.OneOf> = Refinement.isTagged(
   "oneOf",
 );
 
-export const isExtras: P.Refinement<Schema, Extras.Extras> = Refinement
+export const isExtras: Predicate.Refinement<Schema, Extras.Extras> = Refinement
   .isTagged("extras");

@@ -1,14 +1,6 @@
-import { pipe } from "@effect/data/Function";
-import * as Option from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
-import * as Exit from "@effect/io/Exit";
-import * as RequestResolver from "@effect/io/RequestResolver";
-import * as Models from "database";
-import { inspect } from "util";
+import { Effect, pipe, ReadonlyArray, Request, RequestResolver } from "effect";
 import { Database } from "../../Database";
-import { resolveBatch, resolveSingle } from "../../effect/Request";
-import { GetCategoryById, GetCategoryByIdError } from "./getById";
+import { GetCategoryById } from "./getById";
 import { GetCategoryContent } from "./getContent";
 import { GetCategoryItems } from "./getItems";
 
@@ -17,52 +9,55 @@ type CategoryRequest = GetCategoryById | GetCategoryContent | GetCategoryItems;
 export const CategoryResolver = pipe(
   RequestResolver.makeBatched((
     requests: CategoryRequest[],
-  ) =>
-    Effect.all([
-      Effect.sync(() => console.log(inspect(requests.map(r => r._tag), false, null, true))),
-      resolveBatch(
-        A.filter(requests, (_): _ is GetCategoryItems => _._tag === "GetCategoryItems"),
-        (reqs, db) =>
-          db.categoryItem.findMany({
-            where: { categoryId: { in: reqs.map(req => req.id) }, Item: { deleted: null } },
-            orderBy: { categoryId: "asc" },
-          }),
-        r => String(r.id),
-        d => String(d.categoryId),
-      ),
-      resolveBatch(
-        A.filter(requests, (_): _ is GetCategoryContent => _._tag === "GetCategoryContent"),
-        (reqs, db) =>
-          db.categoryI18L.findMany({
-            where: { categoryId: { in: reqs.map(req => req.id) } },
-            orderBy: { categoryId: "asc" },
-          }),
-        r => String(r.id),
-        d => String(d.categoryId),
-      ),
-      resolveSingle(
-        A.filter(requests, (_): _ is GetCategoryById => _._tag === "GetCategoryById"),
-        (reqs, db) =>
+  ) => {
+    const reqMap = ReadonlyArray.groupBy(requests, _ => _._tag);
+    const byId = reqMap.GetCategoryById as GetCategoryById[] ?? [];
+    const content = reqMap.GetCategoryContent as GetCategoryContent[] ?? [];
+    const items = reqMap.GetCategoryItems as GetCategoryItems[] ?? [];
+    return Effect.andThen(Database, db =>
+      Effect.all({
+        GetCategoryById: Effect.promise(() =>
           db.category.findMany({
-            where: idIn(reqs),
-            orderBy: { identifier: "asc" },
-          }),
-        (req, items) =>
-          Option.match(
-            A.findFirst(items, _ => _.id === req.id),
-            {
-              onNone: () => Exit.fail(new GetCategoryByIdError()),
-              onSome: Exit.succeed,
+            where: {
+              id: { in: byId.map(_ => _.id) },
             },
+            include: { content: true },
+          })
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(byId)),
+          Effect.flatMap(
+            Effect.forEach(([category, req]) => Request.succeed(req, category)),
           ),
-      ),
-    ], { concurrency: "unbounded" })
-  ),
+        ),
+        GetCategoryContent: Effect.promise(() =>
+          Promise.all(
+            content.map(_ => db.category.findUnique({ where: { id: _.id } }).content()),
+          )
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(content)),
+          Effect.flatMap(
+            Effect.forEach(([contents, req]) => Request.succeed(req, contents ?? [])),
+          ),
+        ),
+        GetCategoryItems: Effect.promise(() =>
+          Promise.all(
+            items.map(_ =>
+              db.category.findUnique({ where: { id: _.id } }).categoryItems({
+                where: { Item: { deleted: null } },
+                include: { Item: true },
+              })
+            ),
+          )
+        ).pipe(
+          Effect.orDie,
+          Effect.map(ReadonlyArray.zip(items)),
+          Effect.flatMap(
+            Effect.forEach(([items, req]) => Request.succeed(req, items ?? [])),
+          ),
+        ),
+      }, { concurrency: 4 }));
+  }),
   RequestResolver.contextFromServices(Database),
 );
-
-const idIn = (reqs: GetCategoryById[]) => ({
-  id: {
-    in: A.map(reqs, _ => _.id),
-  },
-} satisfies Models.Prisma.CategoryWhereInput);

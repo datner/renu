@@ -1,13 +1,9 @@
 import { Routes } from "@blitzjs/next";
 import { useMutation } from "@blitzjs/rpc";
-import { Branded } from "@effect/data/Brand";
-import * as Data from "@effect/data/Data";
-import { absurd, pipe } from "@effect/data/Function";
-import * as HashMap from "@effect/data/HashMap";
-import * as A from "@effect/data/ReadonlyArray";
 import { LoadingOverlay } from "@mantine/core";
 import { useLocalStorage } from "@mantine/hooks";
 import { a, useSpring } from "@react-spring/web";
+import { absurd, Brand, Data, HashMap, pipe, ReadonlyArray as A } from "effect";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
@@ -34,15 +30,15 @@ type Props = {
 
 declare global {
   function gamapayInit(
-    sessionId: Branded<string, "GamaSession">,
+    sessionId: Brand.Branded<string, "GamaSession">,
     containerId?: string,
     callbackFunction?: (payload: { url: false; confirmation: string }) => void,
   ): void;
 }
 
 class NoPayment extends Data.TaggedClass("NoPayment")<{}> {}
-class PaymentClosed extends Data.TaggedClass("PaymentClosed")<{ session: Branded<string, "GamaSession"> }> {}
-class PaymentOpen extends Data.TaggedClass("PaymentOpen")<{ session: Branded<string, "GamaSession"> }> {}
+class PaymentClosed extends Data.TaggedClass("PaymentClosed")<{ session: Brand.Branded<string, "GamaSession"> }> {}
+class PaymentOpen extends Data.TaggedClass("PaymentOpen")<{ session: Brand.Branded<string, "GamaSession"> }> {}
 
 type Payment = NoPayment | PaymentClosed | PaymentOpen;
 
@@ -98,8 +94,8 @@ export function OrderModal(props: Props) {
 
     sendOrderMutation({
       locale,
-      clearingExtra: Order.Clearing.Extra("Gama")({ phoneNumber }),
-      managementExtra: Order.Management.Extra("Presto")({ phoneNumber }),
+      clearingExtra: Order.Clearing.Extra.Gama({ phoneNumber }),
+      managementExtra: Order.Management.Extra.Presto({ phoneNumber }),
       venueId,
       orderItems: pipe(
         order.items,

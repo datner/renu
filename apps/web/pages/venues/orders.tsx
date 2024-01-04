@@ -1,17 +1,15 @@
 import { BlitzPage } from "@blitzjs/auth";
 import { Routes } from "@blitzjs/next";
 import { invalidateQuery, useMutation, useQuery } from "@blitzjs/rpc";
-import * as O from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
 import { ArrowPathIcon } from "@heroicons/react/24/outline";
 import { Locale, OrderState, Prisma } from "database";
 import { Modifiers } from "database-helpers";
+import { Option as O, ReadonlyArray as A } from "effect";
 import { Suspense, useState } from "react";
 import { titleFor } from "src/core/helpers/content";
 import cancelOrder from "src/orders/mutations/cancelOrder";
 import confirmOrder from "src/orders/mutations/confirmOrder";
 import deliverOrder from "src/orders/mutations/deliverOrder";
-import killOrder from "src/orders/mutations/killOrder";
 import getVenueOrders from "src/orders/queries/current/getVenueOrders";
 
 function ConfirmOrders(props: { orderId: number }) {

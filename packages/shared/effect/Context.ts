@@ -1,6 +1,4 @@
-import * as Context from "@effect/data/Context";
-import * as Option from "@effect/data/Option";
-import * as Effect from "@effect/io/Effect";
+import { Context, Effect, Option } from "effect";
 
 export const access = <Id, Service>(tag: Context.Tag<Id, Service>) =>
   Effect.contextWithEffect((_: Context.Context<never>) => {

@@ -1,7 +1,4 @@
-import * as Brand from "@effect/data/Brand";
-import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as Effect from "@effect/io/Effect";
+import { Brand, Effect, Option as O, pipe } from "effect";
 import { Number } from "shared/branded";
 
 export const paginate = <

@@ -1,8 +1,7 @@
 import { resolver } from "@blitzjs/rpc";
 import { pipe } from "@effect/data/Function";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
+import { Effect, ReadonlyArray as A } from "effect";
 import { Item, ModifierConfig } from "shared";
 import { Resolver, Session } from "src/auth";
 import { Renu } from "src/core/effect";
@@ -27,12 +26,12 @@ export default resolver.pipe(
         _ => ({
           ..._,
           // NOTE: types here are a fuck, this is safe but watch out
-          options: (A.mapNonEmpty(_.options, (_) => ({
+          options: A.map(_.options, (_) => ({
             ..._,
             managementRepresentation: _.identifier === i.choice
               ? ModifierConfig.Base.ManagementRepresentation("Presto")({ id: i.prestoId })
               : _.managementRepresentation,
-          } as any))),
+          })) as any,
         }),
       ),
       Effect.tap(_ => Effect.sync(() => console.log(inspect(_, false, null, true)))),

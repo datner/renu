@@ -323,6 +323,13 @@ model OrderItemModifier {
   referencedIn   OrderItem[]
 }
 
+model ApiKey {
+  id String @id @default(cuid())
+  hash String @unique
+  active Boolean @default(true)
+  associatedWith String
+}
+
 enum TokenType {
   RESET_PASSWORD
 }

@@ -1,8 +1,8 @@
-import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
 import { ExclamationCircleIcon } from "@heroicons/react/20/solid";
 import { ResizeObserver } from "@juggle/resize-observer";
 import { a, useChain, useSpring, useSpringRef } from "@react-spring/web";
+import { pipe } from "effect/Function";
+import * as O from "effect/Option";
 import Image from "next/image";
 import { useState } from "react";
 import { Blurhash } from "react-blurhash";

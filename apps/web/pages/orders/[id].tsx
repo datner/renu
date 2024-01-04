@@ -1,14 +1,11 @@
 import { invoke, useQuery } from "@blitzjs/rpc";
-import { absurd } from "@effect/data/Function";
-import * as Option from "@effect/data/Option";
-import * as Effect from "@effect/io/Effect";
-import * as Match from "@effect/match";
 import * as Schema from "@effect/schema/Schema";
 import { QuestionMarkCircleIcon } from "@heroicons/react/24/outline";
 import { CheckIcon, ExclamationCircleIcon } from "@heroicons/react/24/solid";
 import * as Presto from "@integrations/presto";
 import { Button, Textarea } from "@mantine/core";
 import { useViewportSize } from "@mantine/hooks";
+import { absurd, Effect, Match, Option } from "effect";
 import { InferGetServerSidePropsType } from "next";
 import { ReactNode, Suspense } from "react";
 import ReactConfetti from "react-confetti";

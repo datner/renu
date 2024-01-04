@@ -1,20 +1,19 @@
+import { pipe } from "@effect/data/Function";
 import * as RA from "@effect/data/ReadonlyArray";
 import * as Parser from "@effect/schema/Parser";
 import * as S from "@effect/schema/Schema";
 import { PromiseReturnType } from "blitz";
 import { Locale, Prisma } from "database";
 import { Modifiers } from "database-helpers";
-import { pipe, } from "@effect/data/Function";
 import { Order } from "shared";
 import getVenueManagementIntegration from "src/venues/queries/current/getVenueManagementIntegration";
 import getItem from "./queries/getItem";
-
 
 export type GetItemResult = PromiseReturnType<typeof getItem>;
 export type GetManagementIntegrationResult = PromiseReturnType<typeof getVenueManagementIntegration>;
 
 export const Id_ = pipe(
-  S.union(S.numberFromString(S.string), S.number),
+  S.union(S.NumberFromString, S.number),
   S.int(),
   S.nonNegative(),
   S.brand("Id"),
@@ -46,13 +45,13 @@ export const Content_ = S.struct({
 });
 
 export const Modifier = S.struct({
-  modifierId: pipe(Id_, S.optional),
-  managementId: pipe(Id_, S.optional),
+  modifierId: S.optional(Id_),
+  managementId: S.optional(Id_),
   config: Modifiers.ModifierConfig,
 });
 
 export const CreateItemSchema = S.struct({
-  managementId: pipe(S.string, S.nullable, S.optional),
+  managementId: S.optional(S.nullable(S.string)),
   image: S.string,
   price: Price,
   identifier: Slug_,
@@ -63,13 +62,13 @@ export const CreateItemSchema = S.struct({
     he: Content_,
   }),
 });
-export interface CreateItemSchema extends S.To<typeof CreateItemSchema> {}
+export interface CreateItemSchema extends S.Schema.To<typeof CreateItemSchema> {}
 
 export const UpdateItemSchema = pipe(
   CreateItemSchema,
   S.extend(S.struct({ id: Order.Item.Id })),
 );
-export interface UpdateItemSchema extends S.To<typeof UpdateItemSchema> {}
+export interface UpdateItemSchema extends S.Schema.To<typeof UpdateItemSchema> {}
 
 export const toCreateItem = ({
   content: { en, he },

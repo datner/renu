@@ -1,6 +1,6 @@
 import { resolver } from "@blitzjs/rpc";
-import * as Effect from "@effect/io/Effect";
 import { Prisma } from "database";
+import { Effect } from "effect";
 import { Database } from "shared/Database";
 import { Resolver } from "src/auth";
 import { Renu } from "src/core/effect";

@@ -1,12 +1,10 @@
-import { Routes } from "@blitzjs/next";
+import { BlitzPage, Routes } from "@blitzjs/next";
 import { getQueryClient, useMutation, useQuery } from "@blitzjs/rpc";
-import * as Data from "@effect/data/Data";
-import { pipe } from "@effect/data/Function";
-import * as A from "@effect/data/ReadonlyArray";
 import {
   Autocomplete,
   AutocompleteProps,
   Button,
+  ComboboxItem,
   Container,
   Input,
   Loader,
@@ -15,6 +13,7 @@ import {
   SegmentedControl,
 } from "@mantine/core";
 import { Prisma } from "database";
+import { pipe, ReadonlyArray as A, ReadonlyRecord } from "effect";
 import { useRouter } from "next/router";
 import { forwardRef, ForwardRefExoticComponent, RefAttributes, Suspense, useMemo } from "react";
 import { useController } from "react-hook-form";
@@ -38,34 +37,69 @@ const UserAutocomplete: ForwardRefExoticComponent<
   });
 
   const data = useMemo(() => {
+    if (groupBy === "venue" && false) {
+      return pipe(
+        A.flatMap(
+          users,
+          user =>
+            A.flatMap(
+              user.membership,
+              m =>
+                m.affiliations.map(_ => ({
+                  user,
+                  label: user.email,
+                  value: user.email,
+                  venue: _.Venue.identifier,
+                })),
+            ),
+        ),
+        A.groupBy(_ => _.venue),
+        ReadonlyRecord.toEntries,
+        A.map(([group, u]) => ({ group, items: u })),
+      );
+    }
+
     return pipe(
-      users,
-      A.flatMap((u) =>
-        pipe(
-          u.membership,
-          groupBy === "venue"
-            ? A.flatMap((m) =>
-              pipe(
-                m.affiliations,
-                A.map((a) => a.Venue.identifier),
-              )
-            )
-            : A.map((m) => m.organization.identifier),
-          A.map((group) => Data.struct({ group, user: u })),
-        )
+      A.flatMap(
+        users,
+        user =>
+          A.map(
+            user.membership,
+            m => ({
+              user,
+              label: user.email,
+              value: user.email,
+              organization: m.organization.identifier,
+            }),
+          ),
       ),
-      A.map((datum) => Data.struct({ ...datum, value: datum.user.email })),
-      A.dedupe,
+      A.groupBy(_ => _.organization),
+      ReadonlyRecord.toEntries,
+      A.map(([group, u]) => ({ group, items: u })),
     );
   }, [groupBy, users]);
 
   return (
     <Autocomplete
       label="Pick a User"
+      data-lpignore="true"
+      data-form-type="other"
       ref={ref}
       {...rest}
       data={data}
-      filter={(value, item) => item.value.includes(value) || item.group.includes(value)}
+      filter={({ options, search }) =>
+        options.filter((option) => {
+          console.log(option);
+          return "group" in option
+            ? ({
+              ...option,
+              items: option.items.filter(it =>
+                it.label.toLowerCase().trim().includes(search.toLowerCase().trim())
+                || (it as any).organization.toLowerCase().trim().includes(search.toLowerCase().trim())
+              ),
+            })
+            : false;
+        })}
     />
   );
 });
@@ -103,7 +137,7 @@ function ImpersonateUserForm() {
   return (
     <Container size="xs">
       <Paper
-        sx={{ width: 460 }}
+        w={460}
         component="form"
         withBorder
         shadow="md"
@@ -144,10 +178,14 @@ function ImpersonateUserForm() {
   );
 }
 
-export default function Impersonate() {
+const Impersonate: BlitzPage = () => {
   return (
     <Suspense fallback={<LoadingOverlay visible />}>
       <ImpersonateUserForm />
     </Suspense>
   );
-}
+};
+Impersonate.authenticate = {};
+Impersonate.suppressFirstRenderFlicker = true;
+
+export default Impersonate;

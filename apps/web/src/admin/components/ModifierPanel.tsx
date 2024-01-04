@@ -1,14 +1,11 @@
 import { useModal } from "@ebay/nice-modal-react";
 import { pipe } from "@effect/data/Function";
-import * as O from "@effect/data/Option";
-import * as A from "@effect/data/ReadonlyArray";
-import * as Effect from "@effect/io/Effect";
 import * as Schema from "@effect/schema/Schema";
+import { Effect, Match, Option as O, ReadonlyArray as A } from "effect";
 import * as L from "monocle-ts/Lens";
 import { useState } from "react";
-import { useFieldArray, useFormContext } from "react-hook-form";
+import { Control, FieldArrayWithId, useFieldArray, UseFieldArrayUpdate, useFormContext } from "react-hook-form";
 import { ModifierField } from "src/items/helpers/form";
-import { match } from "ts-pattern";
 import { ExtrasForm } from "../modifier-forms/ExtrasForm";
 import { OneOfForm } from "../modifier-forms/OneOfForm";
 import { ItemFormSchema, ModifierConfigSchema, ModifierSchema } from "../validations/item-form";
@@ -17,7 +14,7 @@ import { NewModifierModal } from "./NewModiferModal";
 
 const getInitialModifierValues = (mod: {
   _tag: "oneOf" | "extras";
-}): Schema.From<typeof ModifierConfigSchema> => {
+}): Schema.Schema.From<typeof ModifierConfigSchema> => {
   switch (mod._tag) {
     case "oneOf":
       return {
@@ -71,6 +68,22 @@ const addCopy = pipe(
   L.modify((id) => `${id}-copy`),
 );
 
+interface SectionProps {
+  control: Control<ItemFormSchema, any>;
+  update: UseFieldArrayUpdate<ItemFormSchema, "modifiers">;
+  field: FieldArrayWithId<ItemFormSchema, "modifiers", "id">;
+  index: number;
+  onDuplicate: () => void;
+  onDelete: () => void;
+}
+
+// Don't copy me, this is not good React
+const renderField = Match.type<SectionProps>().pipe(
+  Match.when({ field: { config: { _tag: "oneOf" } } }, OneOfForm),
+  Match.when({ field: { config: { _tag: "extras" } } }, ExtrasForm),
+  Match.orElse(EditOrCreate),
+);
+
 export function ModifierPanel() {
   const modal = useModal(NewModifierModal);
   const { control, getValues } = useFormContext<ItemFormSchema>();
@@ -100,8 +113,7 @@ export function ModifierPanel() {
           onAddModifier={() => Effect.runPromise(handleAddModifier)}
         />
       </div>
-      {pipe(
-        O.Do,
+      {O.Do.pipe(
         O.bind("index", () => fieldIndex),
         O.bind("field", ({ index }) => A.get(index)(fields)),
         O.let("update", () => updateConfig),
@@ -116,11 +128,7 @@ export function ModifierPanel() {
         }),
         O.match({
           onNone: () => <PickAction />,
-          onSome: (props) =>
-            match(props)
-              .with({ field: { config: { _tag: "oneOf" } } }, (props) => <OneOfForm {...props} />)
-              .with({ field: { config: { _tag: "extras" } } }, (props) => <ExtrasForm {...props} />)
-              .otherwise((props) => <EditOrCreate {...props} />),
+          onSome: renderField,
         }),
       )}
     </div>

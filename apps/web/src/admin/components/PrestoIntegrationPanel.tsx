@@ -1,12 +1,12 @@
 import { useParam } from "@blitzjs/next";
 import { useMutation, useQuery } from "@blitzjs/rpc";
-import * as Schema from "@effect/schema/Schema";
+import { Schema } from "@effect/schema";
 import { CheckIcon } from "@heroicons/react/24/solid";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { Item, ModifierConfig } from "shared";
 import { Modifier } from "shared/Item";
-import { FullItem } from "src/items/hooks/form";
+import { FullItem } from "src/items/helpers/form";
 import setModifierPrestoId from "src/items/mutations/setModifierPrestoId";
 import setPrestoId from "src/items/mutations/setPrestoId";
 import getItemNew from "src/items/queries/getItemNew";
@@ -58,7 +58,7 @@ export function PrestoIntegrationPanel() {
 }
 
 interface ModifierPrestoIdBlockProps {
-  readonly modifier: Schema.To<typeof Item.Modifier.fromPrisma>;
+  readonly modifier: Schema.Schema.To<typeof Item.Modifier.fromPrisma>;
 }
 
 function ModifierPrestoIdBlock(props: ModifierPrestoIdBlockProps) {

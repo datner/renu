@@ -1,8 +1,7 @@
-import * as Effect from "@effect/io/Effect";
-import * as Layer from "@effect/io/Layer";
 import * as M from "@integrations/core/management";
 import * as Dorix from "@integrations/dorix";
 import { ManagementProvider, Order } from "database";
+import { Effect, Layer } from "effect";
 export { IntegrationSettingsService as Integration, ManagementService } from "@integrations/core/management";
 export * from "@integrations/core/management-menu";
 
@@ -28,7 +27,7 @@ export const ManagementServiceLayer = Layer.effect(
   }),
 );
 
-export const layer = Layer.provide(Dorix.layer, ManagementServiceLayer);
+export const layer = Layer.provide(ManagementServiceLayer, Dorix.layer);
 
 export const reportOrder = (order: M.FullOrderWithItems) =>
   Effect.flatMap(M.ManagementService, (_) => _.reportOrder(order));

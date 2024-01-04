@@ -1,6 +1,5 @@
-import * as Data from "@effect/data/Data";
-import * as Request from "@effect/io/Request";
 import * as Models from "database";
+import { Data, Request } from "effect";
 import * as Order from "../order";
 
 export class SetOrderTransactionIdError extends Data.TaggedClass("SetOrderTransactionIdError")<{}> {}

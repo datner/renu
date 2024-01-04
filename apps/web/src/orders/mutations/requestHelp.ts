@@ -1,6 +1,6 @@
 import { resolver } from "@blitzjs/rpc";
-import * as O from "@effect/data/Option";
-import * as Effect from "@effect/io/Effect";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as Telegram from "integrations/telegram/sendMessage";
 import { Order } from "shared";
 import { Renu } from "src/core/effect";

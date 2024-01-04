@@ -1,7 +1,4 @@
-import * as Data from "@effect/data/Data";
-import { pipe } from "@effect/data/Function";
-import * as HashMap from "@effect/data/HashMap";
-import * as A from "@effect/data/ReadonlyArray";
+import { Data, HashMap, pipe, ReadonlyArray as A } from "effect";
 import { memo } from "react";
 import { Venue } from "shared";
 import * as Order from "src/menu/hooks/useOrder";

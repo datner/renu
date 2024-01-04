@@ -15,7 +15,7 @@ const getPayplusUrl = resolver.pipe(
     Effect.provideServiceEffect(
       getPageUrl(orderId),
       Clearing.Settings,
-      Venue.getClearing(venueId),
+      Effect.flatten(Venue.getClearing(venueId)),
     )
   ),
   Effect.map(_ => _.toString()),

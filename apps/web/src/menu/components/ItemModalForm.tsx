@@ -331,11 +331,11 @@ function SubmitButton(props: SubmitButtonProps) {
           disabled={ReadonlyRecord.isEmptyRecord(errors) ? isEmptySelection : !isValid}
           form="item-form"
           type="submit"
-          className="btn grow px-2 btn-primary"
+          className="btn grow px-2 btn-primary gap-0"
         >
           <span className="inline-block text-left rtl:text-right grow xs:grow-0 xs:mx-1.5">
             {t("add")}
-          </span>{" "}
+          </span>
           <span className="hidden xs:inline-block text-left rtl:text-right grow">
             {t("to order")}
           </span>

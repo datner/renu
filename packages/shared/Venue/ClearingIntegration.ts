@@ -1,7 +1,7 @@
 import * as ParseResult from "@effect/schema/ParseResult";
 import * as Schema from "@effect/schema/Schema";
 import { ClearingProvider } from "database";
-import { Effect, identity, pipe } from "effect";
+import { Cause, Console, Effect, Option, pipe } from "effect";
 import { Database } from "../Database";
 import { accessing } from "../effect/Context";
 import { Common } from "../schema";
@@ -16,21 +16,21 @@ const PayPlusData = Schema.struct({
   secret_key: Schema.string,
   service_charge: Schema.optional(Schema.number, { as: "Option" }),
   isQA: Schema.optional(Schema.boolean),
-});
+}).pipe(Schema.attachPropertySignature("_tag", "PayPlusData"));
 
-const NoData = Schema.struct({});
+const NoData = Schema.attachPropertySignature(Schema.struct({}), "_tag", "NoData");
 
 export const GamaData = Schema.struct({
   id: Schema.number,
   secret_key: Schema.string,
   env: Schema.literal("test", "demo", "production"),
-});
+}).pipe(Schema.attachPropertySignature("_tag", "GamaData"));
 export interface GamaData extends Schema.Schema.To<typeof GamaData> {}
 
 export const VendorData = Schema.union(
-  pipe(PayPlusData, Schema.attachPropertySignature("_tag", "PayPlusData")),
-  pipe(GamaData, Schema.attachPropertySignature("_tag", "GamaData")),
-  pipe(NoData, Schema.attachPropertySignature("_tag", "NoData")),
+  PayPlusData,
+  GamaData,
+  NoData,
 );
 export type VendorData = Schema.Schema.To<typeof VendorData>;
 
@@ -41,7 +41,7 @@ export const GeneralClearingIntegration = Schema.struct({
   provider: Provider,
   terminal: Schema.string,
   venueId: Venue.Id,
-  vendorData: Common.fromPrisma(VendorData),
+  vendorData: Schema.compose(Schema.unknown, VendorData),
 });
 export interface ClearingIntegration extends Schema.Schema.To<typeof GeneralClearingIntegration> {}
 
@@ -71,17 +71,17 @@ export const ClearingIntegration = Schema.compose(
 );
 
 export const fromVenue = Schema.transformOrFail(
-  Schema.from(Venue.Id),
-  Schema.union(
-    PayPlusIntegration,
-    GamaIntegration,
-    CreditGuardIntegration,
-  ),
+  Venue.Id,
+  Schema.optionFromSelf(ClearingIntegration),
   id =>
-    pipe(
-      getClearing(id),
+    getClearing(id).pipe(
+      Effect.tapErrorCause(_ => Console.error(Cause.pretty(_))),
+      Effect.map(_ => _),
       Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
       accessing(Database),
     ),
-  _ => ParseResult.succeed(_.venueId),
+  _ =>
+    _._tag === "Some"
+      ? ParseResult.succeed(Venue.Id(_.value.venueId))
+      : ParseResult.fail(ParseResult.parseError([ParseResult.forbidden])),
 );

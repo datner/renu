@@ -1,13 +1,14 @@
 import { resolver } from "@blitzjs/rpc";
 import { Schema } from "@effect/schema";
-import { Effect } from "effect";
+import { Console, Effect } from "effect";
 import { Venue } from "shared";
 import { Resolver } from "src/auth";
 import { Renu } from "src/core/effect";
 
 const getVenueClearingIntegration = resolver.pipe(
   Resolver.schema(Venue.Clearing.fromVenue),
-  Effect.flatMap(Schema.encode(Venue.Clearing.ClearingIntegration)),
+  Effect.tap(Console.log),
+  Effect.flatMap(Schema.encode(Schema.option(Venue.Clearing.ClearingIntegration))),
   Renu.runPromise$,
 );
 

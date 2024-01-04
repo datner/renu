@@ -38,7 +38,7 @@ export class CategoryItem extends CI.Item.transform<CategoryItem>()({
     Effect.andThen(_ => Schema.decode(Item)(_)),
     Effect.mapBoth({
       onSuccess: (item) => ({ ...ci, item }),
-      onFailure: _ => ParseResult.parseError([ParseResult.missing]),
+      onFailure: _ => _._tag === "GetItemByIdError" ? ParseResult.parseError([ParseResult.missing]) : _,
     }),
     accessing(Database),
   ), ParseResult.succeed)
@@ -56,7 +56,7 @@ export class Category extends C.Category.transformFrom<Category>()({
     { batching: true },
   ).pipe(
     Effect.map(([content, categoryItems]) => ({ ...c, content, categoryItems })),
-    Effect.mapError(_ => ParseResult.parseError([ParseResult.missing])),
+    Effect.mapError(_ => _._tag === "ParseError" ? _ : ParseResult.parseError([ParseResult.missing])),
     accessing(Database),
     _ => _,
   ), ParseResult.succeed)
@@ -76,7 +76,7 @@ export class FromVenue extends V.Venue.transformFrom<FromVenue>()({
   ).pipe(
     Effect.mapBoth({
       onSuccess: ([content, categories]) => ({ ...v, content, categories }),
-      onFailure: _ => ParseResult.parseError([ParseResult.missing]),
+      onFailure: _ => _._tag === "ParseError" ? _ : ParseResult.parseError([ParseResult.missing]),
     }),
     accessing(Database),
   ), ParseResult.succeed)

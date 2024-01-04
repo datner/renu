@@ -8,8 +8,7 @@ overrides:
   '@fp-ts/data': npm:@effect/data
   '@effect/data': 0.18.7
   '@effect/io': 0.41.2
-  '@effect/match': 0.40.0
-  '@effect/schema': 0.56.1
+  '@effect/schema': 0.57.0
 
 importers:
 
@@ -21,15 +20,12 @@ importers:
       '@effect/io':
         specifier: 0.41.2
         version: 0.41.2(@effect/data@0.18.7)
-      '@effect/match':
-        specifier: 0.40.0
-        version: 0.40.0(effect@2.0.0-next.62)
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       '@sqlfx/pg':
-        specifier: 0.37.0
-        version: 0.37.0(@effect/schema@0.56.1)
+        specifier: 0.38.0
+        version: 0.38.0(@effect/schema@0.57.0)(effect@2.0.0)
     devDependencies:
       '@commitlint/cli':
         specifier: 18.4.3
@@ -71,14 +67,14 @@ importers:
   apps/web:
     dependencies:
       '@blitzjs/auth':
-        specifier: 2.0.0-beta.36
-        version: 2.0.0-beta.36(blitz@2.0.0-beta.36)(next@14.0.4)(secure-password@4.0.0)
+        specifier: 2.0.1
+        version: 2.0.1(blitz@2.0.1)(next@14.0.4)(secure-password@4.0.0)
       '@blitzjs/next':
-        specifier: 2.0.0-beta.36
-        version: 2.0.0-beta.36(@tanstack/query-core@4.24.4)(blitz@2.0.0-beta.36)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tslog@4.9.2)
+        specifier: 2.0.1
+        version: 2.0.1(@tanstack/query-core@4.24.4)(blitz@2.0.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tslog@4.9.2)
       '@blitzjs/rpc':
-        specifier: 2.0.0-beta.36
-        version: 2.0.0-beta.36(@tanstack/query-core@4.24.4)(blitz@2.0.0-beta.36)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)
+        specifier: 2.0.1
+        version: 2.0.1(@tanstack/query-core@4.24.4)(blitz@2.0.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)
       '@dnd-kit/core':
         specifier: 6.1.0
         version: 6.1.0(react-dom@18.2.0)(react@18.2.0)
@@ -95,11 +91,11 @@ importers:
         specifier: 0.41.2
         version: 0.41.2(@effect/data@0.18.7)
       '@effect/platform-node':
-        specifier: 0.39.0
-        version: 0.39.0(@effect/platform@0.39.0)(effect@2.0.0-next.62)
+        specifier: 0.40.0
+        version: 0.40.0(@effect/platform@0.40.0)(effect@2.0.0)
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       '@emotion/react':
         specifier: 11.11.3
         version: 11.11.3(@types/react@18.2.46)(react@18.2.0)
@@ -107,8 +103,8 @@ importers:
         specifier: 11.11.0
         version: 11.11.0
       '@fp-ts/optic':
-        specifier: 0.21.0
-        version: 0.21.0(@effect/typeclass@0.21.0)(effect@2.0.0-next.62)
+        specifier: 0.22.0
+        version: 0.22.0(@effect/typeclass@0.22.0)(effect@2.0.0)
       '@headlessui/react':
         specifier: 1.7.17
         version: 1.7.17(react-dom@18.2.0)(react@18.2.0)
@@ -146,20 +142,20 @@ importers:
         specifier: 3.4.0
         version: 3.4.0
       '@mantine/core':
-        specifier: 7.3.2
-        version: 7.3.2(@mantine/hooks@7.3.2)(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0)
+        specifier: 7.4.0
+        version: 7.4.0(@mantine/hooks@7.4.0)(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/dropzone':
-        specifier: 7.3.2
-        version: 7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0)
+        specifier: 7.4.0
+        version: 7.4.0(@mantine/core@7.4.0)(@mantine/hooks@7.4.0)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/hooks':
-        specifier: 7.3.2
-        version: 7.3.2(react@18.2.0)
+        specifier: 7.4.0
+        version: 7.4.0(react@18.2.0)
       '@mantine/next':
         specifier: 6.0.21
         version: 6.0.21(@emotion/react@11.11.3)(@emotion/server@11.11.0)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)
       '@mantine/nprogress':
-        specifier: 7.3.2
-        version: 7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0)
+        specifier: 7.4.0
+        version: 7.4.0(@mantine/core@7.4.0)(@mantine/hooks@7.4.0)(react-dom@18.2.0)(react@18.2.0)
       '@next/bundle-analyzer':
         specifier: 14.0.4
         version: 14.0.4
@@ -191,14 +187,14 @@ importers:
         specifier: 10.4.16
         version: 10.4.16(postcss@8.4.32)
       blitz:
-        specifier: 2.0.0-beta.36
-        version: 2.0.0-beta.36(@babel/preset-env@7.23.7)(@types/node@20.10.6)(@types/react@18.2.46)(react@18.2.0)(typescript@5.3.3)
+        specifier: 2.0.1
+        version: 2.0.1(@babel/preset-env@7.23.7)(@types/node@20.10.6)(@types/react@18.2.46)(react@18.2.0)(typescript@5.3.3)
       clsx:
         specifier: 2.1.0
         version: 2.1.0
       daisyui:
-        specifier: 4.4.24
-        version: 4.4.24(postcss@8.4.32)
+        specifier: 4.5.0
+        version: 4.5.0(postcss@8.4.32)
       database:
         specifier: workspace:*
         version: link:../../packages/database
@@ -209,8 +205,8 @@ importers:
         specifier: 3.0.6
         version: 3.0.6
       effect:
-        specifier: 2.0.0-next.62
-        version: 2.0.0-next.62
+        specifier: 2.0.0
+        version: 2.0.0
       effect-tslog:
         specifier: workspace:*
         version: link:../../packages/effect-tslog
@@ -219,7 +215,7 @@ importers:
         version: 8.56.0
       fp-ts-react-stable-hooks:
         specifier: 1.5.0
-        version: 1.5.0(fp-ts@2.16.1)(react@18.2.0)
+        version: 1.5.0(fp-ts@2.16.2)(react@18.2.0)
       got:
         specifier: 14.0.0
         version: 14.0.0
@@ -234,7 +230,7 @@ importers:
         version: 6.3.1
       monocle-ts:
         specifier: 2.3.13
-        version: 2.3.13(fp-ts@2.16.1)
+        version: 2.3.13(fp-ts@2.16.2)
       nanoid:
         specifier: 5.0.4
         version: 5.0.4
@@ -242,8 +238,8 @@ importers:
         specifier: 14.0.4
         version: 14.0.4(@babel/core@7.23.7)(react-dom@18.2.0)(react@18.2.0)
       next-intl:
-        specifier: 3.4.0
-        version: 3.4.0(next@14.0.4)(react@18.2.0)
+        specifier: 3.4.1
+        version: 3.4.1(next@14.0.4)(react@18.2.0)
       postcss:
         specifier: ~8.4.32
         version: 8.4.32
@@ -324,8 +320,8 @@ importers:
         specifier: 14.0.4
         version: 14.0.4(eslint@8.56.0)(typescript@5.3.3)
       postcss-preset-mantine:
-        specifier: 1.12.2
-        version: 1.12.2(postcss@8.4.32)
+        specifier: 1.12.3
+        version: 1.12.3(postcss@8.4.32)
       postcss-simple-vars:
         specifier: 7.0.1
         version: 7.0.1(postcss@8.4.32)
@@ -345,8 +341,8 @@ importers:
         specifier: 5.0.10
         version: 5.0.10(@types/node@20.10.6)
       vitest:
-        specifier: 1.1.0
-        version: 1.1.0(@types/node@20.10.6)(jsdom@23.0.1)
+        specifier: 1.1.1
+        version: 1.1.1(@types/node@20.10.6)(jsdom@23.0.1)
 
   packages/@integrations/clearing:
     dependencies:
@@ -356,15 +352,12 @@ importers:
       '@effect/io':
         specifier: 0.41.2
         version: 0.41.2(@effect/data@0.18.7)
-      '@effect/match':
-        specifier: 0.40.0
-        version: 0.40.0(effect@2.0.0-next.62)
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       '@fp-ts/optic':
-        specifier: 0.21.0
-        version: 0.21.0(@effect/typeclass@0.21.0)(effect@2.0.0-next.62)
+        specifier: 0.22.0
+        version: 0.22.0(@effect/typeclass@0.22.0)(effect@2.0.0)
       '@integrations/core':
         specifier: workspace:*
         version: link:../core
@@ -378,8 +371,8 @@ importers:
         specifier: workspace:*
         version: link:../../database-helpers
       effect:
-        specifier: 2.0.0-next.62
-        version: 2.0.0-next.62
+        specifier: 2.0.0
+        version: 2.0.0
       shared:
         specifier: workspace:*
         version: link:../../shared
@@ -388,8 +381,8 @@ importers:
         specifier: workspace:*
         version: link:../../tsconfig
       vitest:
-        specifier: 1.1.0
-        version: 1.1.0(@types/node@20.10.6)(jsdom@23.0.1)
+        specifier: 1.1.1
+        version: 1.1.1(@types/node@20.10.6)(jsdom@23.0.1)
 
   packages/@integrations/core:
     dependencies:
@@ -399,15 +392,12 @@ importers:
       '@effect/io':
         specifier: 0.41.2
         version: 0.41.2(@effect/data@0.18.7)
-      '@effect/match':
-        specifier: 0.40.0
-        version: 0.40.0(effect@2.0.0-next.62)
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       effect:
-        specifier: 2.0.0-next.62
-        version: 2.0.0-next.62
+        specifier: 2.0.0
+        version: 2.0.0
       shared:
         specifier: workspace:*
         version: link:../../shared
@@ -419,8 +409,8 @@ importers:
         specifier: workspace:*
         version: link:../../tsconfig
       vitest:
-        specifier: 1.1.0
-        version: 1.1.0(@types/node@20.10.6)(jsdom@23.0.1)
+        specifier: 1.1.1
+        version: 1.1.1(@types/node@20.10.6)(jsdom@23.0.1)
 
   packages/@integrations/dorix:
     dependencies:
@@ -430,15 +420,12 @@ importers:
       '@effect/io':
         specifier: 0.41.2
         version: 0.41.2(@effect/data@0.18.7)
-      '@effect/match':
-        specifier: 0.40.0
-        version: 0.40.0(effect@2.0.0-next.62)
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       '@fp-ts/optic':
-        specifier: 0.21.0
-        version: 0.21.0(@effect/typeclass@0.21.0)(effect@2.0.0-next.62)
+        specifier: 0.22.0
+        version: 0.22.0(@effect/typeclass@0.22.0)(effect@2.0.0)
       '@integrations/core':
         specifier: workspace:*
         version: link:../core
@@ -449,8 +436,8 @@ importers:
         specifier: workspace:*
         version: link:../../database-helpers
       effect:
-        specifier: 2.0.0-next.62
-        version: 2.0.0-next.62
+        specifier: 2.0.0
+        version: 2.0.0
       shared:
         specifier: workspace:*
         version: link:../../shared
@@ -459,8 +446,8 @@ importers:
         specifier: workspace:*
         version: link:../../tsconfig
       vitest:
-        specifier: 1.1.0
-        version: 1.1.0(@types/node@20.10.6)(jsdom@23.0.1)
+        specifier: 1.1.1
+        version: 1.1.1(@types/node@20.10.6)(jsdom@23.0.1)
 
   packages/@integrations/gama:
     dependencies:
@@ -470,12 +457,9 @@ importers:
       '@effect/io':
         specifier: 0.41.2
         version: 0.41.2(@effect/data@0.18.7)
-      '@effect/match':
-        specifier: 0.40.0
-        version: 0.40.0(effect@2.0.0-next.62)
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       '@integrations/core':
         specifier: workspace:*
         version: link:../core
@@ -486,8 +470,8 @@ importers:
         specifier: workspace:*
         version: link:../../database-helpers
       effect:
-        specifier: 2.0.0-next.62
-        version: 2.0.0-next.62
+        specifier: 2.0.0
+        version: 2.0.0
       jose:
         specifier: 5.2.0
         version: 5.2.0
@@ -499,8 +483,8 @@ importers:
         specifier: workspace:*
         version: link:../../tsconfig
       vitest:
-        specifier: 1.1.0
-        version: 1.1.0(@types/node@20.10.6)(jsdom@23.0.1)
+        specifier: 1.1.1
+        version: 1.1.1(@types/node@20.10.6)(jsdom@23.0.1)
 
   packages/@integrations/management:
     dependencies:
@@ -510,12 +494,9 @@ importers:
       '@effect/io':
         specifier: 0.41.2
         version: 0.41.2(@effect/data@0.18.7)
-      '@effect/match':
-        specifier: 0.40.0
-        version: 0.40.0(effect@2.0.0-next.62)
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       '@integrations/core':
         specifier: workspace:*
         version: link:../core
@@ -523,8 +504,8 @@ importers:
         specifier: workspace:*
         version: link:../dorix
       effect:
-        specifier: 2.0.0-next.62
-        version: 2.0.0-next.62
+        specifier: 2.0.0
+        version: 2.0.0
       shared:
         specifier: workspace:*
         version: link:../../shared
@@ -533,8 +514,8 @@ importers:
         specifier: workspace:*
         version: link:../../database
       vitest:
-        specifier: 1.1.0
-        version: 1.1.0(@types/node@20.10.6)(jsdom@23.0.1)
+        specifier: 1.1.1
+        version: 1.1.1(@types/node@20.10.6)(jsdom@23.0.1)
 
   packages/@integrations/payplus:
     dependencies:
@@ -544,15 +525,12 @@ importers:
       '@effect/io':
         specifier: 0.41.2
         version: 0.41.2(@effect/data@0.18.7)
-      '@effect/match':
-        specifier: 0.40.0
-        version: 0.40.0(effect@2.0.0-next.62)
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       '@fp-ts/optic':
-        specifier: 0.21.0
-        version: 0.21.0(@effect/typeclass@0.21.0)(effect@2.0.0-next.62)
+        specifier: 0.22.0
+        version: 0.22.0(@effect/typeclass@0.22.0)(effect@2.0.0)
       '@integrations/core':
         specifier: workspace:*
         version: link:../core
@@ -563,8 +541,8 @@ importers:
         specifier: workspace:*
         version: link:../../database-helpers
       effect:
-        specifier: 2.0.0-next.62
-        version: 2.0.0-next.62
+        specifier: 2.0.0
+        version: 2.0.0
       effect-tslog:
         specifier: workspace:*
         version: link:../../effect-tslog
@@ -576,8 +554,8 @@ importers:
         specifier: workspace:*
         version: link:../../tsconfig
       vitest:
-        specifier: 1.1.0
-        version: 1.1.0(@types/node@20.10.6)(jsdom@23.0.1)
+        specifier: 1.1.1
+        version: 1.1.1(@types/node@20.10.6)(jsdom@23.0.1)
 
   packages/@integrations/presto:
     dependencies:
@@ -587,15 +565,12 @@ importers:
       '@effect/io':
         specifier: 0.41.2
         version: 0.41.2(@effect/data@0.18.7)
-      '@effect/match':
-        specifier: 0.40.0
-        version: 0.40.0(effect@2.0.0-next.62)
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       '@fp-ts/optic':
-        specifier: 0.21.0
-        version: 0.21.0(@effect/typeclass@0.21.0)(effect@2.0.0-next.62)
+        specifier: 0.22.0
+        version: 0.22.0(@effect/typeclass@0.22.0)(effect@2.0.0)
       '@integrations/core':
         specifier: workspace:*
         version: link:../core
@@ -609,8 +584,8 @@ importers:
         specifier: workspace:*
         version: link:../../database-helpers
       effect:
-        specifier: 2.0.0-next.62
-        version: 2.0.0-next.62
+        specifier: 2.0.0
+        version: 2.0.0
       shared:
         specifier: workspace:*
         version: link:../../shared
@@ -619,8 +594,8 @@ importers:
         specifier: workspace:*
         version: link:../../tsconfig
       vitest:
-        specifier: 1.1.0
-        version: 1.1.0(@types/node@20.10.6)(jsdom@23.0.1)
+        specifier: 1.1.1
+        version: 1.1.1(@types/node@20.10.6)(jsdom@23.0.1)
 
   packages/@integrations/renu:
     dependencies:
@@ -630,15 +605,12 @@ importers:
       '@effect/io':
         specifier: 0.41.2
         version: 0.41.2(@effect/data@0.18.7)
-      '@effect/match':
-        specifier: 0.40.0
-        version: 0.40.0(effect@2.0.0-next.62)
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       '@fp-ts/optic':
-        specifier: 0.21.0
-        version: 0.21.0(@effect/typeclass@0.21.0)(effect@2.0.0-next.62)
+        specifier: 0.22.0
+        version: 0.22.0(@effect/typeclass@0.22.0)(effect@2.0.0)
       '@integrations/core':
         specifier: workspace:*
         version: link:../core
@@ -649,8 +621,8 @@ importers:
         specifier: workspace:*
         version: link:../../database-helpers
       effect:
-        specifier: 2.0.0-next.62
-        version: 2.0.0-next.62
+        specifier: 2.0.0
+        version: 2.0.0
       shared:
         specifier: workspace:*
         version: link:../../shared
@@ -659,8 +631,8 @@ importers:
         specifier: workspace:*
         version: link:../../tsconfig
       vitest:
-        specifier: 1.1.0
-        version: 1.1.0(@types/node@20.10.6)(jsdom@23.0.1)
+        specifier: 1.1.1
+        version: 1.1.1(@types/node@20.10.6)(jsdom@23.0.1)
 
   packages/database:
     dependencies:
@@ -668,8 +640,8 @@ importers:
         specifier: 0.18.7
         version: 0.18.7
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       '@prisma/client':
         specifier: 5.7.1
         version: 5.7.1(prisma@5.7.1)
@@ -687,14 +659,14 @@ importers:
         specifier: 0.18.7
         version: 0.18.7
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       database:
         specifier: workspace:*
         version: link:../database
       effect:
-        specifier: 2.0.0-next.62
-        version: 2.0.0-next.62
+        specifier: 2.0.0
+        version: 2.0.0
       shared:
         specifier: workspace:*
         version: link:../shared
@@ -727,8 +699,8 @@ importers:
         specifier: 0.18.7
         version: 0.18.7
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       eslint:
         specifier: 8.56.0
         version: 8.56.0
@@ -757,18 +729,15 @@ importers:
       '@effect/io':
         specifier: 0.41.2
         version: 0.41.2(@effect/data@0.18.7)
-      '@effect/match':
-        specifier: 0.40.0
-        version: 0.40.0(effect@2.0.0-next.62)
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
       database:
         specifier: workspace:*
         version: link:../database
       effect:
-        specifier: 2.0.0-next.62
-        version: 2.0.0-next.62
+        specifier: 2.0.0
+        version: 2.0.0
       react-hook-form:
         specifier: 7.49.2
         version: 7.49.2(react@18.2.0)
@@ -783,8 +752,8 @@ importers:
         specifier: 0.18.7
         version: 0.18.7
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
 
   packages/ui:
     dependencies:
@@ -792,8 +761,8 @@ importers:
         specifier: 0.18.7
         version: 0.18.7
       '@effect/schema':
-        specifier: 0.56.1
-        version: 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+        specifier: 0.57.0
+        version: 0.57.0(effect@2.0.0)(fast-check@3.15.0)
     devDependencies:
       '@types/react':
         specifier: ^18.2.46
@@ -2902,10 +2871,10 @@ packages:
       '@babel/helper-validator-identifier': 7.22.20
       to-fast-properties: 2.0.0
 
-  /@blitzjs/auth@2.0.0-beta.36(blitz@2.0.0-beta.36)(next@14.0.4)(secure-password@4.0.0):
-    resolution: {integrity: sha512-j18MlGBsjfNrTNIWQR6YhD+HP2PZI5SkhE+YTkDbywrq0HQuqxXHh//ZOmmD1NjVOYbXrVC39Z5MyFspAcZ/+Q==}
+  /@blitzjs/auth@2.0.1(blitz@2.0.1)(next@14.0.4)(secure-password@4.0.0):
+    resolution: {integrity: sha512-n+/EdTJv1jH2XlF4gr8s+rRwt7Rf7Ldc7040GDdathGOODKnNa+TZmIqdJYJURB8RGzT1oX6yf0UfQlediFWtg==}
     peerDependencies:
-      blitz: 2.0.0-beta.36
+      blitz: 2.0.1
       next: '*'
       next-auth: '*'
       secure-password: 4.0.0
@@ -2924,7 +2893,7 @@ packages:
       '@types/secure-password': 3.1.1
       b64-lite: 1.4.0
       bad-behavior: 1.0.1
-      blitz: 2.0.0-beta.36(@babel/preset-env@7.23.7)(@types/node@20.10.6)(@types/react@18.2.46)(react@18.2.0)(typescript@5.3.3)
+      blitz: 2.0.1(@babel/preset-env@7.23.7)(@types/node@20.10.6)(@types/react@18.2.46)(react@18.2.0)(typescript@5.3.3)
       cookie: 0.4.1
       cookie-session: 2.0.0(supports-color@8.1.1)
       debug: 4.3.3(supports-color@8.1.1)
@@ -2943,8 +2912,8 @@ packages:
       url: 0.11.0
     dev: false
 
-  /@blitzjs/generator@2.0.0-beta.36:
-    resolution: {integrity: sha512-Vi7kzKp/hq/jvpweDhP+3KT+u3ry5boEBqb4LMMI/5Nn+04u5zbWQ9kLrqQXO3iT7QxE8brdNUofHiHjdfNN0Q==}
+  /@blitzjs/generator@2.0.1:
+    resolution: {integrity: sha512-FKP/9mukF8yHHkrmE/STfI3B5Fr35b1u/koa3iFi55XX0Pv58bDe0w9y+cELTxVjgc1Vp//JGtQ5qPtH5UE+Pg==}
     dependencies:
       '@babel/core': 7.12.10(supports-color@8.1.1)
       '@babel/plugin-transform-typescript': 7.12.1(@babel/core@7.12.10)
@@ -2975,18 +2944,18 @@ packages:
       zod: 3.20.2
     dev: false
 
-  /@blitzjs/next@2.0.0-beta.36(@tanstack/query-core@4.24.4)(blitz@2.0.0-beta.36)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tslog@4.9.2):
-    resolution: {integrity: sha512-H9d9NMulpzmitHvgPHuXnabreajutMxl+/m24RJtRwHB3cAKS/MLh2VDAr0bdrGxSpEPYaUbK44bFQ8mF4SrpQ==}
+  /@blitzjs/next@2.0.1(@tanstack/query-core@4.24.4)(blitz@2.0.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)(tslog@4.9.2):
+    resolution: {integrity: sha512-UlyqG5nFD5UaQuZu9dRNIiPDsFIa47vbX+Ga8EpkaXlg8Ry92X15l4Lc6yqjGUwQY3F5Tj4Lz2Q/9r5/azfNtQ==}
     requiresBuild: true
     peerDependencies:
-      blitz: 2.0.0-beta.36
+      blitz: 2.0.1
       next: '*'
       react: '*'
       tslog: 4.9.0
     dependencies:
-      '@blitzjs/rpc': 2.0.0-beta.36(@tanstack/query-core@4.24.4)(blitz@2.0.0-beta.36)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)
+      '@blitzjs/rpc': 2.0.1(@tanstack/query-core@4.24.4)(blitz@2.0.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0)
       '@types/hoist-non-react-statics': 3.3.1
-      blitz: 2.0.0-beta.36(@babel/preset-env@7.23.7)(@types/node@20.10.6)(@types/react@18.2.46)(react@18.2.0)(typescript@5.3.3)
+      blitz: 2.0.1(@babel/preset-env@7.23.7)(@types/node@20.10.6)(@types/react@18.2.46)(react@18.2.0)(typescript@5.3.3)
       debug: 4.3.3(supports-color@8.1.1)
       fs-extra: 10.0.1
       hoist-non-react-statics: 3.3.2
@@ -3001,11 +2970,11 @@ packages:
       - react-native
     dev: false
 
-  /@blitzjs/rpc@2.0.0-beta.36(@tanstack/query-core@4.24.4)(blitz@2.0.0-beta.36)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-+CJTh7Wu+vHoN3nOfH14pHbY8sa/0qIRXpvS4GNUy5GIDV59WE6DPRKnFW7gsQtNsB3jmD2YjPiTrmiQSfWGIw==}
+  /@blitzjs/rpc@2.0.1(@tanstack/query-core@4.24.4)(blitz@2.0.1)(next@14.0.4)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-JFsuvCCqU8p6ToAD/ff31VAuSFDTwFzbqVHSlAW6C52LFTHbdBTAmssljPYMvI+sbkIYOndTKSmxIf30YqD/vA==}
     peerDependencies:
       '@tanstack/query-core': 4.24.4
-      blitz: 2.0.0-beta.36
+      blitz: 2.0.1
       next: '*'
       react: '*'
     dependencies:
@@ -3014,7 +2983,7 @@ packages:
       '@tanstack/react-query': 4.24.4(react-dom@18.2.0)(react@18.2.0)
       b64-lite: 1.4.0
       bad-behavior: 1.0.1
-      blitz: 2.0.0-beta.36(@babel/preset-env@7.23.7)(@types/node@20.10.6)(@types/react@18.2.46)(react@18.2.0)(typescript@5.3.3)
+      blitz: 2.0.1(@babel/preset-env@7.23.7)(@types/node@20.10.6)(@types/react@18.2.46)(react@18.2.0)(typescript@5.3.3)
       chalk: 4.1.2
       debug: 4.3.3(supports-color@8.1.1)
       next: 14.0.4(@babel/core@7.23.7)(react-dom@18.2.0)(react@18.2.0)
@@ -3330,55 +3299,47 @@ packages:
     resolution: {integrity: sha512-BnlM8LlaqCAYgdRfxlbR7gXGh/FD1scL1fPgNVJEPoOM08od1jtJz+iKhwfaud8TPnnhZR+TED2h5ynjanLeCQ==}
     dev: true
 
-  /@effect/match@0.40.0(effect@2.0.0-next.62):
-    resolution: {integrity: sha512-1v2UpVxbUybx6zmN0R1uraRkCju15xLmHquoNQxPFGrQABq2dRI0nSsVM+/yibggUnQ9QAEx2MxQ6xdrQR+8hg==}
+  /@effect/platform-node@0.40.0(@effect/platform@0.40.0)(effect@2.0.0):
+    resolution: {integrity: sha512-/kNB/9nzhclFnXoLiVDjUG06B3pQTarUp5HvZMdvBu4kNDZURUi+L98F/xm47KPgEf84kHKC4sbi+uqNdJDRpA==}
     peerDependencies:
-      effect: 2.0.0-next.47
+      '@effect/platform': ^0.40.0
+      effect: ^2.0.0
     dependencies:
-      effect: 2.0.0-next.62
-    dev: false
-
-  /@effect/platform-node@0.39.0(@effect/platform@0.39.0)(effect@2.0.0-next.62):
-    resolution: {integrity: sha512-5ZggtTpdXntLpv1aWfEc6xIHVKCuRfv71v584ZrTr996uAdyPgwV4YLSt09wMmZpG7lBeu8w9A+twvEAPLzJrQ==}
-    peerDependencies:
-      '@effect/platform': ^0.39.0
-      effect: 2.0.0-next.62
-    dependencies:
-      '@effect/platform': 0.39.0(@effect/schema@0.56.1)(effect@2.0.0-next.62)
-      effect: 2.0.0-next.62
+      '@effect/platform': 0.40.0(@effect/schema@0.57.0)(effect@2.0.0)
+      effect: 2.0.0
       mime: 3.0.0
       multipasta: 0.1.21
     dev: false
 
-  /@effect/platform@0.39.0(@effect/schema@0.56.1)(effect@2.0.0-next.62):
-    resolution: {integrity: sha512-bwvIVdyWAMv42Wi6/EIP8GJagPGEFU8tlkPycH5KcyZWmyi48ai3X1PbVqGdh2A18MsAyTOsVdfBI+bhnCS0Jw==}
+  /@effect/platform@0.40.0(@effect/schema@0.57.0)(effect@2.0.0):
+    resolution: {integrity: sha512-cL4U1U6CUF4AVCoTevb5EyJ9vHJUAoamOiIzCtimMT2iosRLRUOqM3cpVBXyfia5sTB/E88ih+r4vJDfCDutjg==}
     peerDependencies:
-      '@effect/schema': ^0.56.0
-      effect: 2.0.0-next.62
+      '@effect/schema': ^0.57.0
+      effect: ^2.0.0
     dependencies:
-      '@effect/schema': 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
-      effect: 2.0.0-next.62
+      '@effect/schema': 0.57.0(effect@2.0.0)(fast-check@3.15.0)
+      effect: 2.0.0
       find-my-way-ts: 0.1.1
       multipasta: 0.1.21
       path-browserify: 1.0.1
     dev: false
 
-  /@effect/schema@0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0):
-    resolution: {integrity: sha512-cfEyHLXPdzSKzJU/yYrPjFd0iVHPydh+NT0sgTe4bzXbcvOsKZuvQ86cAAwXN7lxY0N5cPes9ACxUxTdkEaNlw==}
+  /@effect/schema@0.57.0(effect@2.0.0)(fast-check@3.15.0):
+    resolution: {integrity: sha512-o4dKS1qhtdIcj4wIS6uejRwXJYcouLO5klAe62vV4QfzQGGItgvD4f0HD6tdlh2E2jlo+iRSPibZadv2J3yEVQ==}
     peerDependencies:
-      effect: 2.0.0-next.62
+      effect: ^2.0.0
       fast-check: ^3.13.2
     dependencies:
-      effect: 2.0.0-next.62
+      effect: 2.0.0
       fast-check: 3.15.0
     dev: false
 
-  /@effect/typeclass@0.21.0(effect@2.0.0-next.62):
-    resolution: {integrity: sha512-J0UU0lZqILcjt/6x1a7ykf608NlO45Mg3rajgjifMRONTc4ANDPBTLE6/e2eknwS/unIVX6LJFEZEPotfQIe6Q==}
+  /@effect/typeclass@0.22.0(effect@2.0.0):
+    resolution: {integrity: sha512-1++hmUh/ODupG6Xh4GdQ9XlpD8+PB0beWypbb+bmvKLCWrRTfSZt6r4ueqxxa0k+yzyEIs7PXBxUL9FXKaLSDQ==}
     peerDependencies:
-      effect: 2.0.0-next.62
+      effect: ^2.0.0
     dependencies:
-      effect: 2.0.0-next.62
+      effect: 2.0.0
     dev: false
 
   /@emnapi/runtime@0.44.0:
@@ -3831,14 +3792,14 @@ packages:
       tslib: 2.6.2
     dev: false
 
-  /@fp-ts/optic@0.21.0(@effect/typeclass@0.21.0)(effect@2.0.0-next.62):
-    resolution: {integrity: sha512-INzxI8AxItH4Ts/AQhEV7qp5SO1o9hTHTgZDwYD6my2NupgSj+ix47YzBJALA/2t5G/KRCWg9Mfg5SgZCWYtsw==}
+  /@fp-ts/optic@0.22.0(@effect/typeclass@0.22.0)(effect@2.0.0):
+    resolution: {integrity: sha512-Kpg9bdA+q3d1I+ulENsax4iV6ge5TzRH6nj2/kdPPg42wtTmlir42oBlpbiwp3l3uNDja9rBWmuya0Q6GAmakQ==}
     peerDependencies:
-      '@effect/typeclass': ^0.21.0
-      effect: 2.0.0-next.62
+      '@effect/typeclass': ^0.22.0
+      effect: ^2.0.0
     dependencies:
-      '@effect/typeclass': 0.21.0(effect@2.0.0-next.62)
-      effect: 2.0.0-next.62
+      '@effect/typeclass': 0.22.0(effect@2.0.0)
+      effect: 2.0.0
     dev: false
 
   /@headlessui/react@1.7.17(react-dom@18.2.0)(react@18.2.0):
@@ -4138,15 +4099,15 @@ packages:
     resolution: {integrity: sha512-dfLbk+PwWvFzSxwk3n5ySL0hfBog779o8h68wK/7/APo/7cgyWp5jcXockbxdk5kFRkbeXWm4Fbi9FrdN381sA==}
     dev: false
 
-  /@mantine/core@7.3.2(@mantine/hooks@7.3.2)(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-CwAuQogVLcLR7O9e1eOgi3gtk4XX6cnaqevAxzJJpIOIyCnHiQ3cEGINVXyUUjUUipBlvK3sqz3NPGJ2ekLFDQ==}
+  /@mantine/core@7.4.0(@mantine/hooks@7.4.0)(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-wnQOz1aSpqVlCpdyY4XyJKRqlW87mexMADQrbCTwg/5BbxKp8XU6sTcnk1piwyR0mM6SI1uo0Yik2qYNGFlyWw==}
     peerDependencies:
-      '@mantine/hooks': 7.3.2
+      '@mantine/hooks': 7.4.0
       react: ^18.2.0
       react-dom: ^18.2.0
     dependencies:
       '@floating-ui/react': 0.24.8(react-dom@18.2.0)(react@18.2.0)
-      '@mantine/hooks': 7.3.2(react@18.2.0)
+      '@mantine/hooks': 7.4.0(react@18.2.0)
       clsx: 2.0.0
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
@@ -4158,23 +4119,23 @@ packages:
       - '@types/react'
     dev: false
 
-  /@mantine/dropzone@7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-SqeBARkfS/x8UkxTc8qup7oWF1NDXP2WsbzllsLpjnlH7A/MpNgEUHs/y6oUF0Sxnc3g5Z0cvzHlZpFiWDGCmg==}
+  /@mantine/dropzone@7.4.0(@mantine/core@7.4.0)(@mantine/hooks@7.4.0)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-vMX9vrYBl9A/0frIcvgHjCLAdZ0hSI79VMQfMoWQ9GpOG15auQGtleT04JEgmB83I0mChSdS1I+8rV9erTBlhQ==}
     peerDependencies:
-      '@mantine/core': 7.3.2
-      '@mantine/hooks': 7.3.2
+      '@mantine/core': 7.4.0
+      '@mantine/hooks': 7.4.0
       react: ^18.2.0
       react-dom: ^18.2.0
     dependencies:
-      '@mantine/core': 7.3.2(@mantine/hooks@7.3.2)(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0)
-      '@mantine/hooks': 7.3.2(react@18.2.0)
+      '@mantine/core': 7.4.0(@mantine/hooks@7.4.0)(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0)
+      '@mantine/hooks': 7.4.0(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
       react-dropzone-esm: 15.0.1(react@18.2.0)
     dev: false
 
-  /@mantine/hooks@7.3.2(react@18.2.0):
-    resolution: {integrity: sha512-xgumuuI3PBWXff5N02HCI7PEy25mDEdyXDQklUYK93J6FKwpcosyZnGVitoUrV1gLtYYa9ZudeAWdhHuh/CpOg==}
+  /@mantine/hooks@7.4.0(react@18.2.0):
+    resolution: {integrity: sha512-Swv23D8XmZqE2hohPBcff+ITwv5l8UlwiiEGMhL+ceUvJLnPzdwlW21qnLBtRtZWyQQ59TAav4M0GFGd93JS8Q==}
     peerDependencies:
       react: ^18.2.0
     dependencies:
@@ -4198,17 +4159,17 @@ packages:
       - '@emotion/server'
     dev: false
 
-  /@mantine/nprogress@7.3.2(@mantine/core@7.3.2)(@mantine/hooks@7.3.2)(react-dom@18.2.0)(react@18.2.0):
-    resolution: {integrity: sha512-idGyG1zfVKjw/QIzKvyIuLqcUtXuRa+9Fi/ZZiuNqUejf+dijSlmw4jboJ9OW/SEe8e8yy6t17tRKHgtELN0KA==}
+  /@mantine/nprogress@7.4.0(@mantine/core@7.4.0)(@mantine/hooks@7.4.0)(react-dom@18.2.0)(react@18.2.0):
+    resolution: {integrity: sha512-MW+/WJogjko7Qku5fgOMe4lt/FwCpTW5jq65A9k7CMbgQbZJO7D2eBbuOtkq/ygc1weblYJlacx8P3XECqVJbg==}
     peerDependencies:
-      '@mantine/core': 7.3.2
-      '@mantine/hooks': 7.3.2
+      '@mantine/core': 7.4.0
+      '@mantine/hooks': 7.4.0
       react: ^18.2.0
       react-dom: ^18.2.0
     dependencies:
-      '@mantine/core': 7.3.2(@mantine/hooks@7.3.2)(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0)
-      '@mantine/hooks': 7.3.2(react@18.2.0)
-      '@mantine/store': 7.3.2(react@18.2.0)
+      '@mantine/core': 7.4.0(@mantine/hooks@7.4.0)(@types/react@18.2.46)(react-dom@18.2.0)(react@18.2.0)
+      '@mantine/hooks': 7.4.0(react@18.2.0)
+      '@mantine/store': 7.4.0(react@18.2.0)
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
     dev: false
@@ -4229,8 +4190,8 @@ packages:
       react-dom: 18.2.0(react@18.2.0)
     dev: false
 
-  /@mantine/store@7.3.2(react@18.2.0):
-    resolution: {integrity: sha512-M1eWHzTRCeCFvrpFhXKIM9zblrlIT5/XrMue/fP2HrkA43dpkgq+ArnZkN3LhG9lWR/EKbRwQWDhDIvdLtfD7w==}
+  /@mantine/store@7.4.0(react@18.2.0):
+    resolution: {integrity: sha512-sSaBj6qVU0e5ml70/8e3A9pwAMBL5yKWNdnhw20b+74j85+FUDhDy8bEGZfyS0BtYPGVoxj5yF8/uZhxnDXpbg==}
     peerDependencies:
       react: ^18.2.0
     dependencies:
@@ -4599,24 +4560,26 @@ packages:
     engines: {node: '>=16'}
     dev: false
 
-  /@sqlfx/pg@0.37.0(@effect/schema@0.56.1):
-    resolution: {integrity: sha512-mn6TBEf67mqwdy8veegj2hmhgaoj0thR6mGA+qZmBZfT/D1y3mMHmCtVAf6r2e4mLy2ofzfMuDiBsGwqpT5sqw==}
+  /@sqlfx/pg@0.38.0(@effect/schema@0.57.0)(effect@2.0.0):
+    resolution: {integrity: sha512-mKZbx9uUqYlmjMKA7zMDbtYwlyl2fs2rGOWrJGbJojFv22aWHxjsF6dz+uLYTb9miyR8xsZzVmFXDDFGs0r2dg==}
     peerDependencies:
-      effect: 2.0.0-next.62
+      effect: ^2.0.0
     dependencies:
-      '@sqlfx/sql': 0.37.0(@effect/schema@0.56.1)
+      '@sqlfx/sql': 0.38.0(@effect/schema@0.57.0)(effect@2.0.0)
+      effect: 2.0.0
       postgres: 3.4.2
     transitivePeerDependencies:
       - '@effect/schema'
     dev: false
 
-  /@sqlfx/sql@0.37.0(@effect/schema@0.56.1):
-    resolution: {integrity: sha512-N0waozvDS+npVQgnWlnHJl307MKnbu9QoL2zQEwRWqoGmqsW3GsWhyu6cX/tFLKlOFMqovq+5YkKtqLutKJnHQ==}
+  /@sqlfx/sql@0.38.0(@effect/schema@0.57.0)(effect@2.0.0):
+    resolution: {integrity: sha512-fXW4jWXDg3BOUiZv9B1qoqnwcTJR6P58YRteNqAOjh9W1tGhtehO69970B57hrU0N2tOP+VdlXyvPRVSl5aZkg==}
     peerDependencies:
       '@effect/schema': ^0.56.0
-      effect: 2.0.0-next.62
+      effect: ^2.0.0
     dependencies:
-      '@effect/schema': 0.56.1(effect@2.0.0-next.62)(fast-check@3.15.0)
+      '@effect/schema': 0.57.0(effect@2.0.0)(fast-check@3.15.0)
+      effect: 2.0.0
     dev: false
 
   /@swc/core-android-arm-eabi@1.3.7:
@@ -5231,38 +5194,38 @@ packages:
       - supports-color
     dev: true
 
-  /@vitest/expect@1.1.0:
-    resolution: {integrity: sha512-9IE2WWkcJo2BR9eqtY5MIo3TPmS50Pnwpm66A6neb2hvk/QSLfPXBz2qdiwUOQkwyFuuXEUj5380CbwfzW4+/w==}
+  /@vitest/expect@1.1.1:
+    resolution: {integrity: sha512-Qpw01C2Hyb3085jBkOJLQ7HRX0Ncnh2qV4p+xWmmhcIUlMykUF69zsnZ1vPmAjZpomw9+5tWEGOQ0GTfR8U+kA==}
     dependencies:
-      '@vitest/spy': 1.1.0
-      '@vitest/utils': 1.1.0
+      '@vitest/spy': 1.1.1
+      '@vitest/utils': 1.1.1
       chai: 4.3.10
     dev: true
 
-  /@vitest/runner@1.1.0:
-    resolution: {integrity: sha512-zdNLJ00pm5z/uhbWF6aeIJCGMSyTyWImy3Fcp9piRGvueERFlQFbUwCpzVce79OLm2UHk9iwaMSOaU9jVHgNVw==}
+  /@vitest/runner@1.1.1:
+    resolution: {integrity: sha512-8HokyJo1SnSi3uPFKfWm/Oq1qDwLC4QDcVsqpXIXwsRPAg3gIDh8EbZ1ri8cmQkBxdOu62aOF9B4xcqJhvt4xQ==}
     dependencies:
-      '@vitest/utils': 1.1.0
+      '@vitest/utils': 1.1.1
       p-limit: 5.0.0
       pathe: 1.1.1
     dev: true
 
-  /@vitest/snapshot@1.1.0:
-    resolution: {integrity: sha512-5O/wyZg09V5qmNmAlUgCBqflvn2ylgsWJRRuPrnHEfDNT6tQpQ8O1isNGgo+VxofISHqz961SG3iVvt3SPK/QQ==}
+  /@vitest/snapshot@1.1.1:
+    resolution: {integrity: sha512-WnMHjv4VdHLbFGgCdVVvyRkRPnOKN75JJg+LLTdr6ah7YnL75W+7CTIMdzPEPzaDxA8r5yvSVlc1d8lH3yE28w==}
     dependencies:
       magic-string: 0.30.5
       pathe: 1.1.1
       pretty-format: 29.7.0
     dev: true
 
-  /@vitest/spy@1.1.0:
-    resolution: {integrity: sha512-sNOVSU/GE+7+P76qYo+VXdXhXffzWZcYIPQfmkiRxaNCSPiLANvQx5Mx6ZURJ/ndtEkUJEpvKLXqAYTKEY+lTg==}
+  /@vitest/spy@1.1.1:
+    resolution: {integrity: sha512-hDU2KkOTfFp4WFFPWwHFauddwcKuGQ7gF6Un/ZZkCogoAiTMN7/7YKvUDbywPZZ754iCQGjdUmXN3t4k0jm1IQ==}
     dependencies:
       tinyspy: 2.2.0
     dev: true
 
-  /@vitest/utils@1.1.0:
-    resolution: {integrity: sha512-z+s510fKmYz4Y41XhNs3vcuFTFhcij2YF7F8VQfMEYAAUfqQh0Zfg7+w9xdgFGhPf3tX3TicAe+8BDITk6ampQ==}
+  /@vitest/utils@1.1.1:
+    resolution: {integrity: sha512-E9LedH093vST/JuBSyHLFMpxJKW3dLhe/flUSPFedoyj4wKiFX7Jm8gYLtOIiin59dgrssfmFv0BJ1u8P/LC/A==}
     dependencies:
       diff-sequences: 29.6.3
       loupe: 2.3.7
@@ -5792,11 +5755,11 @@ packages:
       readable-stream: 3.6.2
     dev: false
 
-  /blitz@2.0.0-beta.36(@babel/preset-env@7.23.7)(@types/node@20.10.6)(@types/react@18.2.46)(react@18.2.0)(typescript@5.3.3):
-    resolution: {integrity: sha512-oJwlKOgbXxtJKRt2S8gc93MfVp4N3uEHaRd0vSwCZRniKKE1GYr8zHtC4rxTNkJKPCtcytx2vvSlueovan47Uw==}
+  /blitz@2.0.1(@babel/preset-env@7.23.7)(@types/node@20.10.6)(@types/react@18.2.46)(react@18.2.0)(typescript@5.3.3):
+    resolution: {integrity: sha512-hv6T/W8+A9bLWJ71tAlPWW9rb+hLwFh7HUIEc3Eg8pjKeyl6whfFm6W1A331HHrncmJzvtXVFy6DWcxhnw+njw==}
     hasBin: true
     dependencies:
-      '@blitzjs/generator': 2.0.0-beta.36
+      '@blitzjs/generator': 2.0.1
       '@mrleebo/prisma-ast': 0.2.6
       '@types/global-agent': 2.1.1
       arg: 5.0.1
@@ -6573,8 +6536,8 @@ packages:
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dev: false
 
-  /daisyui@4.4.24(postcss@8.4.32):
-    resolution: {integrity: sha512-u/B3484J08V7N0rIYymnC+SyxOjlYQL+2vyhHWV+/KC+VaUcbEF2Z3H06eCPgdTiZ0J+ml44aH7wBhIymPFQ+g==}
+  /daisyui@4.5.0(postcss@8.4.32):
+    resolution: {integrity: sha512-RWQCPQ0vBUaxGy768O7Ku8SRQgwdoto1lDzuKeVOcMtYghuSbUY7NoPoMK+k8JH4s1J02OvpNAgtB9MeKpZIwg==}
     engines: {node: '>=16.9.0'}
     dependencies:
       css-selector-tokenizer: 0.8.0
@@ -7002,8 +6965,8 @@ packages:
       safe-buffer: 5.2.1
     dev: false
 
-  /effect@2.0.0-next.62:
-    resolution: {integrity: sha512-fJhLzf5oouL4WZP314ZJgZz5Bel7OHTY+YFxO06sW1mSvqJz0s28y7jDHr5zhtTNM1YRvzbeLYUYfNaJYKqx1A==}
+  /effect@2.0.0:
+    resolution: {integrity: sha512-yYYNf91dlk7dEl+U1QzeSiMHIM9zz1/NqSJ5hNRZ6GrFwctaCQcdxmAhll6mQRCgXFIAMhMEawmATlGLWtU5qQ==}
     dev: false
 
   /ejs@3.1.9:
@@ -8169,18 +8132,18 @@ packages:
       fetch-blob: 3.2.0
     dev: false
 
-  /fp-ts-react-stable-hooks@1.5.0(fp-ts@2.16.1)(react@18.2.0):
+  /fp-ts-react-stable-hooks@1.5.0(fp-ts@2.16.2)(react@18.2.0):
     resolution: {integrity: sha512-EKcXNB7JQXAKUhH9ciFdotC7rqcSMTI5BO8UOIphzbea1NmAivm98VkAl/fRlLGksJrHuJAN9cULDUXhphn/hA==}
     peerDependencies:
       fp-ts: '>= 2.0.0'
       react: '>= 16.8.0'
     dependencies:
-      fp-ts: 2.16.1
+      fp-ts: 2.16.2
       react: 18.2.0
     dev: false
 
-  /fp-ts@2.16.1:
-    resolution: {integrity: sha512-by7U5W8dkIzcvDofUcO42yl9JbnHTEDBrzu3pt5fKT+Z4Oy85I21K80EYJYdjQGC2qum4Vo55Ag57iiIK4FYuA==}
+  /fp-ts@2.16.2:
+    resolution: {integrity: sha512-CkqAjnIKFqvo3sCyoBTqgJvF+bHrSik584S9nhTjtBESLx26cbtVMR/T9a6ApChOcSDAaM3JydDmWDUn4EEXng==}
     dev: false
 
   /fraction.js@4.3.7:
@@ -10106,12 +10069,12 @@ packages:
       ufo: 1.3.2
     dev: true
 
-  /monocle-ts@2.3.13(fp-ts@2.16.1):
+  /monocle-ts@2.3.13(fp-ts@2.16.2):
     resolution: {integrity: sha512-D5Ygd3oulEoAm3KuGO0eeJIrhFf1jlQIoEVV2DYsZUMz42j4tGxgct97Aq68+F8w4w4geEnwFa8HayTS/7lpKQ==}
     peerDependencies:
       fp-ts: ^2.5.0
     dependencies:
-      fp-ts: 2.16.1
+      fp-ts: 2.16.2
     dev: false
 
   /mri@1.2.0:
@@ -10216,8 +10179,8 @@ packages:
     resolution: {integrity: sha512-Yd3UES5mWCSqR+qNT93S3UoYUkqAZ9lLg8a7g9rimsWmYGK8cVToA4/sF3RrshdyV3sAGMXVUmpMYOw+dLpOuw==}
     dev: false
 
-  /next-intl@3.4.0(next@14.0.4)(react@18.2.0):
-    resolution: {integrity: sha512-pccnuQq6N6iyPi0Foiajp9JgZp99w7gRxHhBxmtBdjsCmrsik7QflKWq2a/US2kFP734JSsSoY98xK+acjozeQ==}
+  /next-intl@3.4.1(next@14.0.4)(react@18.2.0):
+    resolution: {integrity: sha512-z8gY7uCe1cDHpH3rAD4uxZ5qEvt0WZX4bdKu7km2COPUIEXAXF1puwNAbtTC8b5clWGd87QwBy1+VS7ZElyU8g==}
     peerDependencies:
       next: ^10.0.0 || ^11.0.0 || ^12.0.0 || ^13.0.0 || ^14.0.0
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
@@ -10226,7 +10189,7 @@ packages:
       negotiator: 0.6.3
       next: 14.0.4(@babel/core@7.23.7)(react-dom@18.2.0)(react@18.2.0)
       react: 18.2.0
-      use-intl: 3.4.0(react@18.2.0)
+      use-intl: 3.4.1(react@18.2.0)
     dev: false
 
   /next@14.0.4(@babel/core@7.23.7)(react-dom@18.2.0)(react@18.2.0):
@@ -10960,8 +10923,8 @@ packages:
       postcss: 8.4.32
       postcss-selector-parser: 6.0.15
 
-  /postcss-preset-mantine@1.12.2(postcss@8.4.32):
-    resolution: {integrity: sha512-a7W/lDSeMg/LeOKb/PNKp+pVzYSSxxWFHGihnwRBEGzeY0qCZnPluH5KsJMfxqbElcf5zoiXZIyElzI/0KmgjA==}
+  /postcss-preset-mantine@1.12.3(postcss@8.4.32):
+    resolution: {integrity: sha512-cCwowf20mIyRXnV1cSVoMGfhYgy8ZqFJWsEJthdMZ3n7LijjucE9l/HO47gv5gAtr9nY1MkaEkpWS7ulhSTbSg==}
     peerDependencies:
       postcss: '>=8.0.0'
     dependencies:
@@ -13104,8 +13067,8 @@ packages:
       react: 18.2.0
     dev: false
 
-  /use-intl@3.4.0(react@18.2.0):
-    resolution: {integrity: sha512-vFwyAm9RDXjQN83wle9LjmE5PB/k0vOU0FetHffjr7/wLW8xlX2tAABxIyG1gy9eS5IYixAezvJXYr8g6fRIXA==}
+  /use-intl@3.4.1(react@18.2.0):
+    resolution: {integrity: sha512-Z2SWvtFXXytpKCTMeyNX6Un8HC8mmu1RxYIHOwI01rMSy6mGBFaO9T1a/0xDL1CLNLP4NzHdzRNsuhDcrw2/VQ==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
     dependencies:
@@ -13230,8 +13193,8 @@ packages:
       replace-ext: 1.0.1
     dev: false
 
-  /vite-node@1.1.0(@types/node@20.10.6):
-    resolution: {integrity: sha512-jV48DDUxGLEBdHCQvxL1mEh7+naVy+nhUUUaPAZLd3FJgXuxQiewHcfeZebbJ6onDqNGkP4r3MhQ342PRlG81Q==}
+  /vite-node@1.1.1(@types/node@20.10.6):
+    resolution: {integrity: sha512-2bGE5w4jvym5v8llF6Gu1oBrmImoNSs4WmRVcavnG2me6+8UQntTqLiAMFyiAobp+ZXhj5ZFhI7SmLiFr/jrow==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     dependencies:
@@ -13287,8 +13250,8 @@ packages:
       fsevents: 2.3.3
     dev: true
 
-  /vitest@1.1.0(@types/node@20.10.6)(jsdom@23.0.1):
-    resolution: {integrity: sha512-oDFiCrw7dd3Jf06HoMtSRARivvyjHJaTxikFxuqJjO76U436PqlVw1uLn7a8OSPrhSfMGVaRakKpA2lePdw79A==}
+  /vitest@1.1.1(@types/node@20.10.6)(jsdom@23.0.1):
+    resolution: {integrity: sha512-Ry2qs4UOu/KjpXVfOCfQkTnwSXYGrqTbBZxw6reIYEFjSy1QUARRg5pxiI5BEXy+kBVntxUYNMlq4Co+2vD3fQ==}
     engines: {node: ^18.0.0 || >=20.0.0}
     hasBin: true
     peerDependencies:
@@ -13313,11 +13276,11 @@ packages:
         optional: true
     dependencies:
       '@types/node': 20.10.6
-      '@vitest/expect': 1.1.0
-      '@vitest/runner': 1.1.0
-      '@vitest/snapshot': 1.1.0
-      '@vitest/spy': 1.1.0
-      '@vitest/utils': 1.1.0
+      '@vitest/expect': 1.1.1
+      '@vitest/runner': 1.1.1
+      '@vitest/snapshot': 1.1.1
+      '@vitest/spy': 1.1.1
+      '@vitest/utils': 1.1.1
       acorn-walk: 8.3.1
       cac: 6.7.14
       chai: 4.3.10
@@ -13333,7 +13296,7 @@ packages:
       tinybench: 2.5.1
       tinypool: 0.8.1
       vite: 5.0.10(@types/node@20.10.6)
-      vite-node: 1.1.0(@types/node@20.10.6)
+      vite-node: 1.1.1(@types/node@20.10.6)
       why-is-node-running: 2.2.2
     transitivePeerDependencies:
       - less

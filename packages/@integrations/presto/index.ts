@@ -161,7 +161,7 @@ export const layer = Layer.effect(
           Effect.gen(function*(_) {
             const o = yield* _(Schema.decode(FullOrder)(orderId));
             const mgmt = yield* _(Schema.decode(Venue.Management.fromVenue)(o.venueId));
-            const clearing = yield* _(Schema.decode(Venue.Clearing.fromVenue)(o.venueId));
+            const clearing = yield* _(Schema.decode(Venue.Clearing.fromVenue)(o.venueId), Effect.flatten);
             if (mgmt.provider !== "PRESTO") {
               throw yield* _(Effect.dieMessage("Wrong integration"));
             }

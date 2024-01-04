@@ -5,7 +5,7 @@ import { Option, Order, ReadonlyArray, String as Str } from "effect";
 import { InferGetServerSidePropsType } from "next";
 import dynamic from "next/dynamic";
 import Head from "next/head";
-import { Fragment, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Venue } from "shared";
 import { gSSP } from "src/blitz-server";
 import { useLocale } from "src/core/hooks/useLocale";
@@ -19,20 +19,15 @@ import * as _Menu from "src/menu/schema";
 import { Query } from "src/menu/validations/page";
 import getVenueClearingIntegration from "src/venues/queries/getVenueClearingIntegration";
 
-const LazyViewOrderButton = dynamic(() => import("src/menu/components/ViewOrderButton"), {
-  loading: () => <Fragment />,
-});
-const LazyItemModal = dynamic(() => import("src/menu/components/ItemModal"), {
-  loading: () => <Fragment />,
-});
-const LazyOrderModal = dynamic(() => import("src/menu/components/PayPlusOrderModal"), {
-  loading: () => <Fragment />,
-});
+const LazyViewOrderButton = dynamic(() => import("src/menu/components/ViewOrderButton"));
+const LazyItemModal = dynamic(() => import("src/menu/components/ItemModal"));
+const LazyOrderModal = dynamic(() => import("src/menu/components/PayPlusOrderModal"));
 
 const CategoryOrder = Order.mapInput(Str.Order, (b: Venue.Menu.Category) => b.identifier);
 
 export const Menu: BlitzPage<InferGetServerSidePropsType<typeof getServerSideProps>> = (props) => {
   const { menu } = props;
+  console.log(menu);
   const restaurant = useMemo(() => Schema.decodeSync(Venue.Menu.Menu)(menu), [menu]);
   const { categories } = restaurant;
   const orderedCategories = useMemo(() => ReadonlyArray.sort(categories as Array<Venue.Menu.Category>, CategoryOrder), [

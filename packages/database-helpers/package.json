@@ -8,9 +8,9 @@
   },
   "dependencies": {
     "@effect/data": "0.18.7",
-    "@effect/schema": "0.56.1",
+    "@effect/schema": "0.57.0",
     "database": "workspace:*",
-    "effect": "2.0.0-next.62",
+    "effect": "2.0.0",
     "shared": "workspace:*"
   },
   "devDependencies": {

@@ -1,6 +1,6 @@
 import { resolver } from "@blitzjs/rpc";
 import * as Schema from "@effect/schema/Schema";
-import { Console, Effect } from "effect";
+import { Cause, Console, Effect } from "effect";
 import { Venue } from "shared";
 import { Resolver } from "src/auth";
 import { Renu } from "src/core/effect";
@@ -17,6 +17,6 @@ export default resolver.pipe(
   Effect.tap(Console.log("got from menu")),
   Effect.andThen(Schema.encode(Venue.Menu.Menu.struct)),
   Effect.tap(Console.log("encoded to menu")),
-  Effect.tapErrorCause(Console.error),
+  Effect.tapErrorCause(_ => Console.error(Cause.pretty(_))),
   Renu.runPromise$,
 );

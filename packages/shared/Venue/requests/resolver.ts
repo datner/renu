@@ -61,11 +61,9 @@ export const VenueResolver = RequestResolver.makeBatched<DB, VenueRequest>((
         Effect.orDie,
         Effect.map(ReadonlyArray.zip(clearing)),
         Effect.flatMap(Effect.forEach(([_, req]) =>
-          Request.complete(
+          Request.succeed(
             req,
-            _
-              ? Exit.succeed(_)
-              : Exit.fail(new GetVenueClearingIntegrationError()),
+            Option.fromNullable(_),
           )
         )),
       ),

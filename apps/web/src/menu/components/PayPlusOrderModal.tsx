@@ -9,7 +9,7 @@ import { useTranslations } from "next-intl";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import Script from "next/script";
-import { Fragment, Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { Order, Venue } from "shared";
 import { Number } from "shared/schema";
@@ -20,14 +20,13 @@ import * as OrderState from "src/menu/hooks/useOrder";
 import getPayplusUrl from "src/orders/mutations/getPayplusUrl";
 import getOrderStatus from "src/orders/queries/getOrderStatus";
 import getVenueClearingIntegration from "src/venues/queries/getVenueClearingIntegration";
+import { useVenue } from "../hooks/useVenue";
 import sendOrder from "../mutations/sendOrder";
 import { Modal } from "./Modal";
 import { useOrderContext, useOrderState } from "./OrderContext";
 import { OrderModalItem } from "./OrderModalItem";
 
-const LazyPhoneModal = dynamic(() => import("src/menu/components/PhoneModal").then(_ => _.PhoneModal), {
-  loading: () => <Fragment />,
-});
+const LazyPhoneModal = dynamic(() => import("src/menu/components/PhoneModal").then(_ => _.PhoneModal));
 
 type Props = {
   open?: boolean;
@@ -50,7 +49,7 @@ const matchUrl = <A, B>(f: (url: string) => A, orElse: () => B) =>
     Init: orElse,
   });
 
-const decodeClearing = Schema.decodeSync(Venue.Clearing.ClearingIntegration);
+const decodeClearing = Schema.decodeSync(Schema.option(Venue.Clearing.ClearingIntegration));
 
 export function PayPlusOrderModal(props: Props) {
   const { onClose, open, venueId } = props;
@@ -130,6 +129,8 @@ export function PayPlusOrderModal(props: Props) {
     (item, key) => <OrderModalItem key={key} hash={key} dispatch={dispatch} orderItem={item} />,
   );
 
+  const venue = useVenue();
+
   return (
     <>
       <Modal open={open} onClose={onClose}>
@@ -149,7 +150,7 @@ export function PayPlusOrderModal(props: Props) {
             <div className="h-8" />
             <button
               onClick={handleOrder}
-              disabled={isLoading || amount === 0 || !valid}
+              disabled={isLoading || amount === 0 || !valid || venue.identifier === "tabun"}
               className="btn btn-primary grow px-3 mx-3"
             >
               <span className="badge badge-outline badge-ghost">{amount}</span>
@@ -198,13 +199,12 @@ const Cost = (props: { id: number }) => {
   const { order } = useOrderState();
   const cost = OrderState.getOrderCost(order);
 
-  if (clearing.provider === "PAY_PLUS") {
-    return toShekel(Option.match(clearing.vendorData.service_charge, {
+  if (Option.isSome(clearing) && clearing.value.provider === "PAY_PLUS") {
+    return toShekel(Option.match(clearing.value.vendorData.service_charge, {
       onNone: () => cost,
       onSome: (_) => cost + _,
     }));
   }
-
   return toShekel(cost);
 };
 
@@ -212,22 +212,21 @@ const ServiceCharge = (props: { id: number }) => {
   const [clearing] = useQuery(getVenueClearingIntegration, props.id, { select: decodeClearing });
   const t = useTranslations("menu.Components.ServiceCharge");
 
-  return clearing.provider === "PAY_PLUS"
-    && Option.getOrNull(
-      Option.map(
-        clearing.vendorData.service_charge,
-        _ => (
-          <li className="px-6 py-2">
-            <p className="text-sm">
-              {t("service charge")}:
-              <span className="ms-14 rounded-full mx-1 text-xs font-medium text-emerald-800">
-                {toShekel(_)}
-              </span>
-            </p>
-          </li>
-        ),
-      ),
-    );
+  return clearing.pipe(
+    Option.filterMap(_ => _.provider === "PAY_PLUS" ? Option.some(_) : Option.none()),
+    Option.flatMap(_ => _.vendorData.service_charge),
+    Option.map(_ => (
+      <li className="px-6 py-2">
+        <p className="text-sm">
+          {t("service charge")}:
+          <span className="ms-14 rounded-full mx-1 text-xs font-medium text-emerald-800">
+            {toShekel(_)}
+          </span>
+        </p>
+      </li>
+    )),
+    Option.getOrNull,
+  );
 };
 
 const WaitForPayment = (props: { id: number }) => {

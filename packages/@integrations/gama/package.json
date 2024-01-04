@@ -7,17 +7,16 @@
   "dependencies": {
     "@effect/data": "0.18.7",
     "@effect/io": "0.41.2",
-    "@effect/match": "0.40.0",
-    "@effect/schema": "0.56.1",
+    "@effect/schema": "0.57.0",
     "@integrations/core": "workspace:*",
     "database": "workspace:*",
     "database-helpers": "workspace:*",
-    "effect": "2.0.0-next.62",
+    "effect": "2.0.0",
     "jose": "5.2.0",
     "shared": "workspace:*"
   },
   "devDependencies": {
     "tsconfig": "workspace:*",
-    "vitest": "1.1.0"
+    "vitest": "1.1.1"
   }
 }

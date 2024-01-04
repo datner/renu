@@ -3,10 +3,12 @@ import { useLocalStorage } from "@mantine/hooks";
 import { useTranslations } from "next-intl";
 import { Fragment, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useVenue } from "../hooks/useVenue";
 
 const PHONE_REGEX = /^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/;
 
 export function PhoneModal() {
+  const venue = useVenue();
   const [show, setShow] = useState(false);
   const t = useTranslations("menu.Components.PhoneModal");
   const [phone, setPhoneNumber] = useLocalStorage({ key: "phone-number" });
@@ -31,6 +33,10 @@ export function PhoneModal() {
     }, 1_000);
     return () => clearTimeout(timoutId);
   }, [phone, reset, trigger]);
+
+  if (venue.identifier === "tabun") {
+    return null;
+  }
 
   return (
     <>

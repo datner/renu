@@ -34,6 +34,7 @@ export const VenueResolver = RequestResolver.makeBatched<DB, VenueRequest>((
           categories.map(_ =>
             db.venue.findUniqueOrThrow({ where: { id: _.id } }).categories({
               where: { deleted: null },
+              include: { content: true },
             })
           ),
         )

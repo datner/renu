@@ -3,7 +3,7 @@ import { Data, Request } from "effect";
 
 export class GetCategoryByIdError extends Data.TaggedClass("GetCategoryByIdError")<{}> {}
 
-export interface GetCategoryById extends Request.Request<GetCategoryByIdError, Models.Category> {
+export interface GetCategoryById extends Request.Request<GetCategoryByIdError, any> {
   readonly _tag: "GetCategoryById";
   readonly id: number;
 }

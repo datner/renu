@@ -74,7 +74,7 @@ export const Menu: BlitzPage<InferGetServerSidePropsType<typeof getServerSidePro
             {orderedCategories.map((category) => (
               <Category.Section key={category.id} category={category}>
                 <Category.Items>
-                  {category.categoryItems.map((ci, i) => <Category.Item priority={i < 6} key={ci.item.id} item={ci} />)}
+                  {category.categoryItems.map((ci, i) => <Category.Item priority={i < 6} key={ci.Item.id} item={ci} />)}
                 </Category.Items>
               </Category.Section>
             ))}

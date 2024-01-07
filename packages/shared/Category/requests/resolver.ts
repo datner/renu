@@ -1,4 +1,5 @@
-import { Effect, pipe, ReadonlyArray, Request, RequestResolver } from "effect";
+import { Console, Effect, Order, pipe, ReadonlyArray, Request, RequestResolver } from "effect";
+import { inspect } from "util";
 import { Database } from "../../Database";
 import { GetCategoryById } from "./getById";
 import { GetCategoryContent } from "./getContent";
@@ -11,9 +12,21 @@ export const CategoryResolver = pipe(
     requests: CategoryRequest[],
   ) => {
     const reqMap = ReadonlyArray.groupBy(requests, _ => _._tag);
-    const byId = reqMap.GetCategoryById as GetCategoryById[] ?? [];
-    const content = reqMap.GetCategoryContent as GetCategoryContent[] ?? [];
-    const items = reqMap.GetCategoryItems as GetCategoryItems[] ?? [];
+    const byId = ReadonlyArray.sort(
+      reqMap.GetCategoryById as GetCategoryById[] ?? [],
+      Order.mapInput(Order.number, (_: GetCategoryById) => _.id),
+    );
+
+    const content = ReadonlyArray.sort(
+      reqMap.GetCategoryContent as GetCategoryContent[] ?? [],
+      Order.mapInput(Order.number, (_: GetCategoryContent) => _.id),
+    );
+
+    const items = ReadonlyArray.sort(
+      reqMap.GetCategoryItems as GetCategoryItems[] ?? [],
+      Order.mapInput(Order.number, (_: GetCategoryItems) => _.id),
+    );
+
     return Effect.andThen(Database, db =>
       Effect.all({
         GetCategoryById: Effect.promise(() =>
@@ -46,7 +59,13 @@ export const CategoryResolver = pipe(
             items.map(_ =>
               db.category.findUnique({ where: { id: _.id } }).categoryItems({
                 where: { Item: { deleted: null } },
-                include: { Item: true },
+                include: {
+                  Item: {
+                    include: {
+                      content: true,
+                    },
+                  },
+                },
               })
             ),
           )

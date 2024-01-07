@@ -16,7 +16,7 @@ export const Item = memo<ItemProps>(({ item, priority }) => {
   const orderItems = Order.getOrderItems(state.order);
 
   const orderItem = pipe(
-    HashMap.filter(orderItems, (it) => it.item.id === item.item.id),
+    HashMap.filter(orderItems, (it) => it.item.id === item.Item.id),
     HashMap.map((oi, key) => [key, oi] as const),
     HashMap.values,
     A.fromIterable,
@@ -26,8 +26,8 @@ export const Item = memo<ItemProps>(({ item, priority }) => {
     onEmpty: () => [
       <ListItem
         priority={priority}
-        key={`${item.item.identifier}-0`}
-        item={Order.NewActiveItem({ item: Data.struct(item.item) })}
+        key={`${item.Item.identifier}-0`}
+        item={Order.NewActiveItem({ item: Data.struct(item.Item) })}
       />,
     ],
     onNonEmpty: A.map(([key, item], i) => (

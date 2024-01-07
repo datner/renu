@@ -18,6 +18,9 @@ export function FormCategoryCombobox() {
   const locale = useLocale();
   const t = useTranslations("admin.Components.FormCategoryCombobox");
   const [queryBag, { isRefetching, refetch }] = useQuery(getCurrentVenueCategories, {});
+  const { field } = useController<ItemFormSchema, "categoryId">({
+    name: "categoryId",
+  });
   const [query, setQuery] = useState(() =>
     ReadonlyArray.findFirst(queryBag.categories, _ => _.id === field.value).pipe(
       Option.map(_ => _.content),
@@ -26,9 +29,6 @@ export function FormCategoryCombobox() {
     )
   );
 
-  const { field } = useController<ItemFormSchema, "categoryId">({
-    name: "categoryId",
-  });
   const combobox = useCombobox();
 
   const title = useMemo(() => titleFor(locale), [locale]);

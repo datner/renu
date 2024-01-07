@@ -1,29 +1,14 @@
 import { AuthenticatedSessionContext } from "@blitzjs/auth";
 import { BlitzPage, Routes } from "@blitzjs/next";
-import { LoadingOverlay } from "@mantine/core";
-import { Suspense } from "react";
-import { Aside } from "src/admin/components/Aside";
-import { Content } from "src/admin/components/Content";
 import { CreateItemForm } from "src/admin/components/CreateItemForm";
 import { gSSP } from "src/blitz-server";
 import AdminItemsItem from "./[identifier]";
 
 const AdminItemsNew: BlitzPage = () => {
   return (
-    <Content
-      main={
-        <Suspense fallback={<LoadingOverlay visible />}>
-          <div className="px-8 pt-6 mx-auto flex max-w-4xl">
-            <CreateItemForm />
-          </div>
-        </Suspense>
-      }
-      aside={
-        <Suspense fallback={<LoadingOverlay visible />}>
-          <Aside.Directory />
-        </Suspense>
-      }
-    />
+    <div className="p-4">
+      <CreateItemForm />
+    </div>
   );
 };
 

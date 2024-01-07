@@ -14,7 +14,7 @@ const AdminItemsItem: BlitzPage = () => {
       onError={() => router.push(Routes.AdminItems())}
       fallback={<div>oops! couldn&apos;t find a {identifier}</div>}
     >
-      <div className="flex flex-col min-h-0 items-stretch grow justify-center p-6">
+      <div className="p-4">
         {identifier && <UpdateItemForm identifier={identifier} />}
       </div>
     </ErrorBoundary>
